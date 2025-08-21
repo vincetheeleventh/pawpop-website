@@ -9,8 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@fontsource/nunito": "^5.2.6",
+    "@fontsource/open-sans": "^5.2.6",
+    "@fontsource/quicksand": "^5.2.8",
+    "@next/font": "^14.2.15",
     "@stripe/stripe-js": "^7.8.0",
     "@uploadthing/react": "^7.3.3",
+    "autoprefixer": "^10.4.21",
+    "framer-motion": "^11.2.12",
+    "lucide-react": "^0.540.0",
     "next": "^14.2.32",
     "react": "^18",
     "react-dom": "^18",
@@ -21,6 +28,7 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "daisyui": "^4.12.10",
     "eslint": "^8",
     "eslint-config-next": "14.2.3",
     "postcss": "^8",

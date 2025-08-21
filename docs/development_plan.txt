@@ -50,7 +50,7 @@ This document breaks down the development of the PawPop landing page into key fu
 **Goal:** Polish the application, add analytics, and prepare for deployment.
 
 - **Task 8: Styling and Responsiveness**
-  - Apply a consistent and polished design using CSS (e.g., Tailwind CSS or CSS Modules).
+    - Apply a consistent and polished design using the Chakra UI component library.
   - Ensure the landing page is fully responsive and looks great on all devices (desktop, tablet, mobile).
 
 - **Task 9: Analytics**

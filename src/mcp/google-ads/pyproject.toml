@@ -1,0 +1,37 @@
+[project]
+name = "mcp-google-ads"
+version = "0.1.0"
+description = "Google Ads API integration for Model Context Protocol (MCP)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "Ernesto Cohnen", email = "ernesto@ixigo.com"}
+]
+keywords = ["mcp", "google ads", "seo", "sem", "claude","search analytics"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
+    "Topic :: Software Development :: Libraries :: Python Modules"
+]
+dependencies = [
+    "google-api-python-client>=2.163.0",
+    "google-auth-httplib2>=0.2.0",
+    "google-auth-oauthlib>=1.2.1",
+    "mcp[cli]>=1.3.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/cohnen/mcp-google-ads"
+"Bug Tracker" = "https://github.com/cohnen/mcp-google-ads/issues"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["mcp_google_ads"]

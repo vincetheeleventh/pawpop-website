@@ -48,6 +48,7 @@ Receives a confirmation email with order details and next steps.
 Tech Stack:
 
 Frontend: Next.js & React for a fast, modern, and responsive user interface.
+	UI Components: Chakra UI for a comprehensive, accessible, and customizable component library to accelerate development.
 
 File Uploads: Uploadthing for reliable and secure file handling.
 

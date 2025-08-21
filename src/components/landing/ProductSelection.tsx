@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { PaginatedBlueprints, Blueprint } from "@/lib/types";
+import type { PaginatedBlueprints, Blueprint } from "@/lib/printify";
 import { loadStripe } from '@stripe/stripe-js';
 
 // Make sure to add your publishable key to your .env.local file
@@ -58,11 +58,28 @@ export const ProductSelection = () => {
       try {
         const response = await fetch("/api/products");
         if (!response.ok) {
-          throw new Error("Failed to fetch products");
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            errorData.message || `Failed to fetch products: ${response.status} ${response.statusText}`
+          );
         }
         const data: PaginatedBlueprints = await response.json();
-        setProducts(data.data);
+        
+        if (!data || !Array.isArray(data.data)) {
+          throw new Error("Invalid data format received from server");
+        }
+        
+        // Ensure each product has at least one image
+        const productsWithImages = data.data.map(product => ({
+          ...product,
+          images: product.images && product.images.length > 0 
+            ? product.images 
+            : ['/images/placeholder.jpg']
+        }));
+        
+        setProducts(productsWithImages);
       } catch (err) {
+        console.error("Error fetching products:", err);
         setError(err instanceof Error ? err.message : "An unknown error occurred");
       } finally {
         setLoading(false);
@@ -73,31 +90,51 @@ export const ProductSelection = () => {
   }, []);
 
   if (loading) {
-    return <div className="text-center p-10">Loading products...</div>;
+    return <div className="text-center p-10"><span className="loading loading-spinner loading-lg"></span></div>;
   }
 
   if (error) {
-    return <div className="text-center p-10 text-red-500">Error: {error}</div>;
+    return <div className="alert alert-error text-center p-10">Error: {error}</div>;
   }
 
   return (
     <section className="py-12 px-4">
       <h2 className="text-3xl font-bold text-center mb-8">Choose Your Product</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {products.map((product) => (
-          <div key={product.id} className="border rounded-lg p-4 text-center hover:shadow-lg transition-shadow">
-            <img src={product.images[0]} alt={product.title} className="w-full h-48 object-cover mb-4 rounded" />
-            <h3 className="font-semibold">{product.title}</h3>
-            <p className="text-sm text-gray-500">{product.brand}</p>
-            <button 
-              onClick={handleCheckout}
-              disabled={isCheckingOut}
-              className="mt-4 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
-            >
-              {isCheckingOut ? 'Processing...' : 'Buy Now'}
-            </button>
+        {products.length === 0 ? (
+          <div className="col-span-full text-center py-8">
+            <p className="text-lg">No products available at the moment.</p>
           </div>
-        ))}
+        ) : (
+          products.map((product) => (
+            <div key={product.id} className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
+              <figure>
+                <img 
+                  src={product.images[0]} 
+                  alt={product.title} 
+                  className="w-full h-48 object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/images/placeholder.jpg';
+                  }}
+                />
+              </figure>
+              <div className="card-body">
+                <h3 className="card-title">{product.title}</h3>
+                <p className="text-sm opacity-70">{product.brand}</p>
+                <div className="card-actions justify-end">
+                  <button 
+                    onClick={handleCheckout}
+                    disabled={isCheckingOut}
+                    className={`btn btn-primary w-full ${isCheckingOut ? 'loading' : ''}`}
+                  >
+                    {isCheckingOut ? 'Processing...' : 'Buy Now'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </section>
   );

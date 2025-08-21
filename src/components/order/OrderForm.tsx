@@ -21,21 +21,21 @@ export const OrderForm = () => {
       case STEPS.SELECT_PRODUCT:
         return <ProductSelection />;
       case STEPS.CHECKOUT:
-        return <div>Checkout details will go here.</div>;
+        return <div className="alert alert-info">Checkout details will go here.</div>;
       default:
         return <ImageUploader />;
     }
   };
 
   return (
-    <div>
+    <div className="container mx-auto px-6 py-8">
       {renderStep()}
       <div className="flex justify-center gap-4 mt-8">
         {step > STEPS.UPLOAD && (
-          <button onClick={() => setStep(step - 1)} className="px-6 py-2 border rounded">Back</button>
+          <button onClick={() => setStep(step - 1)} className="btn btn-outline">Back</button>
         )}
         {step < STEPS.CHECKOUT && (
-          <button onClick={() => setStep(step + 1)} className="px-6 py-2 bg-blue-600 text-white rounded">Next</button>
+          <button onClick={() => setStep(step + 1)} className="btn btn-primary">Next</button>
         )}
       </div>
     </div>

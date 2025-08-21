@@ -12,7 +12,23 @@ interface PrintifyErrorResponse {
   };
 }
 
-export async function getProducts() {
+export interface Blueprint {
+  id: number;
+  title: string;
+  brand: string;
+  images: string[];
+  description: string;
+  tags: string[];
+}
+
+export interface PaginatedBlueprints {
+  data: Blueprint[];
+  current_page: number;
+  per_page: number;
+  total: number;
+}
+
+export async function getProducts(): Promise<PaginatedBlueprints> {
   if (!process.env.PRINTIFY_API_TOKEN) {
     throw new Error("Printify API token is not configured.");
   }
@@ -30,6 +46,22 @@ export async function getProducts() {
     throw new Error(`Failed to fetch products: ${errorData.message}`);
   }
 
-  const data = await response.json();
-  return data;
+  const blueprints = await response.json();
+  
+  // Transform the Printify API response to match our expected structure
+  const transformedData: Blueprint[] = blueprints.map((bp: any) => ({
+    id: bp.id,
+    title: bp.title,
+    brand: bp.brand,
+    description: bp.description || '',
+    images: bp.images?.map((img: any) => img.url) || [],
+    tags: bp.tags || []
+  }));
+
+  return {
+    data: transformedData,
+    current_page: 1,
+    per_page: transformedData.length,
+    total: transformedData.length
+  };
 }
