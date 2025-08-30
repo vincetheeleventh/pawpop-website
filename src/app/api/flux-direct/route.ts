@@ -9,22 +9,24 @@ fal.config({
   credentials: process.env.FAL_KEY || process.env.HF_TOKEN
 });
 
-interface FluxTransformRequest {
+interface FluxDirectRequest {
   imageBuffer?: Buffer;
   imageUrl?: string;
-  prompt: string;
-  strength?: number;
-  guidance_scale?: number;
-  num_inference_steps?: number;
+  prompt?: string;
+  loraPath?: string;
+  loraScale?: number;
+  aspectRatio?: string;
+  guidanceScale?: number;
+  numInferenceSteps?: number;
   seed?: number;
 }
 
 export async function POST(req: NextRequest) {
-  console.log("🎨 /api/flux-transform POST request received");
+  console.log("🎨 /api/flux-direct POST request received");
   
   try {
     const contentType = req.headers.get('content-type');
-    let body: FluxTransformRequest;
+    let body: FluxDirectRequest;
     let imageBuffer: Buffer | null = null;
 
     if (contentType?.includes('application/json')) {
@@ -39,37 +41,47 @@ export async function POST(req: NextRequest) {
       // Form data with file upload
       const formData = await req.formData();
       const file = formData.get('image') as File;
-      const prompt = formData.get('prompt') as string;
       
-      if (!file || !prompt) {
-        return NextResponse.json({ error: "Image file and prompt are required" }, { status: 400 });
+      if (!file) {
+        return NextResponse.json({ error: "Image file is required" }, { status: 400 });
       }
       
       imageBuffer = Buffer.from(await file.arrayBuffer());
       body = {
-        prompt,
-        strength: parseFloat(formData.get('strength') as string) || 0.8,
-        guidance_scale: parseFloat(formData.get('guidance_scale') as string) || 7.5,
-        num_inference_steps: parseInt(formData.get('num_inference_steps') as string) || 28,
+        prompt: formData.get('prompt') as string || 'keep likeness, change pose and style to mona lisa, keep hairstyle',
+        loraPath: formData.get('loraPath') as string || 'https://v3.fal.media/files/koala/HV-XcuBOG0z0apXA9dzP7_adapter_model.safetensors',
+        loraScale: parseFloat(formData.get('loraScale') as string) || 1.0,
+        aspectRatio: formData.get('aspectRatio') as string || '9:16',
+        guidanceScale: parseFloat(formData.get('guidanceScale') as string) || 7.5,
+        numInferenceSteps: parseInt(formData.get('numInferenceSteps') as string) || 28,
         seed: parseInt(formData.get('seed') as string) || Math.floor(Math.random() * 1000000)
       };
     } else {
       return NextResponse.json({ error: "Unsupported content type" }, { status: 400 });
     }
 
+    // Set defaults
+    const {
+      prompt = 'keep likeness, change pose and style to mona lisa, keep hairstyle',
+      loraPath = 'https://v3.fal.media/files/koala/HV-XcuBOG0z0apXA9dzP7_adapter_model.safetensors',
+      loraScale = 1.0,
+      aspectRatio = '9:16',
+      guidanceScale = 7.5,
+      numInferenceSteps = 28,
+      seed = Math.floor(Math.random() * 1000000)
+    } = body;
+
     console.log("📋 Request parameters:", {
-      prompt: body.prompt,
-      strength: body.strength,
-      guidance_scale: body.guidance_scale,
-      num_inference_steps: body.num_inference_steps,
-      seed: body.seed,
+      prompt,
+      loraPath,
+      loraScale,
+      aspectRatio,
+      guidanceScale,
+      numInferenceSteps,
+      seed,
       hasImageBuffer: !!imageBuffer,
       hasImageUrl: !!body.imageUrl
     });
-
-    if (!body.prompt) {
-      return NextResponse.json({ error: "Prompt is required" }, { status: 400 });
-    }
 
     if (!imageBuffer && !body.imageUrl) {
       return NextResponse.json({ error: "Either image file or image URL is required" }, { status: 400 });
@@ -80,39 +92,39 @@ export async function POST(req: NextRequest) {
     // Upload image to fal storage if we have a buffer
     if (imageBuffer) {
       console.log("☁️ Uploading image to fal storage...");
-      const imageFile = new File([imageBuffer], 'input-image.png', { type: 'image/png' });
+      const imageFile = new File([imageBuffer], 'input-image.jpg', { type: 'image/jpeg' });
       imageUrl = await fal.storage.upload(imageFile);
       console.log("✅ Image uploaded:", imageUrl);
     }
 
-    // Run Flux transformation
-    console.log("🎨 Running Flux LoRA transformation...");
-    const result = await fal.subscribe('fal-ai/flux-kontext-lora', {
+    // Run Flux Kontext LoRA transformation with streaming
+    console.log("🎨 Running Flux Kontext LoRA transformation...");
+    const stream = await fal.stream('fal-ai/flux-kontext-lora', {
       input: {
         image_url: imageUrl!,
-        prompt: body.prompt,
-        guidance_scale: body.guidance_scale || 7.5,
-        num_inference_steps: body.num_inference_steps || 28,
-        seed: body.seed || Math.floor(Math.random() * 1000000)
-      },
-      logs: true,
-      onQueueUpdate: (update) => {
-        if (update.status === 'IN_PROGRESS') {
-          console.log("⏳ Flux processing:", update.status);
-          if (update.logs) {
-            update.logs.forEach(log => console.log("📝 Flux log:", log.message));
-          }
-        }
+        prompt: prompt,
+        loras: [{
+          path: loraPath,
+          scale: loraScale
+        }],
+        resolution_mode: aspectRatio as "9:16" | "auto" | "match_input" | "1:1" | "16:9" | "21:9" | "3:2" | "2:3" | "4:5" | "5:4" | "3:4" | "4:3" | "9:21"
       }
     });
 
+    console.log("📡 Processing stream...");
+    for await (const event of stream) {
+      console.log("📝 Stream event:", (event as any).type || 'processing');
+    }
+
+    const result = await stream.done();
+
     console.log("✅ Flux transformation complete!");
     
-    if (!result.data || !result.data.images || !result.data.images[0]) {
+    if (!result || !result.images || !result.images[0]) {
       throw new Error("No image generated by Flux model");
     }
 
-    const outputImageUrl = result.data.images[0].url;
+    const outputImageUrl = result.images[0].url;
     console.log("🖼️ Generated image URL:", outputImageUrl);
 
     // Download the result image and return as buffer
@@ -131,7 +143,9 @@ export async function POST(req: NextRequest) {
       headers: { 
         "Content-Type": "image/png",
         "Cache-Control": "no-store",
-        "X-Generated-Image-URL": outputImageUrl
+        "X-Generated-Image-URL": outputImageUrl,
+        "X-Aspect-Ratio": aspectRatio,
+        "X-LoRA-Scale": loraScale.toString()
       },
     });
 

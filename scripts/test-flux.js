@@ -26,7 +26,7 @@ async function testFluxTransformation() {
     console.log('🔑 API Key loaded:', process.env.FAL_KEY ? 'Yes' : 'No');
 
     // Load test image (you can change this path)
-    const imagePath = path.join(__dirname, '../public/images/overlayed.png');
+    const imagePath = path.join(__dirname, '../public/images/flux-test.png');
     
     if (!fs.existsSync(imagePath)) {
       console.error('❌ Test image not found at:', imagePath);
@@ -43,36 +43,37 @@ async function testFluxTransformation() {
     const imageUrl = await fal.storage.upload(imageFile);
     console.log('✅ Image uploaded:', imageUrl);
 
-    // Test the Flux LoRA model
-    console.log('🎨 Running Flux transformation...');
-    const promptToUse = 'Place it';
+    // Test the Flux Kontext LoRA model with streaming
+    console.log('🎨 Running Flux Kontext LoRA transformation...');
+    const promptToUse = 'keep likeness, change pose and style to mona lisa';
     console.log('📝 Using prompt:', promptToUse);
     
-    const result = await fal.subscribe('fal-ai/flux-kontext-lora', {
+    const stream = await fal.stream("fal-ai/flux-kontext-lora", {
       input: {
         image_url: imageUrl,
         prompt: promptToUse,
-        strength: 1.0,
-        guidance_scale: 7.5,
-        num_inference_steps: 28,
-        seed: Math.floor(Math.random() * 1000000)
-      },
-      logs: true,
-      onQueueUpdate: (update) => {
-        if (update.status === 'IN_PROGRESS') {
-          console.log('⏳ Processing:', update.status);
-          if (update.logs) {
-            update.logs.forEach(log => console.log('📝', log.message));
-          }
-        }
+        model_name: null,
+        loras: [{
+          path: "https://v3.fal.media/files/koala/HV-XcuBOG0z0apXA9dzP7_adapter_model.safetensors",
+          scale: 1
+        }],
+        embeddings: [],
+        resolution_mode: "9:16"
       }
     });
 
+    console.log('📡 Streaming events...');
+    for await (const event of stream) {
+      console.log('📝 Stream event:', event);
+    }
+
+    const result = await stream.done();
+
     console.log('✅ Transformation complete!');
-    console.log('🖼️ Result:', result.data);
+    console.log('🖼️ Result:', result);
     
-    if (result.data && result.data.images && result.data.images[0]) {
-      const outputUrl = result.data.images[0].url;
+    if (result && result.images && result.images[0]) {
+      const outputUrl = result.images[0].url;
       console.log('🌐 Output image URL:', outputUrl);
       
       // Optionally download the result
@@ -88,6 +89,11 @@ async function testFluxTransformation() {
   } catch (error) {
     console.error('💥 Error during Flux test:', error);
     console.error('Stack:', error.stack);
+    
+    // Log detailed error information for validation errors
+    if (error.status === 422 && error.body && error.body.detail) {
+      console.error('🔍 Validation Error Details:', JSON.stringify(error.body.detail, null, 2));
+    }
     
     if (error.message.includes('credentials')) {
       console.log('\n💡 Setup Instructions:');

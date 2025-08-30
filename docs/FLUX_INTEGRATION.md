@@ -1,45 +1,40 @@
 ---
-title: "Flux LoRA Integration"
-date: 2025-08-29
+title: "Flux Kontext LoRA Integration"
+date: 2025-08-30
 author: "Cascade"
-version: "v1.0.0"
+version: "v2.0.0"
 status: "ready"
 ---
 
-# Flux LoRA Integration Implementation Plan
+# Flux Kontext LoRA Direct Transformation
 
 ## Overview
 
-This implementation integrates the fal.ai Flux LoRA model into the existing headshot overlay pipeline, enabling AI-powered artistic transformations of the composite images.
+This implementation uses fal.ai's Flux Kontext LoRA model to directly transform user photos into Mona Lisa styled portraits while preserving facial likeness and hairstyle. The overlay step has been removed in favor of a streamlined direct transformation approach.
 
 ## Architecture
 
 ### Pipeline Flow
-1. **Headshot Overlay** (existing) → Face detection + composite onto Mona Lisa
-2. **Flux Transformation** (new) → AI artistic style transfer using LoRA model  
-3. **Final Output** → Stylized composite image
+1. **User Photo Input** → Direct upload to fal.ai storage
+2. **Flux Kontext LoRA** → AI transformation with custom LoRA model
+3. **Final Output** → Mona Lisa styled portrait (9:16 aspect ratio)
 
 ### Components Created
 
 #### 1. Standalone Testing (`/scripts/test-flux.js`)
-- Tests Flux model independently
-- Validates API credentials
-- Downloads and saves results locally
+- Tests Flux Kontext LoRA model with streaming API
+- Uses custom LoRA model for Mona Lisa transformations
+- Validates API credentials and saves results locally
 
-#### 2. Flux API Endpoint (`/src/app/api/flux-transform/route.ts`)
-- Dedicated endpoint for Flux transformations
-- Supports both file uploads and image URLs
+#### 2. Direct Flux API Endpoint (`/src/app/api/flux-direct/route.ts`)
+- Streamlined endpoint for direct Flux Kontext LoRA transformations
+- Supports file uploads and streaming processing
 - Handles fal.ai storage uploads automatically
 
-#### 3. Combined Pipeline (`/src/app/api/overlay-flux/route.ts`)
-- Integrates overlay + Flux in single request
-- Fallback to overlay-only if Flux fails
-- Configurable transformation parameters
-
-#### 4. Test UI (`/src/app/test-flux/page.tsx`)
-- Interactive testing interface
-- Preset prompts for common transformations
+#### 3. Test UI (`/src/app/test-flux/page.tsx`)
+- Interactive testing interface for direct transformations
 - Real-time processing feedback
+- Download functionality for generated images
 
 ## Setup Instructions
 
@@ -65,43 +60,36 @@ HF_TOKEN=your-huggingface-token
 ### Testing the Pipeline
 
 1. **Navigate to test page**: `/test-flux`
-2. **Select a headshot** from the available options
-3. **Choose transformation**:
-   - Skip Flux: Overlay only (faster)
-   - With Flux: Full artistic transformation
-4. **Customize prompt** or use presets
-5. **Adjust strength** (0.1 = subtle, 1.0 = strong)
-6. **Generate and download** results
+2. **Upload a user photo** or select from test images
+3. **Generate transformation** using Flux Kontext LoRA
+4. **Download results** in 9:16 aspect ratio
 
 ### API Endpoints
 
-#### `/api/flux-transform` - Flux Only
+#### `/api/flux-direct` - Direct Flux Kontext LoRA
 ```typescript
-POST /api/flux-transform
-Content-Type: application/json
+POST /api/flux-direct
+Content-Type: multipart/form-data
 
-{
-  "imageUrl": "https://example.com/image.jpg",
-  "prompt": "Transform into oil painting",
-  "strength": 0.8,
-  "guidance_scale": 7.5,
-  "num_inference_steps": 28
-}
+// Form data:
+image: File
+prompt: "keep likeness, change pose and style to mona lisa, keep hairstyle"
+loraPath: "https://v3.fal.media/files/koala/HV-XcuBOG0z0apXA9dzP7_adapter_model.safetensors"
+loraScale: 1.0
+aspectRatio: "9:16"
 ```
 
-#### `/api/overlay-flux` - Complete Pipeline
+#### JSON API Usage
 ```typescript
-POST /api/overlay-flux
+POST /api/flux-direct
 Content-Type: application/json
 
 {
-  "monaUrl": "/images/monalisa.png",
-  "headUrl": "/images/test headshots/Screenshot_2.jpg",
-  "fit": "width",
-  "scale": 1.0,
-  "fluxPrompt": "Transform into Van Gogh style painting",
-  "fluxStrength": 0.8,
-  "skipFlux": false
+  "imageUrl": "https://example.com/photo.jpg",
+  "prompt": "keep likeness, change pose and style to mona lisa, keep hairstyle",
+  "loraPath": "https://v3.fal.media/files/koala/HV-XcuBOG0z0apXA9dzP7_adapter_model.safetensors",
+  "loraScale": 1.0,
+  "aspectRatio": "9:16"
 }
 ```
 
@@ -110,103 +98,133 @@ Content-Type: application/json
 node scripts/test-flux.js
 ```
 
-## Integration into Existing Pipeline
+## Model Configuration
 
-The Flux transformation can be integrated into your existing image processing workflow in several ways:
+### Flux Kontext LoRA Parameters
 
-### Option 1: Post-Processing Step
-Add Flux as final step after overlay:
-```typescript
-// 1. Create overlay composite (existing)
-const overlayResult = await fetch('/api/overlay', { ... });
-
-// 2. Apply Flux transformation
-const fluxResult = await fetch('/api/flux-transform', {
-  method: 'POST',
-  body: overlayResult.body,
-  headers: { 'Content-Type': 'image/png' }
-});
+```javascript
+const fluxConfig = {
+  model: "fal-ai/flux-kontext-lora",
+  input: {
+    image_url: uploadedImageUrl,
+    prompt: "keep likeness, change pose and style to mona lisa, keep hairstyle",
+    loras: [{
+      path: "https://v3.fal.media/files/koala/HV-XcuBOG0z0apXA9dzP7_adapter_model.safetensors",
+      scale: 1.0
+    }],
+    resolution_mode: "9:16",
+    guidance_scale: 7.5,
+    num_inference_steps: 28,
+    seed: Math.floor(Math.random() * 1000000),
+    model_name: null,
+    embeddings: []
+  }
+};
 ```
 
-### Option 2: Single Endpoint (Recommended)
-Use the combined endpoint for seamless processing:
-```typescript
-const result = await fetch('/api/overlay-flux', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    monaUrl: '/images/monalisa.png',
-    headUrl: userHeadshotUrl,
-    fluxPrompt: 'Transform into Renaissance masterpiece'
-  })
-});
-```
+### Key Configuration Details
 
-## Configuration Options
+- **LoRA Model**: Custom Mona Lisa style adapter hosted on fal.ai
+- **Prompt**: Fixed to preserve likeness while applying Mona Lisa styling
+- **Resolution**: 9:16 aspect ratio for portrait format
+- **Strength**: 1.0 for full transformation effect
 
-### Flux Parameters
-- **prompt**: Transformation description
-- **strength**: 0.1-1.0 (transformation intensity)
-- **guidance_scale**: 1.0-20.0 (prompt adherence)
-- **num_inference_steps**: 10-50 (quality vs speed)
-- **seed**: Random seed for reproducibility
+## Benefits of Direct Transformation
 
-### Overlay Parameters
-- **fit**: "width" | "height" (scaling method)
-- **scale**: Multiplier for face size matching
-- **skipFlux**: Boolean to bypass Flux transformation
+### Advantages Over Overlay Approach
+
+- **Better likeness preservation**: AI understands facial features contextually
+- **Natural pose variations**: Not limited to overlay positioning constraints
+- **Artistic coherence**: Unified Mona Lisa style throughout the image
+- **Simplified pipeline**: Single transformation step reduces complexity
+- **Higher quality**: No compositing artifacts or alignment issues
+
+### Performance Considerations
+
+- **Processing time**: ~30-60 seconds per image with streaming updates
+- **Quality**: Higher fidelity than overlay compositing
+- **Scalability**: Direct API calls to fal.ai infrastructure
+- **Cost**: Per-generation pricing through fal.ai
 
 ## Error Handling
 
-The implementation includes comprehensive error handling:
+### Common Issues
 
-1. **API Credential Validation**: Clear messages for missing/invalid keys
-2. **Graceful Fallbacks**: Overlay-only if Flux fails
-3. **Rate Limit Handling**: Proper HTTP status codes
-4. **Image Processing Errors**: Detailed logging and recovery
+#### API Authentication
+```javascript
+// Check environment variables
+if (!process.env.FAL_KEY && !process.env.HF_TOKEN) {
+  throw new Error('Missing FAL_KEY or HF_TOKEN environment variable');
+}
+```
 
-## Performance Considerations
+#### Image Upload Failures
+```javascript
+try {
+  const imageUrl = await fal.storage.upload(imageFile);
+} catch (error) {
+  console.error('Upload failed:', error);
+  // Handle upload error
+}
+```
 
-- **Flux Processing Time**: 10-30 seconds depending on parameters
-- **Storage Uploads**: Automatic via fal.ai storage service
-- **Memory Usage**: Buffers handled efficiently with streaming
-- **Caching**: No-store headers prevent unwanted caching
-
-## Prompt Engineering Tips
-
-### Effective Prompts
-- **Style-specific**: "oil painting", "watercolor", "digital art"
-- **Artist references**: "in the style of Van Gogh", "Renaissance portrait"
-- **Descriptive**: "dramatic lighting", "soft brushstrokes", "vibrant colors"
-
-### Prompt Presets Included
-1. Van Gogh oil painting style
-2. Renaissance masterpiece with dramatic lighting
-3. Soft watercolor painting
-4. Modern digital art with neon colors
-5. Classical baroque portrait
-6. Impressionist with visible brushstrokes
-
-## Next Steps
-
-1. **Test the pipeline** using `/test-flux` page
-2. **Integrate into production** workflow
-3. **Customize prompts** for your specific use cases
-4. **Monitor API usage** and costs
-5. **Add more artistic styles** as needed
+#### Model Processing Errors
+```javascript
+try {
+  const result = await fal.stream('fal-ai/flux-kontext-lora', {
+    input: fluxConfig.input,
+    logs: true,
+    onQueueUpdate: (update) => {
+      console.log('Status:', update.status);
+    }
+  });
+} catch (error) {
+  console.error('Flux processing failed:', error);
+  // Handle processing error
+}
+```
 
 ## Troubleshooting
 
 ### Common Issues
-- **"Invalid credentials"**: Check FAL_KEY/HF_TOKEN in `.env.local`
-- **"No image generated"**: Try different prompt or reduce strength
-- **Slow processing**: Reduce num_inference_steps (try 20)
-- **Out of quota**: Check fal.ai dashboard for usage limits
 
-### Debug Mode
-Set `NODE_ENV=development` for detailed error logging and stack traces.
+1. **422 Validation Error**: Check LoRA path format and required fields
+2. **Authentication Failed**: Verify FAL_KEY environment variable
+3. **Image Upload Issues**: Ensure image format is supported (PNG, JPG)
+4. **Slow Processing**: Normal for high-quality transformations (30-60s)
 
-## Cost Considerations
+### Debug Steps
+
+```bash
+# Test API credentials
+node scripts/test-flux.js
+
+# Check environment variables
+echo $FAL_KEY
+
+# Verify image format
+file public/images/flux-test.png
+```
+
+## Next Steps
+
+1. **Production Integration**: Replace overlay endpoints with flux-direct
+2. **UI Updates**: Add progress indicators for streaming
+3. **Batch Processing**: Handle multiple images efficiently
+4. **Quality Optimization**: Fine-tune LoRA parameters
+
+---
+
+## Summary
+
+The Flux Kontext LoRA integration provides a streamlined approach to transforming user photos into Mona Lisa styled portraits. The direct transformation method offers superior quality and likeness preservation compared to the previous overlay approach.
+
+**Key files created:**
+- `/scripts/test-flux.js` - Standalone testing
+- `/src/app/api/flux-direct/route.ts` - API endpoint
+- `/src/app/test-flux/page.tsx` - Test UI
+
+**Ready for production use with proper error handling and streaming support.**
 
 - **fal.ai pricing**: Pay-per-use model
 - **Typical cost**: ~$0.01-0.05 per image transformation

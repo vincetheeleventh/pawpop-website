@@ -135,7 +135,6 @@ export async function POST(req: NextRequest) {
           input: {
             image_url: compositeUrl,
             prompt: fluxPrompt,
-            strength: fluxStrength,
             guidance_scale: fluxGuidanceScale,
             num_inference_steps: fluxSteps,
             seed: Math.floor(Math.random() * 1000000)
