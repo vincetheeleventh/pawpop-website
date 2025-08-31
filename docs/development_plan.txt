@@ -15,51 +15,90 @@ This document breaks down the development of the PawPop landing page into key fu
 
 - **Task 3: Build Static UI Components**
   - Create reusable React components for each section of the landing page:
-    - `Header`: Navigation and logo.
-    - `HeroSection`: Main heading, high-quality example image, and primary call-to-action.
-    - `ProcessSection`: Explains the "handcrafted" process with icons and text.
-    - `TestimonialsSection`: Displays customer quotes and stories.
-    - `EmailCaptureSection`: Form for the soft buy-in (e.g., free digital download).
-    - `PricingSection`: Clear layout of product options and prices.
-    - `Footer`: Links and copyright information.
+    - `Header`: Museum-style navigation with PawPop logo and Mona Lisa Gold accents.
+    - `HeroSection`: Dramatic before/after showcase with Monsieur Brush introduction.
+    - `ProcessSection`: Three-step triptych explaining the handcrafted process with character guidance.
+    - `TestimonialsSection`: Gallery-style customer story cards with portrait frames.
+    - `ProductGallery`: Museum-quality showcase of transformations across pet breeds.
+    - `PricingSection`: Elegant product selection with gallery-style presentation.
+    - `EmailCaptureSection`: Character-driven lead capture with whimsical design.
+    - `Footer`: Sophisticated links with artistic touches.
 
-- **Task 4: Centralize Copy**
+- **Task 4: Centralize Copy & Character Content**
   - Create `src/lib/copy.ts` to store all user-facing text for easy management.
+  - Include Monsieur Brush dialogue and character interactions.
+  - Organize content by page and component for maintainability.
+  - Add support for dynamic character responses based on user actions.
 
 ## Phase 2: Core Functionality & Integrations
 
 **Goal:** Implement the main user flow, from photo upload to payment.
 
 - **Task 5: Image Upload Integration**
-  - Integrate `Uploadthing` to handle secure photo uploads for both the recipient and the pet.
-  - Develop the UI for file selection, upload progress, and thumbnail previews.
-  - Implement error handling for failed uploads.
+  - Create gallery-inspired upload zone with Monsieur Brush guidance.
+  - Integrate `Uploadthing` to handle secure photo uploads.
+  - Develop whimsical UI for file selection with artistic progress indicators.
+  - Implement character-driven error handling and validation feedback.
+  - Add image preview with gallery-style framing.
 
-- **Task 6: Product Selection**
-  - Connect to the Printify API to fetch available products and sizes.
-  - (For MVP, this can be mocked with static data if the API is not ready).
-  - Display product options for the user to select.
+- **Task 6: AI Transformation Pipeline**
+  - Integrate existing MonaLisa Maker API endpoints.
+  - Create engaging processing experience with Monsieur Brush animations.
+  - Implement artistic progress tracking and status updates.
+  - Add dramatic result reveal with before/after presentation.
 
-- **Task 7: Payment Gateway Integration**
+- **Task 7: Product Selection & Pricing**
+  - Create gallery-style product selection interface.
+  - Connect to the Printify API for physical products.
+  - Display digital and physical options with elegant presentation.
+  - Implement responsive product cards with artistic styling.
+
+- **Task 8: Payment Gateway Integration**
   - Integrate the Stripe API for secure payment processing.
-  - Create a checkout flow that collects payment information.
-  - Handle success and error states from Stripe.
+  - Create sophisticated checkout flow with order summary.
+  - Handle success and error states with character feedback.
+  - Implement order confirmation page with timeline expectations.
 
-## Phase 3: Finalizing and Launch Prep
+## Phase 3: Enhanced User Experience
+
+**Goal:** Add supporting pages and enhanced functionality.
+
+- **Task 9: Gallery & Process Pages**
+  - Create `/gallery` page with filterable customer transformations.
+  - Build `/process` page explaining the handcrafted approach.
+  - Implement customer story showcases with before/after reveals.
+  - Add character-driven educational content.
+
+- **Task 10: Support & Information Pages**
+  - Create `/contact` page with support form and FAQ.
+  - Build `/about` page with brand story and team introduction.
+  - Implement order status lookup functionality.
+  - Add comprehensive help and policy pages.
+
+## Phase 4: Finalizing and Launch Prep
 
 **Goal:** Polish the application, add analytics, and prepare for deployment.
 
-- **Task 8: Styling and Responsiveness**
-    - Apply a consistent and polished design using the Chakra UI component library.
-  - Ensure the landing page is fully responsive and looks great on all devices (desktop, tablet, mobile).
+- **Task 11: Advanced Styling and Responsiveness**
+  - Refine character animations and micro-interactions.
+  - Optimize mobile experience with touch-friendly interfaces.
+  - Implement progressive web app features.
+  - Add accessibility enhancements and WCAG compliance.
 
-- **Task 9: Analytics**
-  - Integrate Plausible for privacy-focused analytics to track conversion rates and user behavior, as outlined in the OKRs.
+- **Task 12: Analytics & Optimization**
+  - Integrate Plausible for privacy-focused analytics.
+  - Set up conversion tracking for key user actions.
+  - Implement A/B testing for character interactions.
+  - Add performance monitoring and optimization.
 
-- **Task 10: End-to-End Testing**
-  - Manually test the entire user flow, from landing on the page to a successful purchase confirmation.
-  - Test all error states (e.g., failed uploads, declined payments).
+- **Task 13: End-to-End Testing**
+  - Test complete user journey from landing to order confirmation.
+  - Validate AI transformation pipeline with various image types.
+  - Test all error states and character feedback scenarios.
+  - Verify payment processing and order fulfillment.
 
-- **Task 11: Deployment**
-  - Prepare the application for production.
-  - Deploy the landing page to a hosting provider (e.g., Vercel, Netlify).
+- **Task 14: Deployment & Launch**
+  - Configure production environment with proper security.
+  - Deploy to hosting provider (Vercel recommended).
+  - Set up monitoring and alerting systems.
+  - Prepare launch marketing materials.

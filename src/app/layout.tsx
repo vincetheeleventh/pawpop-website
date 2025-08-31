@@ -1,36 +1,39 @@
 import type { Metadata } from "next";
-import '@fontsource/open-sans/400.css';
-import '@fontsource/open-sans/500.css';
-import '@fontsource/open-sans/600.css';
-import '@fontsource/open-sans/700.css';
-import '@fontsource/nunito/400.css';
-import '@fontsource/nunito/500.css';
-import '@fontsource/nunito/600.css';
-import '@fontsource/nunito/700.css';
-import '@fontsource/quicksand/400.css';
-import '@fontsource/quicksand/500.css';
-import '@fontsource/quicksand/600.css';
+import { Inter, Playfair_Display, Fredoka } from 'next/font/google';
 import "./globals.css";
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Providers } from './providers';
 
-// Font variables for CSS
-const fontVariables = {
-  '--font-sans': '"Open Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-  '--font-heading': '"Nunito", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-  '--font-accent': '"Quicksand", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-} as const;
+// PawPop Brand Fonts
+const inter = Inter({ 
+  subsets: ['latin'], 
+  variable: '--font-inter',
+  display: 'swap'
+});
+
+const playfair = Playfair_Display({ 
+  subsets: ['latin'], 
+  variable: '--font-playfair',
+  display: 'swap'
+});
+
+const fredoka = Fredoka({ 
+  weight: '400',
+  subsets: ['latin'], 
+  variable: '--font-fredoka',
+  display: 'swap'
+});
 
 export const metadata: Metadata = {
-  title: "PawPop Art - Custom Pet Pop Art Portraits | Turn Your Pet Into Art",
-  description: "Transform your beloved pet into a stunning pop art masterpiece! Custom pet portraits that celebrate the unique bond between you and your furry friend. Digital downloads and premium prints available.",
-  keywords: "custom pet portraits, pet pop art, dog portraits, cat portraits, pet art, personalized pet gifts, pet canvas prints",
+  title: "PawPop - Transform Into Mona Lisa with Your Pet | AI Art Portraits",
+  description: "Become the Mona Lisa with your beloved pet! Our AI artist Monsieur Brush creates museum-quality portraits that celebrate the bond between pet moms and their furry companions. Fast, magical, unforgettable.",
+  keywords: "pet mom gifts, mona lisa pet portraits, ai pet art, custom pet portraits, thoughtful pet gifts, pet parent art, personalized pet gifts",
   openGraph: {
-    title: "PawPop Art - Custom Pet Pop Art Portraits",
-    description: "Transform your beloved pet into a stunning pop art masterpiece! Custom pet portraits with digital downloads and premium prints available.",
+    title: "PawPop - Transform Into Mona Lisa with Your Pet",
+    description: "Become the Mona Lisa with your beloved pet! Our AI artist creates museum-quality portraits in minutes.",
     url: "https://pawpop.art",
-    siteName: "PawPop Art",
+    siteName: "PawPop",
     images: [
       {
         url: "https://pawpop.art/images/pawpop-og-image.jpg",
@@ -44,8 +47,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "PawPop Art - Custom Pet Pop Art Portraits",
-    description: "Transform your beloved pet into a stunning pop art masterpiece!",
+    title: "PawPop - Transform Into Mona Lisa with Your Pet",
+    description: "Become the Mona Lisa with your beloved pet! Museum-quality AI art in minutes.",
     images: ["https://pawpop.art/images/pawpop-og-image.jpg"],
     creator: "@pawpopart",
     site: "@pawpopart",
@@ -62,8 +65,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" style={fontVariables as React.CSSProperties}>
-      <body className="font-sans">
+    <html lang="en" className={`${inter.variable} ${playfair.variable} ${fredoka.variable}`}>
+      <body className="font-inter bg-gallery-white text-charcoal-frame antialiased">
         <Providers>
           <Header />
           <main>{children}</main>
