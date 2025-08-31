@@ -1,40 +1,45 @@
 ---
-title: "Flux Kontext LoRA Integration"
+title: "MonaLisa Maker Integration"
 date: 2025-08-30
 author: "Cascade"
-version: "v2.0.0"
+version: "v3.0.0"
 status: "ready"
 ---
 
-# Flux Kontext LoRA Direct Transformation
+# MonaLisa Maker - AI Portrait & Pet Integration
 
 ## Overview
 
-This implementation uses fal.ai's Flux Kontext LoRA model to directly transform user photos into Mona Lisa styled portraits while preserving facial likeness and hairstyle. The overlay step has been removed in favor of a streamlined direct transformation approach.
+MonaLisa Maker is a 2-step AI transformation pipeline that creates personalized Mona Lisa portraits with pets. Step 1 transforms user photos into Mona Lisa styled portraits, and Step 2 adds pets to the portrait using advanced AI composition.
 
 ## Architecture
 
 ### Pipeline Flow
-1. **User Photo Input** → Direct upload to fal.ai storage
-2. **Flux Kontext LoRA** → AI transformation with custom LoRA model
-3. **Final Output** → Mona Lisa styled portrait (9:16 aspect ratio)
+1. **User Photo Input** → MonaLisa Maker (Flux Kontext LoRA) → Mona Lisa styled portrait
+2. **Pet Integration** → Flux Pro Kontext Max → Final portrait with pets in lap
+3. **Final Output** → Complete Mona Lisa portrait with pets (9:16 aspect ratio)
 
 ### Components Created
 
-#### 1. Standalone Testing (`/scripts/test-flux.js`)
-- Tests Flux Kontext LoRA model with streaming API
-- Uses custom LoRA model for Mona Lisa transformations
-- Validates API credentials and saves results locally
-
-#### 2. Direct Flux API Endpoint (`/src/app/api/flux-direct/route.ts`)
-- Streamlined endpoint for direct Flux Kontext LoRA transformations
+#### 1. MonaLisa Maker API (`/src/app/api/monalisa-maker/route.ts`)
+- Step 1: Transform user photos into Mona Lisa portraits using Flux Kontext LoRA
 - Supports file uploads and streaming processing
 - Handles fal.ai storage uploads automatically
 
-#### 3. Test UI (`/src/app/test-flux/page.tsx`)
-- Interactive testing interface for direct transformations
-- Real-time processing feedback
-- Download functionality for generated images
+#### 2. Pet Integration API (`/src/app/api/pet-integration/route.ts`)
+- Step 2: Add pets to Mona Lisa portraits using Flux Pro Kontext Max
+- Combines portrait from Step 1 with pet images
+- Advanced AI composition for natural pet placement
+
+#### 3. Complete Pipeline API (`/src/app/api/monalisa-complete/route.ts`)
+- End-to-end pipeline combining both steps
+- Takes user photo and pet image, returns final portrait
+- Handles error recovery and fallbacks
+
+#### 4. Testing Scripts
+- `/scripts/test-monalisa-maker.js` - Test Step 1 transformation
+- `/scripts/test-pet-integration.js` - Test Step 2 pet addition
+- `/scripts/test-complete-pipeline.js` - Test full pipeline
 
 ## Setup Instructions
 
@@ -59,54 +64,88 @@ HF_TOKEN=your-huggingface-token
 
 ### Testing the Pipeline
 
-1. **Navigate to test page**: `/test-flux`
-2. **Upload a user photo** or select from test images
-3. **Generate transformation** using Flux Kontext LoRA
-4. **Download results** in 9:16 aspect ratio
+#### Individual Steps
+```bash
+# Test Step 1: MonaLisa Maker
+node scripts/test-monalisa-maker.js
+
+# Test Step 2: Pet Integration
+node scripts/test-pet-integration.js
+
+# Test Complete Pipeline
+node scripts/test-complete-pipeline.js
+```
+
+#### Test Images Available
+- **User photos**: `/public/images/flux-test.png`
+- **Pet images**: `/public/images/test pets/`
+  - `test-cat.png`
+  - `test-corgi.png` 
+  - `test-gshep.png`
 
 ### API Endpoints
 
-#### `/api/flux-direct` - Direct Flux Kontext LoRA
+#### `/api/monalisa-maker` - Step 1: Portrait Transformation
 ```typescript
-POST /api/flux-direct
+POST /api/monalisa-maker
 Content-Type: multipart/form-data
 
 // Form data:
-image: File
-prompt: "keep likeness, change pose and style to mona lisa, keep hairstyle"
-loraPath: "https://v3.fal.media/files/koala/HV-XcuBOG0z0apXA9dzP7_adapter_model.safetensors"
-loraScale: 1.0
-aspectRatio: "9:16"
+image: File (user photo)
+```
+
+#### `/api/pet-integration` - Step 2: Add Pets
+```typescript
+POST /api/pet-integration
+Content-Type: multipart/form-data
+
+// Form data:
+portrait: File (MonaLisa portrait from Step 1)
+pet: File (pet image)
+```
+
+#### `/api/monalisa-complete` - Complete Pipeline
+```typescript
+POST /api/monalisa-complete
+Content-Type: multipart/form-data
+
+// Form data:
+userImage: File (user photo)
+petImage: File (pet image)
 ```
 
 #### JSON API Usage
 ```typescript
-POST /api/flux-direct
-Content-Type: application/json
-
+// Step 1: MonaLisa Maker
+POST /api/monalisa-maker
 {
-  "imageUrl": "https://example.com/photo.jpg",
-  "prompt": "keep likeness, change pose and style to mona lisa, keep hairstyle",
-  "loraPath": "https://v3.fal.media/files/koala/HV-XcuBOG0z0apXA9dzP7_adapter_model.safetensors",
-  "loraScale": 1.0,
-  "aspectRatio": "9:16"
+  "imageUrl": "https://example.com/user-photo.jpg"
 }
-```
 
-### Standalone Testing Script
-```bash
-node scripts/test-flux.js
+// Step 2: Pet Integration
+POST /api/pet-integration
+{
+  "portraitUrl": "https://example.com/monalisa-portrait.jpg",
+  "petUrl": "https://example.com/pet-photo.jpg"
+}
+
+// Complete Pipeline
+POST /api/monalisa-complete
+{
+  "userImageUrl": "https://example.com/user-photo.jpg",
+  "petImageUrl": "https://example.com/pet-photo.jpg"
+}
 ```
 
 ## Model Configuration
 
-### Flux Kontext LoRA Parameters
+### Step 1: MonaLisa Maker (Flux Kontext LoRA)
 
 ```javascript
-const fluxConfig = {
+const monaLisaConfig = {
   model: "fal-ai/flux-kontext-lora",
   input: {
-    image_url: uploadedImageUrl,
+    image_url: userImageUrl,
     prompt: "keep likeness, change pose and style to mona lisa, keep hairstyle",
     loras: [{
       path: "https://v3.fal.media/files/koala/HV-XcuBOG0z0apXA9dzP7_adapter_model.safetensors",
@@ -115,19 +154,41 @@ const fluxConfig = {
     resolution_mode: "9:16",
     guidance_scale: 7.5,
     num_inference_steps: 28,
-    seed: Math.floor(Math.random() * 1000000),
-    model_name: null,
-    embeddings: []
+    seed: Math.floor(Math.random() * 1000000)
   }
 };
 ```
 
-### Key Configuration Details
+### Step 2: Pet Integration (Flux Pro Kontext Max)
 
+```javascript
+const petIntegrationConfig = {
+  model: "fal-ai/flux-pro/kontext/max",
+  input: {
+    prompt: "Incorporate the pets into the painting of the woman. She is holding them in her lap. Keep the painted style and likeness of the woman and pets",
+    guidance_scale: 3.5,
+    num_images: 1,
+    output_format: "jpeg",
+    safety_tolerance: "2",
+    image_url: portraitUrl,
+    aspect_ratio: "9:16"
+  }
+};
+```
+
+### Configuration Details
+
+**Step 1 - MonaLisa Maker:**
 - **LoRA Model**: Custom Mona Lisa style adapter hosted on fal.ai
 - **Prompt**: Fixed to preserve likeness while applying Mona Lisa styling
 - **Resolution**: 9:16 aspect ratio for portrait format
-- **Strength**: 1.0 for full transformation effect
+- **LoRA Scale**: 1.0 for full transformation effect
+
+**Step 2 - Pet Integration:**
+- **Model**: Flux Pro Kontext Max for advanced composition
+- **Guidance Scale**: 3.5 for balanced prompt adherence
+- **Output Format**: JPEG for final portraits
+- **Safety Tolerance**: Level 2 for content filtering
 
 ## Benefits of Direct Transformation
 
