@@ -10,33 +10,99 @@
   }
 
   html {
-    @apply font-sans text-neutral-900;
+    @apply font-sans text-gray-900 antialiased;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-white text-gray-900;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-heading font-bold leading-tight tracking-tight;
+    @apply font-heading font-bold leading-tight tracking-tight text-gray-900;
   }
 
-  h1 { @apply text-5xl md:text-6xl; }
-  h2 { @apply text-4xl md:text-5xl; }
-  h3 { @apply text-3xl md:text-4xl; }
-  h4 { @apply text-2xl md:text-3xl; }
-  h5 { @apply text-xl md:text-2xl; }
-  h6 { @apply text-lg md:text-xl; }
+  h1 { @apply text-4xl md:text-5xl lg:text-6xl; }
+  h2 { @apply text-3xl md:text-4xl lg:text-5xl; }
+  h3 { @apply text-2xl md:text-3xl lg:text-4xl; }
+  h4 { @apply text-xl md:text-2xl lg:text-3xl; }
+  h5 { @apply text-lg md:text-xl lg:text-2xl; }
+  h6 { @apply text-base md:text-lg lg:text-xl; }
 
   p {
-    @apply text-base leading-relaxed text-neutral-700;
+    @apply text-base leading-relaxed text-gray-700;
   }
 
-  .btn {
-    @apply font-accent font-medium rounded-full transition-all duration-200 ease-in-out;
-  }
-
+  /* Custom button styles */
   .btn-primary {
-    @apply bg-primary-500 text-white hover:bg-primary-600;
+    @apply bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 ease-in-out;
   }
 
   .btn-secondary {
-    @apply bg-secondary-500 text-white hover:bg-secondary-600;
+    @apply bg-gray-200 text-gray-900 px-6 py-3 rounded-lg font-medium hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 ease-in-out;
+  }
+
+  .btn-outline {
+    @apply border-2 border-blue-600 text-blue-600 px-6 py-3 rounded-lg font-medium hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 ease-in-out;
+  }
+
+  /* Utility classes */
+  .container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .section-padding {
+    @apply py-16 md:py-20 lg:py-24;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;
+  }
+
+  /* Animation classes */
+  .fade-in {
+    animation: fadeIn 0.6s ease-in-out;
+  }
+
+  .slide-up {
+    animation: slideUp 0.6s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Focus styles for accessibility */
+  .focus-visible {
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  }
+
+  /* Image optimization */
+  img {
+    @apply max-w-full h-auto;
+  }
+
+  /* Line clamp utility */
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 }

@@ -23,8 +23,37 @@ const fontVariables = {
 } as const;
 
 export const metadata: Metadata = {
-  title: "PawPop Art",
-  description: "Turn your pet into a pop art icon!",
+  title: "PawPop Art - Custom Pet Pop Art Portraits | Turn Your Pet Into Art",
+  description: "Transform your beloved pet into a stunning pop art masterpiece! Custom pet portraits that celebrate the unique bond between you and your furry friend. Digital downloads and premium prints available.",
+  keywords: "custom pet portraits, pet pop art, dog portraits, cat portraits, pet art, personalized pet gifts, pet canvas prints",
+  openGraph: {
+    title: "PawPop Art - Custom Pet Pop Art Portraits",
+    description: "Transform your beloved pet into a stunning pop art masterpiece! Custom pet portraits with digital downloads and premium prints available.",
+    url: "https://pawpop.art",
+    siteName: "PawPop Art",
+    images: [
+      {
+        url: "https://pawpop.art/images/pawpop-og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "PawPop Art - Custom Pet Pop Art Portraits",
+      }
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PawPop Art - Custom Pet Pop Art Portraits",
+    description: "Transform your beloved pet into a stunning pop art masterpiece!",
+    images: ["https://pawpop.art/images/pawpop-og-image.jpg"],
+    creator: "@pawpopart",
+    site: "@pawpopart",
+  },
+  other: {
+    "google-site-verification": process.env.GOOGLE_SITE_VERIFICATION || "",
+    "facebook-domain-verification": process.env.FACEBOOK_DOMAIN_VERIFICATION || "",
+  },
 };
 
 export default function RootLayout({
