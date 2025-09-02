@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     site: "@pawpopart",
   },
   verification: {
-    google: process.env.GOOGLE_SITE_VERIFICATION || "",
+    google: "30eO67pmdyXdxWYYZXuxhamPaTMcHKmtmSMbvuDNY7Y",
   },
   other: {
     "facebook-domain-verification": process.env.FACEBOOK_DOMAIN_VERIFICATION || "",
