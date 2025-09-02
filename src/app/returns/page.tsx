@@ -38,7 +38,7 @@ export default function ReturnPolicy() {
             <strong>Return Process:</strong>
           </p>
           <ol className="list-decimal pl-6 mb-4">
-            <li>Contact our support team at returns@pawpop.art</li>
+            <li>Contact our support team at pawpopart@gmail.com</li>
             <li>Provide your order number and photos of the issue</li>
             <li>We'll provide a prepaid return label if applicable</li>
             <li>Send the item back in original packaging</li>

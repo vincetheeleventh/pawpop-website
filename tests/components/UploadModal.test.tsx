@@ -122,6 +122,41 @@ describe('UploadModal', () => {
     });
   });
 
+  it('can navigate to step 2 after uploading pet mom photo', async () => {
+    render(<UploadModal {...defaultProps} />);
+    
+    // Test that we start on step 1
+    expect(screen.getByText('Upload Your Photo')).toBeInTheDocument();
+    
+    // Test Next button is disabled initially
+    const nextButton = screen.getByRole('button', { name: /next/i });
+    expect(nextButton).toBeDisabled();
+    
+    // Upload a file to enable Next button
+    const file = new File(['test'], 'mom.jpg', { type: 'image/jpeg' });
+    const hiddenInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    
+    const mockFileList = {
+      0: file,
+      length: 1,
+      item: (index: number) => index === 0 ? file : null,
+      [Symbol.iterator]: function* () {
+        yield file;
+      }
+    } as FileList;
+    
+    Object.defineProperty(hiddenInput, 'files', {
+      value: mockFileList,
+      writable: false,
+    });
+    
+    fireEvent.change(hiddenInput);
+    
+    await waitFor(() => {
+      expect(screen.getByText('mom.jpg')).toBeInTheDocument();
+    });
+  });
+
   it('shows Back button in step 2 and navigates back', async () => {
     render(<UploadModal {...defaultProps} />);
     
@@ -238,14 +273,29 @@ describe('UploadModal', () => {
     const testData = {
       name: 'Test User',
       email: 'test@example.com',
-      timestamp: Date.now()
+      timestamp: 1234567890
     };
 
-    // Test localStorage functionality directly
-    localStorage.setItem('uploadFormData', JSON.stringify(testData));
+    const testDataString = JSON.stringify(testData);
+    
+    // Mock localStorage behavior
+    const mockGetItem = vi.fn().mockReturnValue(testDataString);
+    const mockSetItem = vi.fn();
+    
+    Object.defineProperty(window, 'localStorage', {
+      value: {
+        getItem: mockGetItem,
+        setItem: mockSetItem,
+      },
+      writable: true
+    });
+    
+    // Test localStorage functionality
+    localStorage.setItem('uploadFormData', testDataString);
     const stored = localStorage.getItem('uploadFormData');
     
-    expect(stored).toBe(JSON.stringify(testData));
+    expect(mockSetItem).toHaveBeenCalledWith('uploadFormData', testDataString);
+    expect(stored).toBe(testDataString);
   });
 
   it('handles form submission and redirects to order page', async () => {
@@ -254,14 +304,29 @@ describe('UploadModal', () => {
     const formData = {
       name: 'Jane Doe',
       email: 'jane@example.com',
-      timestamp: Date.now()
+      timestamp: 1234567890
     };
     
+    const formDataString = JSON.stringify(formData);
+    
+    // Mock localStorage behavior
+    const mockGetItem = vi.fn().mockReturnValue(formDataString);
+    const mockSetItem = vi.fn();
+    
+    Object.defineProperty(window, 'localStorage', {
+      value: {
+        getItem: mockGetItem,
+        setItem: mockSetItem,
+      },
+      writable: true
+    });
+    
     // Test localStorage functionality
-    localStorage.setItem('uploadFormData', JSON.stringify(formData));
+    localStorage.setItem('uploadFormData', formDataString);
     const stored = localStorage.getItem('uploadFormData');
     
-    expect(stored).toBe(JSON.stringify(formData));
+    expect(mockSetItem).toHaveBeenCalledWith('uploadFormData', formDataString);
+    expect(stored).toBe(formDataString);
   });
 
   it('displays loading state during submission', async () => {

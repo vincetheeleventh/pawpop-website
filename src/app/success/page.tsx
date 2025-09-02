@@ -99,7 +99,7 @@ function SuccessContent() {
             <h2 className="text-lg font-medium text-gray-900">Need help?</h2>
             <p className="mt-2 text-base text-gray-500">
               Have questions about your order?{' '}
-              <a href="mailto:support@pawpop.com" className="text-blue-600 hover:text-blue-500">
+              <a href="mailto:pawpopart@gmail.com" className="text-blue-600 hover:text-blue-500">
                 Contact our support team
               </a>{' '}
               and we'll be happy to help.
