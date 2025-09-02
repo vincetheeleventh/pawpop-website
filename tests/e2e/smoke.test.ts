@@ -14,7 +14,7 @@ describe('E2E Smoke Tests', () => {
   it('should complete MonaLisa Maker transformation', async () => {
     const imageBuffer = loadTestImage(TEST_IMAGES.USER_PHOTO);
     const formData = new FormData();
-    formData.append('image', new File([imageBuffer], 'test-user.png', { type: 'image/png' }));
+    formData.append('image', new File([new Uint8Array(imageBuffer)], 'test-user.png', { type: 'image/png' }));
 
     const response = await fetch(`${BASE_URL}/api/monalisa-maker`, {
       method: 'POST',
@@ -33,8 +33,8 @@ describe('E2E Smoke Tests', () => {
     const petBuffer = loadTestImage(TEST_IMAGES.PET_CORGI);
     
     const formData = new FormData();
-    formData.append('portrait', new File([portraitBuffer], 'portrait.png', { type: 'image/png' }));
-    formData.append('pet', new File([petBuffer], 'pet.png', { type: 'image/png' }));
+    formData.append('portrait', new File([new Uint8Array(portraitBuffer)], 'portrait.png', { type: 'image/png' }));
+    formData.append('pet', new File([new Uint8Array(petBuffer)], 'pet.png', { type: 'image/png' }));
 
     const response = await fetch(`${BASE_URL}/api/pet-integration`, {
       method: 'POST',
@@ -53,8 +53,8 @@ describe('E2E Smoke Tests', () => {
     const petBuffer = loadTestImage(TEST_IMAGES.PET_CAT);
     
     const formData = new FormData();
-    formData.append('userImage', new File([userBuffer], 'user.png', { type: 'image/png' }));
-    formData.append('petImage', new File([petBuffer], 'pet.png', { type: 'image/png' }));
+    formData.append('userImage', new File([new Uint8Array(userBuffer)], 'user.png', { type: 'image/png' }));
+    formData.append('petImage', new File([new Uint8Array(petBuffer)], 'pet.png', { type: 'image/png' }));
 
     const response = await fetch(`${BASE_URL}/api/monalisa-complete`, {
       method: 'POST',
@@ -73,12 +73,12 @@ describe('E2E Smoke Tests', () => {
   it('should handle rate limiting gracefully', async () => {
     const imageBuffer = loadTestImage(TEST_IMAGES.USER_PHOTO);
     const formData = new FormData();
-    formData.append('image', new File([imageBuffer], 'test-user.png', { type: 'image/png' }));
+    formData.append('image', new File([new Uint8Array(imageBuffer)], 'test-user.png', { type: 'image/png' }));
 
     // Fire multiple concurrent requests
     const promises = Array(3).fill(0).map(() => {
       const newFormData = new FormData();
-      newFormData.append('image', new File([imageBuffer], 'test-user.png', { type: 'image/png' }));
+      newFormData.append('image', new File([new Uint8Array(imageBuffer)], 'test-user.png', { type: 'image/png' }));
       return fetch(`${BASE_URL}/api/monalisa-maker`, {
         method: 'POST',
         body: newFormData

@@ -31,8 +31,8 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold">Email</h3>
-                  <p className="text-gray-600">hello@pawpop.art</p>
-                  <p className="text-sm text-gray-500">We typically respond within 24 hours</p>
+                  <p className="text-gray-600">pawpopart@gmail.com</p>
+                  <p className="text-sm text-gray-500">We'll respond within 24 hours</p>
                 </div>
               </div>
 
@@ -44,7 +44,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold">Phone</h3>
-                  <p className="text-gray-600">+1-555-PAWPOP1</p>
+                  <p className="text-gray-600">+1 604 499 7660</p>
                   <p className="text-sm text-gray-500">Monday-Friday, 9 AM - 6 PM PST</p>
                 </div>
               </div>
@@ -56,13 +56,13 @@ export default function ContactPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold">Address</h3>
+                <div className="bg-gray-50 p-6 rounded-lg">
+                  <h3 className="text-lg font-semibold mb-4">Visit Our Studio</h3>
                   <p className="text-gray-600">
-                    123 Art Street<br />
-                    San Francisco, CA 94102<br />
-                    United States
+                    2006-1323 Homer St<br />
+                    Vancouver BC Canada V6B 5T1
                   </p>
+                  <p className="text-sm text-gray-500 mt-2">By appointment only</p>
                 </div>
               </div>
             </div>

@@ -36,15 +36,15 @@ export const Footer = () => {
             <h3 className="font-fredoka font-semibold text-charcoal-frame mb-4">Contact</h3>
             <ul className="space-y-2 text-sm text-gray-600">
               <li>
-                <strong>Email:</strong> hello@pawpop.art
+                <strong>Email:</strong> pawpopart@gmail.com
               </li>
               <li>
-                <strong>Phone:</strong> +1-555-PAWPOP1
+                <strong>Phone:</strong> +1 604 499 7660
               </li>
               <li>
                 <strong>Address:</strong><br />
-                123 Art Street<br />
-                San Francisco, CA 94102
+                2006-1323 Homer St<br />
+                Vancouver BC Canada V6B 5T1
               </li>
             </ul>
           </div>
@@ -64,7 +64,7 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <a href="mailto:hello@pawpop.art" className="text-gray-600 hover:text-french-blue transition-colors text-sm">
+                <a href="mailto:pawpopart@gmail.com" className="text-gray-600 hover:text-french-blue transition-colors text-sm">
                   Order Support
                 </a>
               </li>

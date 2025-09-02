@@ -1,11 +1,15 @@
 // src/components/landing/HeroSection.tsx
+'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { landingPageCopy } from '@/lib/copy';
 import { HeroVideoReveal } from './HeroVideoReveal';
+import { UploadModal } from '@/components/forms/UploadModal';
 
 export const HeroSection = () => {
   const { hero } = landingPageCopy;
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <section className="min-h-screen flex items-center justify-center px-0 md:px-6 py-8 bg-gallery-white">
@@ -29,8 +33,8 @@ export const HeroSection = () => {
           </h1>
 
           {/* Single CTA Button - Mobile Optimized */}
-          <Link
-            href="/create"
+          <button
+            onClick={() => setIsModalOpen(true)}
             className="
               inline-block w-full max-w-xs
               bg-mona-gold hover:bg-yellow-600
@@ -42,7 +46,7 @@ export const HeroSection = () => {
             "
           >
             {hero.ctaButton}
-          </Link>
+          </button>
 
           {/* Monsieur Brush Quote */}
           <div className="mt-6">
@@ -52,6 +56,12 @@ export const HeroSection = () => {
           </div>
         </div>
       </div>
+
+      {/* Upload Modal */}
+      <UploadModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
     </section>
   );
 };

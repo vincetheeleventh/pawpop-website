@@ -30,7 +30,13 @@ export interface PaginatedBlueprints {
 
 export async function getProducts(): Promise<PaginatedBlueprints> {
   if (!process.env.PRINTIFY_API_TOKEN) {
-    throw new Error("Printify API token is not configured.");
+    console.warn("Printify API token is not configured. Returning empty products list.");
+    return {
+      data: [],
+      current_page: 1,
+      per_page: 0,
+      total: 0
+    };
   }
 
   const response = await fetch(`${PRINTIFY_API_URL}/catalog/blueprints.json`, {

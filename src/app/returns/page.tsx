@@ -137,9 +137,9 @@ export default function ReturnPolicy() {
             For returns, refunds, or questions about this policy:
           </p>
           <div className="bg-gray-50 p-4 rounded-lg">
-            <p><strong>Email:</strong> returns@pawpop.art</p>
-            <p><strong>Support:</strong> hello@pawpop.art</p>
-            <p><strong>Phone:</strong> +1-555-PAWPOP1</p>
+            <p><strong>Email:</strong> pawpopart@gmail.com</p>
+            <p><strong>Support:</strong> pawpopart@gmail.com</p>
+            <p><strong>Phone:</strong> +1 604 499 7660</p>
             <p><strong>Hours:</strong> Monday-Friday, 9 AM - 6 PM PST</p>
           </div>
           <p className="mt-4">

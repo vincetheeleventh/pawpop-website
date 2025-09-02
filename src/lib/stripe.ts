@@ -1,11 +1,14 @@
 // src/lib/stripe.ts
 import Stripe from 'stripe';
 
-if (!process.env.STRIPE_API_KEY) {
-  throw new Error('Stripe API key is not configured.');
+// Use STRIPE_SECRET_KEY as the standard environment variable name
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY || process.env.STRIPE_API_KEY;
+
+if (!stripeSecretKey) {
+  console.warn('Stripe API key is not configured. Checkout functionality will be disabled.');
 }
 
-export const stripe = new Stripe(process.env.STRIPE_API_KEY, {
+export const stripe = stripeSecretKey ? new Stripe(stripeSecretKey, {
   apiVersion: '2025-07-30.basil',
   typescript: true,
-});
+}) : null;

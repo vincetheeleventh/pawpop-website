@@ -6,6 +6,11 @@ export async function POST(req: Request) {
   const body = await req.text();
   const signature = headers().get('stripe-signature') as string;
 
+  // Check if Stripe is configured
+  if (!stripe) {
+    return new NextResponse('Stripe not configured', { status: 503 });
+  }
+
   let event;
   
   try {

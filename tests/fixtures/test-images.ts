@@ -17,7 +17,7 @@ export function loadTestImage(imagePath: string): Buffer {
 }
 
 export function createTestFormData(imageBuffer: Buffer, filename: string, fieldName: string): FormData {
-  const file = new File([imageBuffer], filename, { type: 'image/png' });
+  const file = new File([new Uint8Array(imageBuffer)], filename, { type: 'image/png' });
   const formData = new FormData();
   formData.append(fieldName, file);
   return formData;

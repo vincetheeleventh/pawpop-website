@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getProductById, formatProductPrice } from '@/lib/products';
 import { generateProductStructuredData } from '@/lib/structured-data';
-import { generateProductSEO, generateMetadata } from '@/lib/seo';
+import { generateProductSEO, generateMetadata as generateSEOMetadata } from '@/lib/seo';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   }
 
   const seoConfig = generateProductSEO(product);
-  return generateMetadata(seoConfig);
+  return generateSEOMetadata(seoConfig);
 }
 
 export default function ProductPage({ params }: ProductPageProps) {

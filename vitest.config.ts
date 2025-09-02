@@ -4,7 +4,7 @@ import path from 'path';
 export default defineConfig({
   test: {
     globals: true,
-    environment: 'node',
+    environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
     testTimeout: 30000, // 30s for image processing tests
     hookTimeout: 10000,

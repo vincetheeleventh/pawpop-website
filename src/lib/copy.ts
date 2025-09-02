@@ -133,9 +133,9 @@ export const landingPageCopy = {
     },
     characterMessage: "Merci for visiting my atelier! Remember, every pet mom deserves to be immortalized as a Renaissance masterpiece with her beloved companion.",
     contact: {
-      email: "bonjour@pawpop.art",
-      phone: "+1-555-PAWPOP1",
-      address: "123 Art Street, San Francisco, CA 94102"
+      email: "pawpopart@gmail.com",
+      phone: "+1 604 499 7660",
+      address: "2006-1323 Homer St, Vancouver BC Canada V6B 5T1"
     },
     links: {
       experience: [
@@ -239,7 +239,12 @@ export const pageContent = {
   contact: {
     title: "Get in Touch",
     subtitle: "Questions about your masterpiece? Monsieur Brush is here to help!",
-    supportHours: "Support available 9 AM - 6 PM EST, Monday-Friday"
+    supportHours: "Support available 9 AM - 6 PM EST, Monday-Friday",
+    contact: {
+      email: "pawpopart@gmail.com",
+      phone: "+1 604 499 7660",
+      address: "2006-1323 Homer St, Vancouver BC Canada V6B 5T1"
+    }
   },
   footer: {
     brand: {
@@ -248,9 +253,9 @@ export const pageContent = {
     },
     characterMessage: "Merci for visiting my atelier! Remember, every pet mom deserves to be immortalized as a Renaissance masterpiece with her beloved companion.",
     contact: {
-      email: "bonjour@pawpop.art",
-      phone: "+1-555-PAWPOP1",
-      address: "123 Art Street, San Francisco, CA 94102"
+      email: "pawpopart@gmail.com",
+      phone: "+1 604 499 7660",
+      address: "2006-1323 Homer St, Vancouver BC Canada V6B 5T1"
     },
     links: {
       experience: [

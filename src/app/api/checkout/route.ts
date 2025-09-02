@@ -6,6 +6,17 @@ export async function POST(req: Request) {
   try {
     console.log('Checkout request received');
     
+    // Check if Stripe is configured
+    if (!stripe) {
+      return new NextResponse(
+        JSON.stringify({ error: 'Payment processing is not configured' }), 
+        { 
+          status: 503,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
     // Parse request body
     let requestBody;
     try {

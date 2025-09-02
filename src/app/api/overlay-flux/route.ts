@@ -125,7 +125,7 @@ export async function POST(req: NextRequest) {
       try {
         // Upload composite to fal storage
         console.log("☁️ Uploading composite to fal storage...");
-        const compositeFile = new File([overlayComposite], 'overlay-composite.png', { type: 'image/png' });
+        const compositeFile = new File([new Uint8Array(overlayComposite)], 'overlay-composite.png', { type: 'image/png' });
         const compositeUrl = await fal.storage.upload(compositeFile);
         console.log("✅ Composite uploaded:", compositeUrl);
 
@@ -176,7 +176,7 @@ export async function POST(req: NextRequest) {
 
     // Return final result
     console.log("📤 Returning final result");
-    return new NextResponse(finalOutput, {
+    return new NextResponse(new Uint8Array(finalOutput), {
       status: 200,
       headers: { 
         "Content-Type": "image/png", 

@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
     // Upload image to fal storage if we have a buffer
     if (imageBuffer) {
       console.log("☁️ Uploading image to fal storage...");
-      const imageFile = new File([imageBuffer], 'input-image.jpg', { type: 'image/jpeg' });
+      const imageFile = new File([new Uint8Array(imageBuffer)], 'input-image.jpg', { type: 'image/jpeg' });
       imageUrl = await fal.storage.upload(imageFile);
       console.log("✅ Image uploaded:", imageUrl);
     }

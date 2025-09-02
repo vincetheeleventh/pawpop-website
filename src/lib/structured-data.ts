@@ -83,9 +83,9 @@ export function generateOrganizationStructuredData(baseUrl: string) {
     description: 'Custom pet pop art portraits that transform your beloved pets into stunning artistic masterpieces.',
     contactPoint: {
       '@type': 'ContactPoint',
-      telephone: '+1-555-PAWPOP1',
+      telephone: '+1 604 499 7660',
       contactType: 'customer service',
-      email: 'hello@pawpop.art'
+      email: 'pawpopart@gmail.com'
     },
     sameAs: [
       'https://www.instagram.com/pawpopart',
@@ -94,11 +94,11 @@ export function generateOrganizationStructuredData(baseUrl: string) {
     ],
     address: {
       '@type': 'PostalAddress',
-      streetAddress: '123 Art Street',
-      addressLocality: 'San Francisco',
-      addressRegion: 'CA',
-      postalCode: '94102',
-      addressCountry: 'US'
+      streetAddress: '2006-1323 Homer St',
+      addressLocality: 'Vancouver',
+      addressRegion: 'BC',
+      postalCode: 'V6B 5T1',
+      addressCountry: 'CA'
     }
   };
 }

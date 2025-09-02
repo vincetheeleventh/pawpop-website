@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
 
     // 6) Return PNG buffer (pipeline-ready)
     console.log("📤 Returning PNG response");
-    return new NextResponse(out, {
+    return new NextResponse(new Uint8Array(out), {
       status: 200,
       headers: { "Content-Type": "image/png", "Cache-Control": "no-store" },
     });
