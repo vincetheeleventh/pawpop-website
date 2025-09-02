@@ -11,74 +11,86 @@ export const Footer = () => {
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company Info */}
-          <div className="col-span-1 md:col-span-2">
-            <Link href="/" className="font-playfair text-2xl font-bold text-mona-gold hover:text-joy-yellow transition-colors">
-              {footer.brand.name}
-            </Link>
-            <p className="mt-4 font-inter text-gray-300 max-w-md">
-              {footer.brand.description}
-            </p>
-            
-            {/* Monsieur Brush Character */}
-            <div className="mt-6 bg-warm-peach/10 rounded-lg p-4 border border-warm-peach/20">
-              <div className="flex items-center mb-2">
-                <span className="text-xl mr-2">🎨</span>
-                <h4 className="font-fredoka text-sm font-semibold text-mona-gold">Monsieur Brush Says:</h4>
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-mona-gold rounded-full flex items-center justify-center">
+                <span className="text-white font-bold">P</span>
               </div>
-              <p className="font-fredoka text-sm text-gray-300 italic">
-                "{footer.characterMessage}"
-              </p>
+              <span className="font-playfair text-xl font-bold text-charcoal-frame">
+                PawPop
+              </span>
             </div>
-            
-            <div className="mt-6">
-              <h4 className="font-inter text-sm font-semibold text-gray-200 uppercase tracking-wider">Contact</h4>
-              <div className="mt-2 space-y-1 font-inter text-gray-300">
-                <p>📧 {footer.contact.email}</p>
-                <p>📞 {footer.contact.phone}</p>
-                <p>📍 {footer.contact.address}</p>
-              </div>
+            <p className="text-gray-600 text-sm">
+              Transform your pet into Renaissance masterpieces with our AI-powered custom portrait service.
+            </p>
+            <div className="text-sm text-gray-600">
+              <p><strong>Business Hours:</strong></p>
+              <p>Monday-Friday: 9 AM - 6 PM PST</p>
+              <p>Saturday: 10 AM - 4 PM PST</p>
+              <p>Sunday: Closed</p>
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Contact Info */}
           <div>
-            <h4 className="font-inter text-sm font-semibold text-gray-200 uppercase tracking-wider">Experience</h4>
-            <div className="mt-4 space-y-2">
-              {footer.links.experience.map((link: {label: string, href: string}, index: number) => (
-                <Link key={index} href={link.href} className="block font-inter text-gray-300 hover:text-mona-gold transition-colors">
-                  {link.label}
-                </Link>
-              ))}
-            </div>
+            <h3 className="font-fredoka font-semibold text-charcoal-frame mb-4">Contact</h3>
+            <ul className="space-y-2 text-sm text-gray-600">
+              <li>
+                <strong>Email:</strong> hello@pawpop.art
+              </li>
+              <li>
+                <strong>Phone:</strong> +1-555-PAWPOP1
+              </li>
+              <li>
+                <strong>Address:</strong><br />
+                123 Art Street<br />
+                San Francisco, CA 94102
+              </li>
+            </ul>
           </div>
 
           {/* Support */}
           <div>
-            <h4 className="font-inter text-sm font-semibold text-gray-200 uppercase tracking-wider">Support</h4>
-            <div className="mt-4 space-y-2">
-              {footer.links.support.map((link: {label: string, href: string}, index: number) => (
-                <Link key={index} href={link.href} className="block font-inter text-gray-300 hover:text-mona-gold transition-colors">
-                  {link.label}
+            <h3 className="font-fredoka font-semibold text-charcoal-frame mb-4">Support</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link href="/contact" className="text-gray-600 hover:text-french-blue transition-colors text-sm">
+                  Contact Us
                 </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Social Links */}
-        <div className="mt-8 pt-8 border-t border-warm-peach/20">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="font-inter text-gray-400 text-sm">
-              {footer.copyright}
-            </p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
-              {footer.social.map((social: {name: string, href: string, icon: string}, index: number) => (
-                <a key={index} href={social.href} className="text-gray-400 hover:text-mona-gold transition-colors">
-                  <span className="sr-only">{social.name}</span>
-                  <span className="text-xl">{social.icon}</span>
+              </li>
+              <li>
+                <Link href="/returns" className="text-gray-600 hover:text-french-blue transition-colors text-sm">
+                  Returns & Refunds
+                </Link>
+              </li>
+              <li>
+                <a href="mailto:hello@pawpop.art" className="text-gray-600 hover:text-french-blue transition-colors text-sm">
+                  Order Support
                 </a>
-              ))}
-            </div>
+              </li>
+            </ul>
+          </div>
+
+          {/* Legal - Required for Google Merchant Center */}
+          <div>
+            <h3 className="font-fredoka font-semibold text-charcoal-frame mb-4">Legal</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link href="/privacy" className="text-gray-600 hover:text-french-blue transition-colors text-sm">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="text-gray-600 hover:text-french-blue transition-colors text-sm">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link href="/returns" className="text-gray-600 hover:text-french-blue transition-colors text-sm">
+                  Return Policy
+                </Link>
+              </li>
+            </ul>
           </div>
         </div>
       </div>

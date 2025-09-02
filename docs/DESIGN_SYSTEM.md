@@ -1,52 +1,52 @@
-# PawPop Unified Design System
+# PawPop Squeeze Page Design System
 
-**Version**: 2.0 - Unified Brand Implementation  
-**Date**: August 30, 2025  
-**Status**: Active  
+**Version**: 3.0 - Squeeze Page Conversion Focus  
+**Date**: September 1, 2025  
+**Goal**: Single CTA Optimization  
 
-This document serves as the central reference for the PawPop design system, implementing our whimsical, art-focused brand through Tailwind CSS and custom components. It bridges our brand vision with technical implementation.
+Technical implementation guide for the PawPop squeeze page with singular focus: getting visitors to click "Upload Photo Now".
 
-## Table of Contents
-- [Brand Integration](#brand-integration)
-- [Visual Identity](#visual-identity)
-- [Typography](#typography)
-- [Layout & Spacing](#layout--spacing)
-- [Components](#components)
-- [Character Integration](#character-integration)
-- [Forms](#forms)
-- [Navigation](#navigation)
-- [Feedback & Animations](#feedback--animations)
-- [Implementation Guidelines](#implementation-guidelines)
+## Squeeze Page Principles
 
-## Brand Integration
+### Single Goal Implementation
+- **One CTA**: Only "Upload Photo Now" buttons exist
+- **Zero Navigation Leaks**: No header links, minimal footer
+- **Conversion Optimized**: Every element drives toward upload
 
-### Core Experience Principles
-- **Whimsical & Artistic**: Every interaction feels magical and art-focused
-- **Character-Driven**: Monsieur Brush guides the user journey
-- **Fast & Delightful**: Instant gratification with smooth animations
-- **Gallery-Quality**: Museum-like presentation of results
+### Technical Requirements
+- **10-Second Load**: Optimize all assets for speed
+- **Mobile-First**: Touch-friendly upload interface
+- **A/B Test Ready**: Modular components for testing
 
-### Design Philosophy
-Transform a simple photo upload into an enchanting art creation experience, where users feel like they're visiting a charming French artist's studio.
+## Squeeze Page Color System
 
-## Visual Identity
+### Conversion-Optimized Palette
 
-### Color Palette
+#### CTA Hierarchy
+- **Primary CTA**: `#D4AF37` (Mona Lisa Gold) - Upload buttons only
+- **Background**: `#FEFEFE` (Gallery White) - Zero distractions
+- **Text**: `#2C2C2C` (Charcoal Frame) - Maximum readability
+- **Trust Elements**: `#4A90E2` (French Blue) - Social proof, ratings
 
-#### Primary Colors (Art-Focused)
-- **Mona Lisa Gold**: `#D4AF37` - Primary brand color, luxury and artistry
-- **Gallery White**: `#FEFEFE` - Clean backgrounds, museum aesthetic  
-- **Charcoal Frame**: `#2C2C2C` - Sophisticated contrast, frame borders
+#### State Colors (Minimal)
+- **Success**: `#22C55E` - Upload confirmation
+- **Loading**: `#8A2BE2` - Processing state
+- **Error**: `#EF4444` - Upload issues only
 
-#### Secondary Colors (Character & Whimsy)
-- **French Blue**: `#4A90E2` - Monsieur Brush's beret, playful accents
-- **Warm Peach**: `#FFB5A7` - Soft highlights, welcoming tones
-- **Sage Green**: `#87A96B` - Natural balance, calm moments
-
-#### Emotion Colors (Interactive States)
-- **Joy Yellow**: `#FFD700` - Success, excitement, magical moments
-- **Love Pink**: `#FF69B4` - Pet love, heart connections
-- **Magic Purple**: `#8A2BE2` - Transformation, AI processing
+#### Tailwind Configuration
+```css
+// tailwind.config.ts - Squeeze Page Colors
+colors: {
+  'cta-gold': '#D4AF37',     // Primary action only
+  'bg-clean': '#FEFEFE',     // Distraction-free background
+  'text-main': '#2C2C2C',    // High contrast readability
+  'trust-blue': '#4A90E2',   // Credibility elements
+  'sage-green': '#87A96B',
+  'joy-yellow': '#FFD700',
+  'love-pink': '#FF69B4',
+  'magic-purple': '#8A2BE2'
+}
+```
 
 #### Implementation in Tailwind
 ```css

@@ -1,72 +1,96 @@
-# PawPop Brand & Design Document
+# PawPop Squeeze Page Design
 
 ---
-**Version**: 1.0  
-**Date**: August 30, 2025  
-**Status**: Draft  
-
----
-
-## Brand Vision
-
-**PawPop transforms pet moms into Mona Lisa masterpieces through a whimsical, game-like experience that delivers instant joy and artistic wonder.**
-
-### Core Mission
-Create an extremely fast, delightful experience where pet moms can see themselves immortalized as the Mona Lisa alongside their beloved pets - turning ordinary photos into extraordinary art in minutes, not hours.
+**Version**: 2.0 - Squeeze Page Focus  
+**Date**: September 1, 2025  
+**Goal**: Single CTA Conversion Optimization
 
 ---
 
-## Brand Personality
+## Core Strategy: One Page, One Job
 
-### Primary Traits
-- **Whimsical & Playful**: Like stepping into a magical art studio
-- **Fast & Effortless**: Single-click transformation magic
-- **Joyful & Surprising**: Eliciting "wow!" moments of delight
-- **Artistic & Sophisticated**: High-quality, museum-worthy results
-- **Personal & Intimate**: Celebrating the bond between pets and their humans
+**Primary Goal**: Get visitors to click "Upload Photo Now"
 
-### Voice & Tone
-- **Conversational**: Friendly, approachable, never stuffy
-- **Encouraging**: "You're going to love this!" energy
-- **Magical**: Hints at the transformation without over-promising
-- **Confident**: We know you'll be amazed by the result
+**10-Second Rule**: Any visitor instantly knows what to do - upload their photo to become the Mona Lisa with their pet.
 
 ---
 
-## Visual Identity
+## Headline & Value Proposition
 
-### Color Palette
+### Primary Headline (3-Second Understanding)
+**"Become the Mona Lisa with Your Pet in 60 Seconds"**
 
-#### Primary Colors
-- **Mona Lisa Gold**: `#D4AF37` - Warm, luxurious, artistic
-- **Gallery White**: `#FEFEFE` - Clean, museum-like backdrop
-- **Charcoal Frame**: `#2C2C2C` - Sophisticated contrast
+### Supporting Subhead
+**"AI transforms your photo into a Renaissance masterpiece - instantly"**
 
-#### Secondary Colors
-- **French Blue**: `#4A90E2` - Playful accent, artist's beret
-- **Warm Peach**: `#FFB5A7` - Soft, welcoming highlights
-- **Sage Green**: `#87A96B` - Natural, calming balance
+### Core Benefits (Bullet Points)
+- ✨ **60-Second Magic**: Instant AI transformation
+- 🎨 **Museum Quality**: Renaissance-style artistry  
+- 💕 **You + Your Pet**: Celebrate your bond forever
+- 🖼️ **Guaranteed Delight**: 100% satisfaction promise
 
-#### Emotion Colors
-- **Joy Yellow**: `#FFD700` - Excitement and surprise moments
-- **Love Pink**: `#FF69B4` - Pet love and bonding
-- **Magic Purple**: `#8A2BE2` - Transformation moments
+---
 
-### Typography
+## Visual Design Strategy
 
-#### Primary Typeface: **Playfair Display**
-- **Usage**: Headlines, hero text, artistic moments
-- **Personality**: Elegant, artistic, sophisticated
-- **Weights**: Regular (400), Bold (700), Black (900)
+### Color Hierarchy (Conversion Optimized)
+- **CTA Button**: Mona Lisa Gold `#D4AF37` - impossible to miss
+- **Background**: Gallery White `#FEFEFE` - zero distractions
+- **Headlines**: Charcoal Frame `#2C2C2C` - maximum readability
+- **Trust Elements**: French Blue `#4A90E2` - credibility
 
-#### Secondary Typeface: **Inter**
-- **Usage**: Body text, UI elements, descriptions
-- **Personality**: Clean, modern, highly readable
-- **Weights**: Regular (400), Medium (500), Semibold (600)
+### Typography (Squeeze Page)
+- **Headlines**: Playfair Display Bold - artistic authority
+- **Body Text**: Inter Regular - clean readability
+- **CTA Button**: Inter Bold - action-oriented
 
-#### Accent Typeface: **Fredoka One**
-- **Usage**: Playful CTAs, character dialogue, fun elements
-- **Personality**: Whimsical, friendly, approachable
+---
+
+## Monsieur Brush (Conversion Role)
+
+### Social Proof Function
+- **Credibility**: "I've transformed 10,000+ pet moms into masterpieces!"
+- **Urgency**: "Upload now - your Renaissance awaits!"
+- **Confidence**: "You will absolutely love your transformation!"
+
+### Character Placement
+- **Hero Section**: Brief welcome + social proof
+- **Benefits Section**: Testimonial-style endorsement
+- **Final CTA**: Encouraging push to action
+---
+
+## Ultra-Minimal Squeeze Page Layout
+
+### Above-the-Fold (100% Focus)
+1. **Hero Image**: Large before/after transformation (pet mom + portrait)
+2. **Headline**: "The Unforgettable Gift for Pet Moms"
+3. **Single CTA**: "Upload Photo Now" button (impossible to miss)
+
+### Below-the-Fold (Optional Reassurance)
+4. **Single Collapsible Section**: "Why PawPop?" accordion
+   - Contains all social proof, benefits, testimonials
+   - Hidden by default - only for those who need reassurance
+   - Mobile-optimized accordion interaction
+
+### Zero Navigation
+- **No Header**: Just logo if needed
+- **No Footer**: Completely removed
+- **No Links**: Zero distractions from upload goal
+
+---
+
+## Mobile-First Principles
+- **Single Column**: Stack everything vertically
+- **Thumb-Friendly CTA**: 44px minimum button height
+- **Fast Load**: Optimize images, minimal assets
+- **One-Tap Upload**: Native file picker integration
+
+---
+
+## Success Metrics (Squeeze Page)
+- **Primary**: Upload conversion rate
+- **Secondary**: Time to first upload
+- **Tertiary**: Mobile vs desktop performance
 
 ### Logo & Branding Elements
 

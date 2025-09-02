@@ -1,17 +1,15 @@
-import { EmailCaptureSection } from "@/components/landing/EmailCaptureSection";
 import { HeroSection } from "@/components/landing/HeroSection";
-import { PricingSection } from "@/components/landing/PricingSection";
+import { WhyPawPopSection } from "@/components/landing/WhyPawPopSection";
 import { ProcessSection } from "@/components/landing/ProcessSection";
-import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
+import { PricingSection } from "@/components/landing/PricingSection";
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="min-h-screen">
       <HeroSection />
+      <WhyPawPopSection />
       <ProcessSection />
-      <TestimonialsSection />
       <PricingSection />
-      <EmailCaptureSection />
     </div>
   );
 }

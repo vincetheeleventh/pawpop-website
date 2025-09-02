@@ -8,18 +8,35 @@
 export const landingPageCopy = {
   header: {
     logoText: 'PawPop',
-    navLinks: [
-      { text: 'Gallery', href: '/gallery' },
-      { text: 'How It Works', href: '/process' },
-      { text: 'About', href: '/about' },
-    ],
-    ctaButton: 'Start Creating',
+    navLinks: [], // No navigation links for squeeze page
+    ctaButton: 'Upload Photo Now',
   },
   hero: {
-    title: 'Become the Mona Lisa with Your Pet',
-    subtitle: 'The unforgettable gift for the pet mom who has everything. Transform into a Renaissance masterpiece alongside your beloved companion.',
-    ctaButton: 'Create Your Masterpiece',
-    characterIntro: '"Bonjour! I am Monsieur Brush, your personal artist. Let me paint you as ze magnificent Mona Lisa!"',
+    title: 'The Unforgettable Gift for Pet Moms',
+    subtitle: 'AI transforms your photo into a Renaissance masterpiece in 60 seconds',
+    ctaButton: 'Upload Photo Now',
+    characterIntro: '"Upload your photo and watch ze magic happen, mon ami!"',
+  },
+  whyPawPop: {
+    title: 'Why PawPop?',
+    items: [
+      {
+        icon: '⭐',
+        title: '10,000+ Happy Pet Moms',
+        description: 'Join thousands who\'ve become Renaissance masterpieces'
+      },
+      {
+        icon: '🎨',
+        title: 'Museum-Quality AI Art',
+        description: 'Professional results in 60 seconds, not 60 days'
+      },
+      {
+        icon: '💕',
+        title: '100% Satisfaction Guarantee',
+        description: 'Love your masterpiece or get your money back'
+      }
+    ],
+    characterQuote: '"I guarantee you will love your transformation, mon ami!"'
   },
   process: {
     title: 'The Magical Transformation',

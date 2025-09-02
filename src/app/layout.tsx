@@ -26,20 +26,20 @@ const fredoka = Fredoka({
 });
 
 export const metadata: Metadata = {
-  title: "PawPop - Transform Into Mona Lisa with Your Pet | AI Art Portraits",
-  description: "Become the Mona Lisa with your beloved pet! Our AI artist Monsieur Brush creates museum-quality portraits that celebrate the bond between pet moms and their furry companions. Fast, magical, unforgettable.",
-  keywords: "pet mom gifts, mona lisa pet portraits, ai pet art, custom pet portraits, thoughtful pet gifts, pet parent art, personalized pet gifts",
+  title: "PawPop - The Unforgettable Gift for Pet Moms | AI Renaissance Portraits",
+  description: "Transform into the Mona Lisa with your beloved pet! AI creates museum-quality Renaissance portraits in 60 seconds. The perfect gift for pet moms. Order now!",
+  keywords: "pet mom gifts, mona lisa pet portraits, ai pet art, custom pet portraits, thoughtful pet gifts, pet parent art, personalized pet gifts, renaissance pet art",
   openGraph: {
-    title: "PawPop - Transform Into Mona Lisa with Your Pet",
-    description: "Become the Mona Lisa with your beloved pet! Our AI artist creates museum-quality portraits in minutes.",
+    title: "PawPop - The Unforgettable Gift for Pet Moms",
+    description: "Transform into the Mona Lisa with your beloved pet! AI creates museum-quality Renaissance portraits in 60 seconds.",
     url: "https://pawpop.art",
     siteName: "PawPop",
     images: [
       {
-        url: "https://pawpop.art/images/pawpop-og-image.jpg",
+        url: "https://pawpop.art/images/hero_image.png",
         width: 1200,
         height: 630,
-        alt: "PawPop Art - Custom Pet Pop Art Portraits",
+        alt: "Pet mom transformed into Mona Lisa with her dog - PawPop Art",
       }
     ],
     locale: "en_US",
@@ -47,14 +47,16 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "PawPop - Transform Into Mona Lisa with Your Pet",
-    description: "Become the Mona Lisa with your beloved pet! Museum-quality AI art in minutes.",
-    images: ["https://pawpop.art/images/pawpop-og-image.jpg"],
+    title: "PawPop - The Unforgettable Gift for Pet Moms",
+    description: "Transform into the Mona Lisa with your beloved pet! Museum-quality AI Renaissance art in 60 seconds.",
+    images: ["https://pawpop.art/images/hero_image.png"],
     creator: "@pawpopart",
     site: "@pawpopart",
   },
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION || "",
+  },
   other: {
-    "google-site-verification": process.env.GOOGLE_SITE_VERIFICATION || "",
     "facebook-domain-verification": process.env.FACEBOOK_DOMAIN_VERIFICATION || "",
   },
 };
