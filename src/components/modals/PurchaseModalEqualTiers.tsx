@@ -1,7 +1,7 @@
 // src/components/modals/PurchaseModalEqualTiers.tsx
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { X, Download, Image, Frame, Check } from 'lucide-react';
 import { ProductType, getProductPricing } from '@/lib/printify-products';
 import { loadStripe } from '@stripe/stripe-js';

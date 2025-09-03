@@ -1,6 +1,6 @@
 // src/app/api/artwork/[token]/route.ts
 import { NextResponse } from 'next/server';
-import { getArtworkByToken } from '@/lib/supabase-orders';
+import { getArtworkByToken } from '@/lib/supabase-artworks';
 
 export async function GET(
   request: Request,

@@ -1,6 +1,7 @@
 // src/components/modals/PurchaseModalRouter.tsx
 'use client';
 
+import React from 'react';
 import { PurchaseModalDigitalFirst } from './PurchaseModalDigitalFirst';
 import { PurchaseModalEqualTiers } from './PurchaseModalEqualTiers';
 import { PurchaseModalPhysicalFirst } from './PurchaseModalPhysicalFirst';

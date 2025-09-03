@@ -1,56 +1,7 @@
 // src/lib/supabase-orders.ts
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin, type Order, type OrderStatusHistory, type Artwork } from './supabase';
 import { ProductType } from './printify';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-// Use service role key for server-side operations
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-export interface Artwork {
-  id: string;
-  user_id?: string;
-  original_image_url: string;
-  generated_image_url: string;
-  pet_name?: string;
-  customer_name: string;
-  generation_status: 'pending' | 'completed' | 'failed';
-  created_at: string;
-  updated_at: string;
-  access_token?: string;
-  token_expires_at?: string;
-  customer_email?: string;
-  original_pet_mom_url?: string;
-  original_pet_url?: string;
-}
-
-export interface Order {
-  id: string;
-  artwork_id: string;
-  stripe_session_id: string;
-  stripe_payment_intent_id?: string;
-  product_type: ProductType;
-  product_size: string;
-  price_cents: number;
-  customer_email: string;
-  customer_name: string;
-  shipping_address?: any;
-  order_status: 'pending' | 'paid' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  printify_order_id?: string;
-  printify_status?: string;
-  created_at: string;
-  updated_at: string;
-  artworks?: Artwork;
-}
-
-export interface OrderStatusHistory {
-  id: string;
-  order_id: string;
-  status: string;
-  notes?: string;
-  created_at: string;
-}
+import crypto from 'crypto';
 
 // Create artwork record
 export async function createArtwork(data: {
@@ -59,7 +10,7 @@ export async function createArtwork(data: {
   pet_name?: string;
   customer_name: string;
 }): Promise<Artwork> {
-  const { data: artwork, error } = await supabase
+  const { data: artwork, error } = await supabaseAdmin
     .from('artworks')
     .insert({
       ...data,
@@ -81,7 +32,7 @@ export async function updateArtworkImage(
   artworkId: string, 
   generatedImageUrl: string
 ): Promise<void> {
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('artworks')
     .update({
       generated_image_url: generatedImageUrl,
@@ -106,7 +57,7 @@ export async function createOrder(data: {
   customer_email: string;
   customer_name: string;
 }): Promise<Order> {
-  const { data: order, error } = await supabase
+  const { data: order, error } = await supabaseAdmin
     .from('orders')
     .insert({
       ...data,
@@ -129,7 +80,7 @@ export async function updateOrderAfterPayment(
   paymentIntentId: string,
   shippingAddress?: any
 ): Promise<void> {
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('orders')
     .update({
       order_status: 'paid',
@@ -151,7 +102,7 @@ export async function updateOrderWithPrintify(
   printifyOrderId: string,
   printifyStatus: string
 ): Promise<void> {
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('orders')
     .update({
       printify_order_id: printifyOrderId,
@@ -175,7 +126,7 @@ export async function updateOrderFromPrintify(
   // Map Printify status to our order status
   const orderStatus = mapPrintifyStatusToOrderStatus(printifyStatus);
 
-  const { data: order, error } = await supabase
+  const { data: order, error } = await supabaseAdmin
     .from('orders')
     .update({
       printify_status: printifyStatus,
@@ -199,7 +150,7 @@ export async function updateOrderFromPrintify(
 
 // Get order by Stripe session ID
 export async function getOrderByStripeSession(stripeSessionId: string): Promise<Order | null> {
-  const { data: order, error } = await supabase
+  const { data: order, error } = await supabaseAdmin
     .from('orders')
     .select('*, artworks(*)')
     .eq('stripe_session_id', stripeSessionId)
@@ -215,7 +166,7 @@ export async function getOrderByStripeSession(stripeSessionId: string): Promise<
 
 // Get order by ID
 export async function getOrderById(orderId: string): Promise<Order | null> {
-  const { data: order, error } = await supabase
+  const { data: order, error } = await supabaseAdmin
     .from('orders')
     .select('*, artworks(*)')
     .eq('id', orderId)
@@ -231,7 +182,7 @@ export async function getOrderById(orderId: string): Promise<Order | null> {
 
 // Get orders by user ID
 export async function getOrdersByUser(userId: string): Promise<Order[]> {
-  const { data: orders, error } = await supabase
+  const { data: orders, error } = await supabaseAdmin
     .from('orders')
     .select('*, artworks(*)')
     .eq('artworks.user_id', userId)
@@ -247,7 +198,7 @@ export async function getOrdersByUser(userId: string): Promise<Order[]> {
 
 // Get failed orders for retry
 export async function getFailedOrders(): Promise<Order[]> {
-  const { data: orders, error } = await supabase
+  const { data: orders, error } = await supabaseAdmin
     .from('orders')
     .select('*, artworks(*)')
     .eq('order_status', 'paid')
@@ -269,7 +220,7 @@ export async function addOrderStatusHistory(
   status: string,
   notes?: string
 ): Promise<void> {
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('order_status_history')
     .insert({
       order_id: orderId,
@@ -284,7 +235,7 @@ export async function addOrderStatusHistory(
 
 // Get order status history
 export async function getOrderStatusHistory(orderId: string): Promise<OrderStatusHistory[]> {
-  const { data: history, error } = await supabase
+  const { data: history, error } = await supabaseAdmin
     .from('order_status_history')
     .select('*')
     .eq('order_id', orderId)
@@ -319,7 +270,7 @@ function mapPrintifyStatusToOrderStatus(printifyStatus: string): string {
 // Health check for database connection
 export async function checkDatabaseConnection(): Promise<boolean> {
   try {
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('orders')
       .select('id')
       .limit(1);
@@ -332,7 +283,7 @@ export async function checkDatabaseConnection(): Promise<boolean> {
 
 // Get artwork by secure token for email delivery
 export async function getArtworkByToken(token: string): Promise<Artwork | null> {
-  const { data: artwork, error } = await supabase
+  const { data: artwork, error } = await supabaseAdmin
     .from('artworks')
     .select('*')
     .eq('access_token', token)
@@ -351,7 +302,7 @@ export async function getArtworkByToken(token: string): Promise<Artwork | null> 
 export async function generateArtworkToken(artworkId: string): Promise<string | null> {
   const token = crypto.randomUUID();
   
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from('artworks')
     .update({
       access_token: token,
@@ -376,7 +327,7 @@ export async function createArtworkWithEmail(data: {
   original_pet_mom_url: string;
   original_pet_url: string;
 }): Promise<Artwork | null> {
-  const { data: artwork, error } = await supabase
+  const { data: artwork, error } = await supabaseAdmin
     .from('artworks')
     .insert({
       customer_email: data.customer_email,

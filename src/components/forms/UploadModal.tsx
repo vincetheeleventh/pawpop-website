@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { X, Upload, ArrowRight, ArrowLeft, Check, Camera } from 'lucide-react';
+import { X, Upload, ArrowRight, ArrowLeft, Check, Camera, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { createArtwork } from '@/lib/supabase-artworks';
 
 interface UploadModalProps {
   isOpen: boolean;
@@ -16,6 +17,12 @@ interface FormData {
   email: string;
 }
 
+interface ProcessingState {
+  step: 'uploading' | 'generating' | 'saving' | 'complete' | 'error';
+  message: string;
+  progress: number;
+}
+
 export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<FormData>({
@@ -25,6 +32,8 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
     email: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [processing, setProcessing] = useState<ProcessingState | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const petMomInputRef = useRef<HTMLInputElement>(null);
@@ -53,24 +62,84 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
   };
 
   const handleSubmit = async () => {
+    if (!formData.petMomPhoto || !formData.petPhoto) return;
+    
     setIsSubmitting(true);
+    setError(null);
     
-    // TODO: Implement Supabase upload
-    // For now, simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Store form data in localStorage for order page
-    localStorage.setItem('pawpop-order-data', JSON.stringify({
-      petMomPhoto: formData.petMomPhoto?.name,
-      petPhoto: formData.petPhoto?.name,
-      name: formData.name,
-      email: formData.email,
-      timestamp: Date.now()
-    }));
-    
-    setIsSubmitting(false);
-    onClose();
-    router.push('/order');
+    try {
+      // Step 1: Create artwork record in Supabase
+      setProcessing({ step: 'uploading', message: 'Creating your artwork...', progress: 10 });
+      
+      const { artwork, access_token } = await createArtwork({
+        customer_name: formData.name,
+        customer_email: formData.email,
+        original_image_url: 'pending', // Will be updated after generation
+      });
+
+      // Step 2: Generate artwork using complete pipeline
+      setProcessing({ step: 'generating', message: 'Transforming you into Mona Lisa...', progress: 30 });
+      
+      const formDataToSend = new FormData();
+      formDataToSend.append('userImage', formData.petMomPhoto);
+      formDataToSend.append('petImage', formData.petPhoto);
+      
+      const response = await fetch('/api/monalisa-complete', {
+        method: 'POST',
+        body: formDataToSend,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Generation failed' }));
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
+      
+      setProcessing({ step: 'generating', message: 'Adding your pet to the masterpiece...', progress: 70 });
+      
+      // Get the generated image URL from headers
+      const generatedImageUrl = response.headers.get('X-Generated-Image-URL');
+      if (!generatedImageUrl) {
+        throw new Error('No generated image URL received');
+      }
+      
+      // Step 3: Update artwork with generated image
+      setProcessing({ step: 'saving', message: 'Saving your masterpiece...', progress: 90 });
+      
+      await fetch('/api/artwork/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: artwork.id,
+          generated_image_url: generatedImageUrl,
+          generation_status: 'completed'
+        })
+      });
+      
+      setProcessing({ step: 'complete', message: 'Your masterpiece is ready!', progress: 100 });
+      
+      // Store artwork info for order page
+      localStorage.setItem('pawpop-artwork-data', JSON.stringify({
+        artworkId: artwork.id,
+        accessToken: access_token,
+        generatedImageUrl,
+        customerName: formData.name,
+        customerEmail: formData.email,
+        timestamp: Date.now()
+      }));
+      
+      // Wait a moment to show completion, then redirect
+      setTimeout(() => {
+        setIsSubmitting(false);
+        onClose();
+        router.push(`/artwork/${access_token}`);
+      }, 1500);
+      
+    } catch (error) {
+      console.error('Artwork generation failed:', error);
+      setError(error instanceof Error ? error.message : 'Something went wrong');
+      setProcessing({ step: 'error', message: 'Generation failed', progress: 0 });
+      setIsSubmitting(false);
+    }
   };
 
   const canProceed = () => {
@@ -84,7 +153,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl">
+      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl" data-testid="upload-modal">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -241,7 +310,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
           )}
 
           {/* Step 3: Contact Info */}
-          {currentStep === 3 && (
+          {currentStep === 3 && !processing && (
             <div>
               <div className="text-center mb-6">
                 <div className="w-12 h-12 bg-french-blue/20 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -291,8 +360,56 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
             </div>
           )}
 
+          {/* Processing State */}
+          {processing && (
+            <div className="text-center py-8">
+              <div className="mb-6">
+                {processing.step === 'error' ? (
+                  <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                ) : (
+                  <div className="w-12 h-12 bg-mona-gold/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="w-6 h-6 border-2 border-mona-gold/30 border-t-mona-gold rounded-full animate-spin" />
+                  </div>
+                )}
+                
+                <h2 className="text-xl font-playfair font-bold text-charcoal-frame mb-2">
+                  {processing.step === 'error' ? 'Oops!' : 'Creating Your Masterpiece'}
+                </h2>
+                
+                <p className="text-gray-600 text-sm mb-4">
+                  {processing.message}
+                </p>
+                
+                {processing.step !== 'error' && (
+                  <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                    <div 
+                      className="bg-mona-gold h-2 rounded-full transition-all duration-500 ease-out"
+                      style={{ width: `${processing.progress}%` }}
+                    />
+                  </div>
+                )}
+                
+                {error && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
+                    <p className="text-red-700 text-sm">{error}</p>
+                    <button
+                      onClick={() => {
+                        setProcessing(null);
+                        setError(null);
+                      }}
+                      className="mt-2 text-red-600 hover:text-red-800 text-sm underline"
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Navigation Buttons */}
-          <div className="flex items-center justify-between mt-8">
+          {!processing && (
+            <div className="flex items-center justify-between mt-8">
             <button
               onClick={handleBack}
               disabled={currentStep === 1}
@@ -348,7 +465,8 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                 )}
               </button>
             )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

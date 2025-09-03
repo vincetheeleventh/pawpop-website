@@ -20,7 +20,9 @@
 *.pem
 
 # Local Environment Variables
-.env.local
+# local env files
+.env*.local
+.env.test
 .env.development.local
 .env.test.local
 .env.production.local

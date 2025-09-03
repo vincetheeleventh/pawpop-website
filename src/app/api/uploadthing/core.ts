@@ -1,21 +1,76 @@
 // src/app/api/uploadthing/core.ts
 
 import { createUploadthing, type FileRouter } from "uploadthing/next";
+import { z } from "zod";
 
 const f = createUploadthing();
 
 // FileRouter for your app, can contain multiple FileRoutes
 export const ourFileRouter = {
-  // Define as many FileRoutes as you like, each with a unique route slug
-  imageUploader: f({ image: { maxFileSize: "4MB" } })
-    // Set permissions and file types for this FileRoute
+  // Pet photo uploader for artwork generation
+  petPhotoUploader: f({ 
+    image: { 
+      maxFileSize: "8MB",
+      maxFileCount: 1
+    } 
+  })
+    .input(z.object({
+      petName: z.string().optional(),
+      customerName: z.string(),
+      customerEmail: z.string().email()
+    }))
+    .middleware(async ({ input }) => {
+      return { 
+        petName: input.petName,
+        customerName: input.customerName,
+        customerEmail: input.customerEmail,
+        uploadedAt: new Date().toISOString()
+      };
+    })
     .onUploadComplete(async ({ metadata, file }) => {
-      // This code RUNS ON YOUR SERVER after upload
-      console.log("Upload complete for userId:", metadata);
-      console.log("file url", file.url);
+      console.log("Pet photo upload complete:", {
+        url: file.url,
+        name: file.name,
+        size: file.size,
+        customerEmail: metadata.customerEmail
+      });
 
-      // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
-      return { uploadedBy: 'pawpop-user' };
+      return { 
+        url: file.url,
+        name: file.name,
+        size: file.size,
+        customerName: metadata.customerName,
+        customerEmail: metadata.customerEmail,
+        petName: metadata.petName
+      };
+    }),
+
+  // Pet mom photo uploader (for the 2-step process)
+  petMomUploader: f({ 
+    image: { 
+      maxFileSize: "8MB",
+      maxFileCount: 1
+    } 
+  })
+    .input(z.object({
+      artworkId: z.string().uuid()
+    }))
+    .middleware(async ({ input }) => {
+      return { 
+        artworkId: input.artworkId,
+        uploadedAt: new Date().toISOString()
+      };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      console.log("Pet mom photo upload complete:", {
+        url: file.url,
+        artworkId: metadata.artworkId
+      });
+
+      return { 
+        url: file.url,
+        artworkId: metadata.artworkId
+      };
     }),
 } satisfies FileRouter;
 

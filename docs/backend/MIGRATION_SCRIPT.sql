@@ -1,5 +1,5 @@
--- PawPop Supabase Database Schema
--- This file contains all the SQL commands needed to set up the database schema for PawPop
+-- PawPop Database Migration Script
+-- Run this in your Supabase SQL Editor to create all tables and functions
 
 -- Enable necessary extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- Generated artworks table
-CREATE TABLE artworks (
+CREATE TABLE IF NOT EXISTS artworks (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users(id) ON DELETE SET NULL,
   original_image_url TEXT NOT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE artworks (
 );
 
 -- Orders table
-CREATE TABLE orders (
+CREATE TABLE IF NOT EXISTS orders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   artwork_id UUID REFERENCES artworks(id) ON DELETE CASCADE,
   stripe_session_id TEXT UNIQUE NOT NULL,
@@ -50,7 +50,7 @@ CREATE TABLE orders (
 );
 
 -- Order status history
-CREATE TABLE order_status_history (
+CREATE TABLE IF NOT EXISTS order_status_history (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
   status TEXT NOT NULL,
@@ -59,14 +59,14 @@ CREATE TABLE order_status_history (
 );
 
 -- Indexes for performance
-CREATE INDEX idx_orders_stripe_session ON orders(stripe_session_id);
-CREATE INDEX idx_orders_status ON orders(order_status);
-CREATE INDEX idx_orders_printify ON orders(printify_order_id);
-CREATE INDEX idx_artworks_user ON artworks(user_id);
-CREATE INDEX idx_artworks_status ON artworks(generation_status);
-CREATE INDEX idx_artworks_token ON artworks(access_token);
-CREATE INDEX idx_artworks_email ON artworks(customer_email);
-CREATE INDEX idx_order_history_order ON order_status_history(order_id);
+CREATE INDEX IF NOT EXISTS idx_orders_stripe_session ON orders(stripe_session_id);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(order_status);
+CREATE INDEX IF NOT EXISTS idx_orders_printify ON orders(printify_order_id);
+CREATE INDEX IF NOT EXISTS idx_artworks_user ON artworks(user_id);
+CREATE INDEX IF NOT EXISTS idx_artworks_status ON artworks(generation_status);
+CREATE INDEX IF NOT EXISTS idx_artworks_token ON artworks(access_token);
+CREATE INDEX IF NOT EXISTS idx_artworks_email ON artworks(customer_email);
+CREATE INDEX IF NOT EXISTS idx_order_history_order ON order_status_history(order_id);
 
 -- Triggers for updated_at timestamps
 CREATE OR REPLACE FUNCTION update_updated_at_column()

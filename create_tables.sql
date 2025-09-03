@@ -1,10 +1,10 @@
--- PawPop Supabase Database Schema
--- This file contains all the SQL commands needed to set up the database schema for PawPop
+-- PawPop Database Setup - Run this in Supabase SQL Editor
+-- Project: nwqwtmudwbdkyjfyzlyg
 
--- Enable necessary extensions
+-- Enable extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Users table (if not exists from auth)
+-- Users table
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email TEXT UNIQUE NOT NULL,
@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Generated artworks table
-CREATE TABLE artworks (
+-- Artworks table
+CREATE TABLE IF NOT EXISTS artworks (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users(id) ON DELETE SET NULL,
   original_image_url TEXT NOT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE artworks (
 );
 
 -- Orders table
-CREATE TABLE orders (
+CREATE TABLE IF NOT EXISTS orders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   artwork_id UUID REFERENCES artworks(id) ON DELETE CASCADE,
   stripe_session_id TEXT UNIQUE NOT NULL,
@@ -49,8 +49,8 @@ CREATE TABLE orders (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Order status history
-CREATE TABLE order_status_history (
+-- Order status history table
+CREATE TABLE IF NOT EXISTS order_status_history (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
   status TEXT NOT NULL,
@@ -58,17 +58,17 @@ CREATE TABLE order_status_history (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Indexes for performance
-CREATE INDEX idx_orders_stripe_session ON orders(stripe_session_id);
-CREATE INDEX idx_orders_status ON orders(order_status);
-CREATE INDEX idx_orders_printify ON orders(printify_order_id);
-CREATE INDEX idx_artworks_user ON artworks(user_id);
-CREATE INDEX idx_artworks_status ON artworks(generation_status);
-CREATE INDEX idx_artworks_token ON artworks(access_token);
-CREATE INDEX idx_artworks_email ON artworks(customer_email);
-CREATE INDEX idx_order_history_order ON order_status_history(order_id);
+-- Performance indexes
+CREATE INDEX IF NOT EXISTS idx_orders_stripe_session ON orders(stripe_session_id);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(order_status);
+CREATE INDEX IF NOT EXISTS idx_orders_printify ON orders(printify_order_id);
+CREATE INDEX IF NOT EXISTS idx_artworks_user ON artworks(user_id);
+CREATE INDEX IF NOT EXISTS idx_artworks_status ON artworks(generation_status);
+CREATE INDEX IF NOT EXISTS idx_artworks_token ON artworks(access_token);
+CREATE INDEX IF NOT EXISTS idx_artworks_email ON artworks(customer_email);
+CREATE INDEX IF NOT EXISTS idx_order_history_order ON order_status_history(order_id);
 
--- Triggers for updated_at timestamps
+-- Timestamp update function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -77,18 +77,29 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+-- Triggers
+DROP TRIGGER IF EXISTS update_artworks_updated_at ON artworks;
 CREATE TRIGGER update_artworks_updated_at BEFORE UPDATE ON artworks
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_orders_updated_at ON orders;
 CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON orders
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Row Level Security (RLS) policies
+-- Enable RLS
 ALTER TABLE artworks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE order_status_history ENABLE ROW LEVEL SECURITY;
 
--- Policies for artworks
+-- RLS Policies
+DROP POLICY IF EXISTS "Users can view their own artworks" ON artworks;
+DROP POLICY IF EXISTS "Users can insert their own artworks" ON artworks;
+DROP POLICY IF EXISTS "Users can update their own artworks" ON artworks;
+DROP POLICY IF EXISTS "Users can view orders for their artworks" ON orders;
+DROP POLICY IF EXISTS "Service role can access all artworks" ON artworks;
+DROP POLICY IF EXISTS "Service role can access all orders" ON orders;
+DROP POLICY IF EXISTS "Service role can access all order history" ON order_status_history;
+
 CREATE POLICY "Users can view their own artworks" ON artworks
     FOR SELECT USING (auth.uid() = user_id);
 
@@ -98,7 +109,6 @@ CREATE POLICY "Users can insert their own artworks" ON artworks
 CREATE POLICY "Users can update their own artworks" ON artworks
     FOR UPDATE USING (auth.uid() = user_id);
 
--- Policies for orders
 CREATE POLICY "Users can view orders for their artworks" ON orders
     FOR SELECT USING (
         EXISTS (
@@ -108,7 +118,6 @@ CREATE POLICY "Users can view orders for their artworks" ON orders
         )
     );
 
--- Service role can access all data (for webhooks and server operations)
 CREATE POLICY "Service role can access all artworks" ON artworks
     FOR ALL USING (auth.jwt() ->> 'role' = 'service_role');
 
@@ -118,7 +127,7 @@ CREATE POLICY "Service role can access all orders" ON orders
 CREATE POLICY "Service role can access all order history" ON order_status_history
     FOR ALL USING (auth.jwt() ->> 'role' = 'service_role');
 
--- Functions for common operations
+-- Utility functions
 CREATE OR REPLACE FUNCTION get_order_with_artwork(order_stripe_session_id TEXT)
 RETURNS TABLE (
     order_id UUID,
@@ -153,7 +162,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Function to get failed orders for retry
 CREATE OR REPLACE FUNCTION get_failed_orders()
 RETURNS TABLE (
     order_id UUID,
