@@ -6,10 +6,6 @@ import { createOrder } from '@/lib/supabase-orders';
 
 export async function POST(req: Request) {
   try {
-    if (!stripe) {
-      return new NextResponse('Payment processing not configured', { status: 503 });
-    }
-
     const body = await req.json();
     const { 
       artworkId, 
@@ -18,8 +14,33 @@ export async function POST(req: Request) {
       customerEmail, 
       customerName, 
       petName, 
-      imageUrl 
+      imageUrl,
+      testMode = false
     } = body;
+
+    // Test mode - return mock response without hitting Stripe/Printify
+    if (testMode || !stripe) {
+      console.log('🧪 TEST MODE: Checkout API called with:', {
+        artworkId,
+        productType,
+        size,
+        customerEmail,
+        customerName,
+        petName
+      });
+
+      // Simulate successful response
+      return NextResponse.json({ 
+        sessionId: `test_session_${Date.now()}`,
+        testMode: true,
+        message: 'Test mode - no actual payment processed',
+        productDetails: {
+          type: productType,
+          size,
+          estimatedPrice: getProductPricing(productType as ProductType, size, 'US')
+        }
+      });
+    }
 
     // Validate required fields
     if (!artworkId || !productType || !size || !customerEmail || !customerName || !imageUrl) {

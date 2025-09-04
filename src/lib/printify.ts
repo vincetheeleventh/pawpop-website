@@ -1,6 +1,54 @@
 // src/lib/printify.ts
 
-const PRINTIFY_API_URL = "https://api.printify.com/v1";
+import { ProductType } from './printify-products';
+
+const PRINTIFY_API_URL = 'https://api.printify.com/v1';
+
+// Upload image to Printify
+export async function uploadImageToPrintify(imageUrl: string, fileName: string): Promise<string> {
+  if (!process.env.PRINTIFY_API_TOKEN) {
+    throw new Error("Printify API token is not configured");
+  }
+
+  console.log(' Uploading image to Printify:', imageUrl);
+
+  // First, fetch the image data
+  const imageResponse = await fetch(imageUrl);
+  if (!imageResponse.ok) {
+    throw new Error(`Failed to fetch image: ${imageResponse.status}`);
+  }
+
+  const imageBuffer = await imageResponse.arrayBuffer();
+  const base64Image = Buffer.from(imageBuffer).toString('base64');
+
+  // Upload to Printify
+  const uploadResponse = await fetch(`${PRINTIFY_API_URL}/uploads/images.json`, {
+    method: 'POST',
+    headers: {
+      "Authorization": `Bearer ${process.env.PRINTIFY_API_TOKEN}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      file_name: fileName,
+      contents: base64Image
+    })
+  });
+
+  if (!uploadResponse.ok) {
+    const errorText = await uploadResponse.text();
+    console.error("Printify image upload error:", {
+      status: uploadResponse.status,
+      statusText: uploadResponse.statusText,
+      body: errorText
+    });
+    throw new Error(`Failed to upload image to Printify: ${uploadResponse.status} - ${errorText}`);
+  }
+
+  const uploadResult = await uploadResponse.json();
+  console.log(' Image uploaded to Printify:', uploadResult.id);
+  
+  return uploadResult.id;
+}
 
 interface PrintifyErrorResponse {
   status: string;
@@ -27,8 +75,8 @@ export const PRINTIFY_PRODUCTS = {
       print_provider_id: 1, // Generic Brand
       variants: [
         { id: 'poster_12x18', size: '12x18', price: 2999 }, // $29.99
-        { id: 'poster_16x20', size: '16x20', price: 3999 }, // $39.99
-        { id: 'poster_18x24', size: '18x24', price: 4999 }  // $49.99
+        { id: 'poster_18x24', size: '18x24', price: 3999 }, // $39.99
+        { id: 'poster_20x30', size: '20x30', price: 4999 }  // $49.99
       ]
     },
     EUROPE: {
@@ -36,19 +84,19 @@ export const PRINTIFY_PRODUCTS = {
       print_provider_id: 1, // Generic Brand
       variants: [
         { id: 'giclee_12x18', size: '12x18', price: 3499 }, // $34.99
-        { id: 'giclee_16x20', size: '16x20', price: 4499 }, // $44.99
-        { id: 'giclee_18x24', size: '18x24', price: 5499 }  // $54.99
+        { id: 'giclee_18x24', size: '18x24', price: 4499 }, // $44.99
+        { id: 'giclee_20x30', size: '20x30', price: 5499 }  // $54.99
       ]
     }
   },
   [ProductType.FRAMED_CANVAS]: {
     GLOBAL: {
-      blueprint_id: 944, // Matte Canvas Framed Multi-Color
-      print_provider_id: 1, // Generic Brand
+      blueprint_id: 1191, // Photo Art Paper Posters
+      print_provider_id: 27, // Print Geek
       variants: [
-        { id: 'canvas_12x16', size: '12x16', price: 7999 }, // $79.99
-        { id: 'canvas_16x20', size: '16x20', price: 9999 }, // $99.99
-        { id: 'canvas_20x24', size: '20x24', price: 12999 } // $129.99
+        { id: 91677, size: '12x18', price: 7999 }, // $79.99 - 12″ x 18″ (Vertical) / Satin
+        { id: 91693, size: '18x24', price: 9999 }, // $99.99 - 18″ x 24″ (Vertical) / Satin
+        { id: 91695, size: '20x30', price: 12999 } // $129.99 - 20″ x 30″ (Vertical) / Satin
       ]
     }
   }
@@ -148,18 +196,22 @@ export async function getProducts(): Promise<PaginatedBlueprints> {
 
 // Create a Printify product for a specific blueprint
 export async function createPrintifyProduct(
-  shopId: string,
   blueprintId: number,
   printProviderId: number,
   title: string,
   description: string,
   imageUrl: string,
   productType: ProductType,
-  size: string
+  size: string,
+  shopId: string
 ): Promise<any> {
   if (!process.env.PRINTIFY_API_TOKEN) {
     throw new Error("Printify API token is not configured");
   }
+
+  // Upload image to Printify first
+  const fileName = `${String(title).replace(/[^a-zA-Z0-9]/g, '_')}.png`;
+  const printifyImageId = await uploadImageToPrintify(imageUrl, fileName);
 
   // Import image positioning logic
   const { calculateImagePlacement, validatePlacement } = await import('./printify-image-positioning');
@@ -168,27 +220,37 @@ export async function createPrintifyProduct(
   const placement = calculateImagePlacement(productType, size, imageUrl);
   const validatedPlacement = validatePlacement(placement);
 
+  // Get the product configuration based on the product type and size
+  const productConfig = getProductConfig(productType, 'US');
+  if (!productConfig) {
+    throw new Error(`No product configuration found for ${productType} in US region`);
+  }
+
+  // Configure canvas-specific options for framed canvas products
+  const isCanvas = productType === ProductType.FRAMED_CANVAS;
+  
+  // Get the actual variant IDs from the product config (ensure they're integers)
+  const variantIds = productConfig.variants.map(v => parseInt(String(v.id), 10));
+  
   const productData = {
     title,
     description,
     blueprint_id: blueprintId,
     print_provider_id: printProviderId,
-    variants: [
-      {
-        id: 1,
-        price: 2999, // Will be overridden by variant-specific pricing
-        is_enabled: true
-      }
-    ],
+    variants: productConfig.variants.map(variant => ({
+      id: parseInt(String(variant.id), 10),
+      price: variant.price,
+      is_enabled: true
+    })),
     print_areas: [
       {
-        variant_ids: [1],
+        variant_ids: variantIds,
         placeholders: [
           {
             position: "front",
             images: [
               {
-                id: imageUrl,
+                id: printifyImageId,
                 x: validatedPlacement.x,
                 y: validatedPlacement.y,
                 scale: validatedPlacement.scale,
@@ -201,6 +263,8 @@ export async function createPrintifyProduct(
     ]
   };
 
+  console.log("📤 Creating Printify product with data:", JSON.stringify(productData, null, 2));
+
   const response = await fetch(`${PRINTIFY_API_URL}/shops/${shopId}/products.json`, {
     method: 'POST',
     headers: {
@@ -211,9 +275,24 @@ export async function createPrintifyProduct(
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
-    console.error("Printify product creation error:", errorData);
-    throw new Error(`Failed to create Printify product: ${errorData.message}`);
+    const errorText = await response.text();
+    console.error("❌ Printify product creation error:", {
+      status: response.status,
+      statusText: response.statusText,
+      body: errorText,
+      requestPayload: productData
+    });
+    
+    let errorData;
+    try {
+      errorData = JSON.parse(errorText);
+      console.error("❌ Parsed error details:", JSON.stringify(errorData, null, 2));
+    } catch (e) {
+      errorData = { message: errorText };
+      console.error("❌ Could not parse error response:", errorText);
+    }
+    
+    throw new Error(`Failed to create Printify product: ${response.status} - ${JSON.stringify(errorData)}`);
   }
 
   return response.json();

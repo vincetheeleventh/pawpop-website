@@ -32,10 +32,10 @@ User Upload → Image Generation → Payment → Order Processing → Printify F
      - 18x24: $54.99
 
 3. **Framed Canvas** (`ProductType.FRAMED_CANVAS`)
-   - **Global**: Matte Canvas Framed Multi-Color (Blueprint ID: 944)
-     - 12x16: $79.99
-     - 16x20: $99.99
-     - 20x24: $129.99
+   - **Global**: Photo Art Paper Posters (Blueprint ID: 1191) - Print Geek
+     - 12x18: $79.99 (Variant ID: 91677)
+     - 18x24: $99.99 (Variant ID: 91693)
+     - 20x30: $129.99 (Variant ID: 91695)
 
 ## Database Schema (Supabase)
 
@@ -386,6 +386,142 @@ async function retryFailedOrder(orderId: string) {
 - Order status changes
 - Failed operations with error details
 
+## Troubleshooting Common Issues
+
+### Issue: "Provided images do not exist" Error
+**Solution**: Images must be uploaded to Printify servers before product creation.
+```typescript
+// Upload image to Printify first
+const printifyImageId = await uploadImageToPrintify(imageUrl, fileName);
+
+// Then use the Printify image ID in product creation
+const productData = {
+  // ... other fields
+  print_areas: [{
+    variant_ids: variantIds,
+    placeholders: [{
+      position: "front",
+      images: [{
+        id: printifyImageId, // Use Printify image ID, not external URL
+        x: placement.x,
+        y: placement.y,
+        scale: placement.scale,
+        angle: placement.angle
+      }]
+    }]
+  }]
+};
+```
+
+### Issue: "Validation failed" - Variant ID Type Error
+**Solution**: Ensure variant IDs are integers, not strings.
+```typescript
+// Convert variant IDs to integers
+const variantIds = productConfig.variants.map(v => parseInt(String(v.id), 10));
+
+variants: productConfig.variants.map(variant => ({
+  id: parseInt(String(variant.id), 10), // Ensure integer type
+  price: variant.price,
+  is_enabled: true
+}))
+```
+
+### Issue: Wrong Product Sizes in Dashboard
+**Solution**: Use correct blueprint and variant IDs for desired sizes.
+- For vertical canvas prints (12x18, 18x24, 20x30), use Blueprint 1191
+- Verify variant IDs match actual Printify catalog
+- Test with `/api/test/printify-blueprint?id=1191` to confirm available sizes
+
+### Issue: 404 "Not found" Error
+**Solution**: Verify print provider ID matches the blueprint.
+```bash
+# Check available print providers for a blueprint
+curl "http://localhost:3001/api/test/printify-blueprint?id=1191"
+```
+
+## Implementation Details
+
+### Image Upload Function
+```typescript
+export async function uploadImageToPrintify(imageUrl: string, fileName: string): Promise<string> {
+  if (!process.env.PRINTIFY_API_TOKEN) {
+    throw new Error("Printify API token is not configured");
+  }
+
+  // Fetch image data
+  const imageResponse = await fetch(imageUrl);
+  if (!imageResponse.ok) {
+    throw new Error(`Failed to fetch image: ${imageResponse.status}`);
+  }
+
+  const imageBuffer = await imageResponse.arrayBuffer();
+  const base64Image = Buffer.from(imageBuffer).toString('base64');
+
+  // Upload to Printify
+  const uploadResponse = await fetch(`${PRINTIFY_API_URL}/uploads/images.json`, {
+    method: 'POST',
+    headers: {
+      "Authorization": `Bearer ${process.env.PRINTIFY_API_TOKEN}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      file_name: fileName,
+      contents: base64Image
+    })
+  });
+
+  if (!uploadResponse.ok) {
+    const errorText = await uploadResponse.text();
+    throw new Error(`Failed to upload image to Printify: ${uploadResponse.status} - ${errorText}`);
+  }
+
+  const uploadResult = await uploadResponse.json();
+  return uploadResult.id;
+}
+```
+
+### Updated Product Configuration
+```typescript
+export const PRINTIFY_PRODUCTS = {
+  [ProductType.FRAMED_CANVAS]: {
+    GLOBAL: {
+      blueprint_id: 1191, // Photo Art Paper Posters
+      print_provider_id: 27, // Print Geek
+      variants: [
+        { id: 91677, size: '12x18', price: 7999 }, // 12″ x 18″ (Vertical) / Satin
+        { id: 91693, size: '18x24', price: 9999 }, // 18″ x 24″ (Vertical) / Satin
+        { id: 91695, size: '20x30', price: 12999 } // 20″ x 30″ (Vertical) / Satin
+      ]
+    }
+  }
+};
+```
+
+## Testing Endpoints
+
+### Test Printify Integration
+```bash
+# Test canvas product creation
+curl -X POST "http://localhost:3001/api/test/printify-mockup" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "imageUrl": "http://localhost:3001/images/final-output-test.png",
+    "productType": "framed_canvas",
+    "size": "18x24",
+    "customerName": "Test Customer",
+    "petName": "Test Pet"
+  }'
+```
+
+### Get Blueprint Information
+```bash
+# Get blueprint details and variants
+curl "http://localhost:3001/api/test/printify-blueprint?id=1191"
+
+# Get shop information
+curl "http://localhost:3001/api/test/printify-info"
+```
+
 ## Future Enhancements
 
 1. **Inventory Management**: Track Printify product availability
@@ -394,3 +530,4 @@ async function retryFailedOrder(orderId: string) {
 4. **Order Tracking**: Real-time tracking integration
 5. **Customer Portal**: Self-service order management
 6. **Analytics Dashboard**: Order and revenue analytics
+7. **Canvas Side Printing**: Research and implement "print on sides" and "mirror sides" options for canvas products

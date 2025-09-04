@@ -1,0 +1,11 @@
+// src/app/api/test/env-check/route.ts
+import { NextResponse } from 'next/server';
+
+export async function GET() {
+  return NextResponse.json({
+    printifyApiToken: process.env.PRINTIFY_API_TOKEN ? 'SET' : 'NOT SET',
+    printifyShopId: process.env.PRINTIFY_SHOP_ID ? process.env.PRINTIFY_SHOP_ID : 'NOT SET',
+    printifyWebhookSecret: process.env.PRINTIFY_WEBHOOK_SECRET ? 'SET' : 'NOT SET',
+    nodeEnv: process.env.NODE_ENV
+  });
+}

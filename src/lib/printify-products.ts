@@ -84,14 +84,14 @@ export async function getOrCreatePrintifyProduct(
 
   try {
     const printifyProduct = await createPrintifyProduct(
-      shopId,
       productConfig.blueprint_id,
       productConfig.print_provider_id,
       title,
       description,
       imageUrl,
       productType,
-      size
+      size,
+      shopId
     );
 
     // Cache the product ID

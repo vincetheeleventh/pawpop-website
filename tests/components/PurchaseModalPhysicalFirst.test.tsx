@@ -19,10 +19,19 @@ vi.mock('@/lib/printify-products', () => ({
   },
   getProductPricing: vi.fn((type, size) => {
     if (type === 'DIGITAL') return 999;
-    if (type === 'ART_PRINT') return 2999;
-    if (type === 'FRAMED_CANVAS') return 7999;
+    if (type === 'ART_PRINT') {
+      if (size === '12x18') return 2499;
+      if (size === '18x24') return 2999;
+      if (size === '20x30') return 3499;
+    }
+    if (type === 'FRAMED_CANVAS') {
+      if (size === '12x18') return 6999;
+      if (size === '18x24') return 7999;
+      if (size === '20x30') return 8999;
+    }
     return 0;
-  })
+  }),
+  getAvailableSizes: vi.fn(() => ['12x18', '18x24', '20x30'])
 }));
 
 global.fetch = vi.fn();
@@ -245,6 +254,147 @@ describe('PurchaseModalPhysicalFirst', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Order My Masterpiece')).toBeInTheDocument();
+    });
+  });
+
+  describe('Size Selection', () => {
+    it('displays all available print sizes', () => {
+      render(
+        <PurchaseModalPhysicalFirst
+          isOpen={true}
+          onClose={mockOnClose}
+          artwork={mockArtwork}
+        />
+      );
+
+      expect(screen.getByText('12x18"')).toBeInTheDocument();
+      expect(screen.getByText('18x24"')).toBeInTheDocument();
+      expect(screen.getByText('20x30"')).toBeInTheDocument();
+    });
+
+    it('has 18x24 as default selected size', () => {
+      render(
+        <PurchaseModalPhysicalFirst
+          isOpen={true}
+          onClose={mockOnClose}
+          artwork={mockArtwork}
+        />
+      );
+
+      const size18x24Button = screen.getByText('18x24"').closest('button');
+      expect(size18x24Button).toHaveClass('border-mona-gold', 'bg-mona-gold');
+    });
+
+    it('allows selecting different sizes', async () => {
+      render(
+        <PurchaseModalPhysicalFirst
+          isOpen={true}
+          onClose={mockOnClose}
+          artwork={mockArtwork}
+        />
+      );
+
+      // Click on 20x30 size
+      const size20x30Button = screen.getByText('20x30"').closest('button')!;
+      fireEvent.click(size20x30Button);
+
+      await waitFor(() => {
+        expect(size20x30Button).toHaveClass('ring-2', 'ring-purple-500');
+      });
+
+      // Verify 18x24 is no longer selected
+      const size18x24Button = screen.getByText('18x24"').closest('button');
+      expect(size18x24Button).not.toHaveClass('ring-2', 'ring-purple-500');
+    });
+
+    it('updates pricing when size changes', async () => {
+      render(
+        <PurchaseModalPhysicalFirst
+          isOpen={true}
+          onClose={mockOnClose}
+          artwork={mockArtwork}
+        />
+      );
+
+      // Select Art Print product first
+      fireEvent.click(screen.getByText('Premium Art Print').closest('div')!);
+
+      // Default 18x24 should show $29.99
+      await waitFor(() => {
+        expect(screen.getByText('$29.99')).toBeInTheDocument();
+      });
+
+      // Select 20x30 size
+      fireEvent.click(screen.getByText('20x30"').closest('button')!);
+
+      // Price should update to $34.99
+      await waitFor(() => {
+        expect(screen.getByText('$34.99')).toBeInTheDocument();
+      });
+    });
+
+    it('includes size in checkout request', async () => {
+      render(
+        <PurchaseModalPhysicalFirst
+          isOpen={true}
+          onClose={mockOnClose}
+          artwork={mockArtwork}
+        />
+      );
+
+      // Select Art Print and 12x18 size
+      fireEvent.click(screen.getByText('Premium Art Print').closest('div')!);
+      fireEvent.click(screen.getByText('12x18"').closest('button')!);
+
+      // Click purchase button
+      await waitFor(() => {
+        expect(screen.getByText('Order My Masterpiece')).toBeInTheDocument();
+      });
+      fireEvent.click(screen.getByText('Order My Masterpiece'));
+
+      // Verify fetch was called with correct size
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledWith('/api/checkout/artwork', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            artworkId: 'test-artwork-123',
+            productType: 'art_print',
+            size: '12x18',
+            customerEmail: 'sarah@example.com',
+            customerName: 'Sarah',
+            petName: 'Bella',
+            imageUrl: '/test-image.jpg',
+            variant: 'physical-first'
+          })
+        });
+      });
+    });
+
+    it('shows different pricing for framed canvas sizes', async () => {
+      render(
+        <PurchaseModalPhysicalFirst
+          isOpen={true}
+          onClose={mockOnClose}
+          artwork={mockArtwork}
+        />
+      );
+
+      // Select Framed Canvas product
+      fireEvent.click(screen.getByText('Framed Canvas').closest('div')!);
+
+      // Default 18x24 should show $79.99
+      await waitFor(() => {
+        expect(screen.getByText('$79.99')).toBeInTheDocument();
+      });
+
+      // Select 12x18 size
+      fireEvent.click(screen.getByText('12x18"').closest('button')!);
+
+      // Price should update to $69.99
+      await waitFor(() => {
+        expect(screen.getByText('$69.99')).toBeInTheDocument();
+      });
     });
   });
 

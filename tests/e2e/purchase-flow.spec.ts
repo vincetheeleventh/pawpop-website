@@ -132,6 +132,78 @@ test.describe('Complete Purchase Flow', () => {
     }
   });
 
+  test('should handle print size selection in physical-first modal', async ({ page }) => {
+    await page.goto('/artwork/test-artwork-123?variant=physical-first');
+    await page.click('[data-testid="purchase-button"]');
+    
+    // Verify size selection buttons are present
+    await expect(page.getByText('12x18"')).toBeVisible();
+    await expect(page.getByText('18x24"')).toBeVisible();
+    await expect(page.getByText('20x30"')).toBeVisible();
+    
+    // Verify 18x24 is selected by default
+    const defaultSizeButton = page.locator('button:has-text("18x24\"")');
+    await expect(defaultSizeButton).toHaveClass(/ring-2/);
+    
+    // Select Art Print product
+    await page.click('text=Premium Art Print');
+    
+    // Verify default pricing for 18x24
+    await expect(page.getByText('$29.99')).toBeVisible();
+    
+    // Change to 20x30 size
+    await page.click('button:has-text("20x30\"")');
+    
+    // Verify pricing updates
+    await expect(page.getByText('$34.99')).toBeVisible();
+    
+    // Verify 20x30 is now selected
+    const newSizeButton = page.locator('button:has-text("20x30\"")');
+    await expect(newSizeButton).toHaveClass(/ring-2/);
+    
+    // Complete purchase with selected size
+    await page.click('text=Order My Masterpiece');
+    
+    // Verify checkout request includes correct size
+    const checkoutRequest = await page.waitForRequest('**/api/checkout/artwork');
+    const requestBody = JSON.parse(checkoutRequest.postData() || '{}');
+    expect(requestBody.size).toBe('20x30');
+    expect(requestBody.productType).toBe('art_print');
+  });
+
+  test('should show different pricing for different product types and sizes', async ({ page }) => {
+    await page.goto('/artwork/test-artwork-123?variant=physical-first');
+    await page.click('[data-testid="purchase-button"]');
+    
+    // Test Art Print pricing
+    await page.click('text=Premium Art Print');
+    
+    // Test 12x18 pricing
+    await page.click('button:has-text("12x18\"")');
+    await expect(page.getByText('$24.99')).toBeVisible();
+    
+    // Test 18x24 pricing
+    await page.click('button:has-text("18x24\"")');
+    await expect(page.getByText('$29.99')).toBeVisible();
+    
+    // Test 20x30 pricing
+    await page.click('button:has-text("20x30\"")');
+    await expect(page.getByText('$34.99')).toBeVisible();
+    
+    // Switch to Framed Canvas
+    await page.click('text=Framed Canvas');
+    
+    // Test Framed Canvas pricing for same sizes
+    await page.click('button:has-text("12x18\"")');
+    await expect(page.getByText('$69.99')).toBeVisible();
+    
+    await page.click('button:has-text("18x24\"")');
+    await expect(page.getByText('$79.99')).toBeVisible();
+    
+    await page.click('button:has-text("20x30\"")');
+    await expect(page.getByText('$89.99')).toBeVisible();
+  });
+
   test('should track analytics events', async ({ page }) => {
     // Mock gtag function
     await page.addInitScript(() => {
