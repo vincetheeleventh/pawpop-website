@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createArtwork } from '@/lib/supabase-artworks'
 import { isValidEmail } from '@/lib/utils'
+import { sendMasterpieceCreatingEmail } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,6 +32,22 @@ export async function POST(request: NextRequest) {
       original_image_url: uploaded_file_url,
       pet_name
     })
+
+    // Send "masterpiece being created" email
+    const artworkUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://pawpopart.com'}/artwork/${access_token}`
+    
+    try {
+      await sendMasterpieceCreatingEmail({
+        customerName: customer_name,
+        customerEmail: customer_email,
+        petName: pet_name,
+        artworkUrl
+      })
+      console.log('Masterpiece creating email sent successfully')
+    } catch (emailError) {
+      console.error('Failed to send masterpiece creating email:', emailError)
+      // Don't fail the request if email fails
+    }
 
     // Return artwork details and access token
     return NextResponse.json({

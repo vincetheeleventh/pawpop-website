@@ -1,0 +1,411 @@
+// src/lib/email.ts
+import { Resend } from 'resend'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
+
+export interface EmailData {
+  to: string
+  subject: string
+  html: string
+  from?: string
+}
+
+export interface MasterpieceCreatingEmailData {
+  customerName: string
+  customerEmail: string
+  petName?: string
+  artworkUrl: string
+}
+
+export interface MasterpieceReadyEmailData {
+  customerName: string
+  customerEmail: string
+  petName?: string
+  artworkUrl: string
+  generatedImageUrl: string
+}
+
+export interface OrderConfirmationEmailData {
+  customerName: string
+  customerEmail: string
+  orderNumber: string
+  productType: string
+  productSize?: string
+  amount: number
+  currency: string
+  petName?: string
+}
+
+export interface ShippingNotificationEmailData {
+  customerName: string
+  customerEmail: string
+  orderNumber: string
+  trackingNumber?: string
+  trackingUrl?: string
+  carrier?: string
+  productType: string
+}
+
+/**
+ * Send email using Resend
+ */
+export async function sendEmail(data: EmailData): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  try {
+    if (!process.env.RESEND_API_KEY) {
+      console.error('RESEND_API_KEY not configured')
+      return { success: false, error: 'Email service not configured' }
+    }
+
+    const result = await resend.emails.send({
+      from: data.from || 'PawPop <noreply@pawpopart.com>',
+      to: data.to,
+      subject: data.subject,
+      html: data.html,
+    })
+
+    if (result.error) {
+      console.error('Resend error:', result.error)
+      return { success: false, error: result.error.message }
+    }
+
+    console.log('Email sent successfully:', result.data?.id)
+    return { success: true, messageId: result.data?.id }
+
+  } catch (error) {
+    console.error('Error sending email:', error)
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+  }
+}
+
+/**
+ * Send "masterpiece being created" email after photo upload
+ */
+export async function sendMasterpieceCreatingEmail(data: MasterpieceCreatingEmailData): Promise<{ success: boolean; error?: string }> {
+  const petNameText = data.petName ? ` for ${data.petName}` : ''
+  
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Your masterpiece is being created</title>
+      <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8f9fa; }
+        .container { max-width: 600px; margin: 0 auto; background-color: white; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 30px; text-align: center; }
+        .header h1 { margin: 0; font-size: 28px; font-weight: 300; }
+        .content { padding: 40px 30px; }
+        .content h2 { color: #667eea; margin-top: 0; }
+        .cta-button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 0; }
+        .footer { background-color: #f8f9fa; padding: 30px; text-align: center; color: #6c757d; font-size: 14px; }
+        .divider { height: 1px; background: linear-gradient(to right, transparent, #e9ecef, transparent); margin: 30px 0; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🎨 Your Masterpiece is Being Created</h1>
+        </div>
+        
+        <div class="content">
+          <h2>Hi ${data.customerName}!</h2>
+          
+          <p>Thank you for choosing PawPop! We've received your beautiful photo${petNameText} and our artists are now working their magic to create your one-of-a-kind Mona Lisa masterpiece.</p>
+          
+          <p><strong>What happens next:</strong></p>
+          <ul>
+            <li>🎨 Our AI artists are transforming your photo into a stunning Mona Lisa-style portrait</li>
+            <li>⏱️ This usually takes 2-5 minutes to complete</li>
+            <li>📧 You'll receive another email as soon as your masterpiece is ready</li>
+            <li>🖼️ You can then choose to purchase beautiful prints or keep it digital</li>
+          </ul>
+          
+          <div class="divider"></div>
+          
+          <p>You can check the status of your artwork anytime:</p>
+          <a href="${data.artworkUrl}" class="cta-button">View Your Artwork Status</a>
+          
+          <p>We're excited to show you the incredible transformation!</p>
+          
+          <p>Best regards,<br>The PawPop Team</p>
+        </div>
+        
+        <div class="footer">
+          <p>PawPop - The Unforgettable Gift for Pet Moms</p>
+          <p>2006-1323 Homer St, Vancouver BC Canada V6B 5T1</p>
+          <p>Questions? Reply to this email or contact us at pawpopart@gmail.com</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+
+  const result = await sendEmail({
+    to: data.customerEmail,
+    subject: 'Your masterpiece is being created! 🎨',
+    html
+  })
+
+  return result
+}
+
+/**
+ * Send "masterpiece ready" email when artwork generation is complete
+ */
+export async function sendMasterpieceReadyEmail(data: MasterpieceReadyEmailData): Promise<{ success: boolean; error?: string }> {
+  const petNameText = data.petName ? ` ${data.petName}'s` : ' your'
+  
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Your masterpiece is ready!</title>
+      <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8f9fa; }
+        .container { max-width: 600px; margin: 0 auto; background-color: white; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 30px; text-align: center; }
+        .header h1 { margin: 0; font-size: 28px; font-weight: 300; }
+        .content { padding: 40px 30px; }
+        .content h2 { color: #667eea; margin-top: 0; }
+        .artwork-preview { text-align: center; margin: 30px 0; }
+        .artwork-preview img { max-width: 100%; height: auto; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+        .cta-button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 10px; }
+        .secondary-button { display: inline-block; border: 2px solid #667eea; color: #667eea; padding: 13px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 10px; }
+        .footer { background-color: #f8f9fa; padding: 30px; text-align: center; color: #6c757d; font-size: 14px; }
+        .divider { height: 1px; background: linear-gradient(to right, transparent, #e9ecef, transparent); margin: 30px 0; }
+        .buttons-container { text-align: center; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🎉 Your Masterpiece is Ready!</h1>
+        </div>
+        
+        <div class="content">
+          <h2>Hi ${data.customerName}!</h2>
+          
+          <p>Amazing news! We've completed${petNameText} stunning Mona Lisa transformation. The result is absolutely beautiful!</p>
+          
+          <div class="artwork-preview">
+            <img src="${data.generatedImageUrl}" alt="Your PawPop Masterpiece" />
+          </div>
+          
+          <p><strong>What would you like to do next?</strong></p>
+          
+          <div class="buttons-container">
+            <a href="${data.artworkUrl}" class="cta-button">View Full Artwork</a>
+            <a href="${data.artworkUrl}#purchase" class="secondary-button">Order Prints</a>
+          </div>
+          
+          <div class="divider"></div>
+          
+          <p><strong>Print Options Available:</strong></p>
+          <ul>
+            <li>🖼️ <strong>Premium Art Prints</strong> - Museum-quality paper, multiple sizes</li>
+            <li>🎨 <strong>Framed Canvas</strong> - Ready to hang, gallery-wrapped</li>
+            <li>📱 <strong>Digital Download</strong> - High-resolution file for personal use</li>
+          </ul>
+          
+          <p>Your artwork link will remain active for 30 days, so you can share it with friends and family or come back to order prints anytime.</p>
+          
+          <p>We hope you love your unique PawPop masterpiece!</p>
+          
+          <p>Best regards,<br>The PawPop Team</p>
+        </div>
+        
+        <div class="footer">
+          <p>PawPop - The Unforgettable Gift for Pet Moms</p>
+          <p>2006-1323 Homer St, Vancouver BC Canada V6B 5T1</p>
+          <p>Questions? Reply to this email or contact us at pawpopart@gmail.com</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+
+  const result = await sendEmail({
+    to: data.customerEmail,
+    subject: 'Your masterpiece is ready! 🎉',
+    html
+  })
+
+  return result
+}
+
+/**
+ * Send order confirmation email after successful purchase
+ */
+export async function sendOrderConfirmationEmail(data: OrderConfirmationEmailData): Promise<{ success: boolean; error?: string }> {
+  const petNameText = data.petName ? ` for ${data.petName}` : ''
+  const formattedAmount = (data.amount / 100).toFixed(2)
+  
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Order Confirmation - PawPop</title>
+      <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8f9fa; }
+        .container { max-width: 600px; margin: 0 auto; background-color: white; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 30px; text-align: center; }
+        .header h1 { margin: 0; font-size: 28px; font-weight: 300; }
+        .content { padding: 40px 30px; }
+        .content h2 { color: #667eea; margin-top: 0; }
+        .order-details { background-color: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; }
+        .order-row { display: flex; justify-content: space-between; margin: 10px 0; }
+        .order-row strong { font-weight: 600; }
+        .total-row { border-top: 2px solid #e9ecef; padding-top: 15px; margin-top: 15px; font-size: 18px; font-weight: 600; }
+        .footer { background-color: #f8f9fa; padding: 30px; text-align: center; color: #6c757d; font-size: 14px; }
+        .divider { height: 1px; background: linear-gradient(to right, transparent, #e9ecef, transparent); margin: 30px 0; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>✅ Order Confirmed!</h1>
+        </div>
+        
+        <div class="content">
+          <h2>Thank you for your order, ${data.customerName}!</h2>
+          
+          <p>We've received your order${petNameText} and are excited to create your beautiful PawPop print!</p>
+          
+          <div class="order-details">
+            <h3 style="margin-top: 0; color: #667eea;">Order Details</h3>
+            <div class="order-row">
+              <span>Order Number:</span>
+              <strong>${data.orderNumber}</strong>
+            </div>
+            <div class="order-row">
+              <span>Product:</span>
+              <strong>${data.productType}${data.productSize ? ` (${data.productSize})` : ''}</strong>
+            </div>
+            <div class="order-row total-row">
+              <span>Total:</span>
+              <strong>${data.currency.toUpperCase()} $${formattedAmount}</strong>
+            </div>
+          </div>
+          
+          <p><strong>What happens next:</strong></p>
+          <ul>
+            <li>🎨 We'll prepare your artwork for printing with the highest quality standards</li>
+            <li>🖨️ Your order will be sent to our premium printing partner</li>
+            <li>📦 You'll receive a shipping notification with tracking information</li>
+            <li>🚚 Delivery typically takes 5-7 business days</li>
+          </ul>
+          
+          <div class="divider"></div>
+          
+          <p>We'll keep you updated throughout the process. If you have any questions about your order, please don't hesitate to reach out!</p>
+          
+          <p>Thank you for choosing PawPop!</p>
+          
+          <p>Best regards,<br>The PawPop Team</p>
+        </div>
+        
+        <div class="footer">
+          <p>PawPop - The Unforgettable Gift for Pet Moms</p>
+          <p>2006-1323 Homer St, Vancouver BC Canada V6B 5T1</p>
+          <p>Questions? Reply to this email or contact us at pawpopart@gmail.com</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+
+  const result = await sendEmail({
+    to: data.customerEmail,
+    subject: `Order Confirmation #${data.orderNumber} - PawPop`,
+    html
+  })
+
+  return result
+}
+
+/**
+ * Send shipping notification email when order ships
+ */
+export async function sendShippingNotificationEmail(data: ShippingNotificationEmailData): Promise<{ success: boolean; error?: string }> {
+  const trackingInfo = data.trackingNumber ? `
+    <div class="tracking-info">
+      <h3 style="color: #667eea;">Tracking Information</h3>
+      <p><strong>Tracking Number:</strong> ${data.trackingNumber}</p>
+      ${data.carrier ? `<p><strong>Carrier:</strong> ${data.carrier}</p>` : ''}
+      ${data.trackingUrl ? `<p><a href="${data.trackingUrl}" style="color: #667eea; text-decoration: none; font-weight: 600;">Track Your Package →</a></p>` : ''}
+    </div>
+  ` : ''
+  
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Your PawPop order has shipped!</title>
+      <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8f9fa; }
+        .container { max-width: 600px; margin: 0 auto; background-color: white; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 30px; text-align: center; }
+        .header h1 { margin: 0; font-size: 28px; font-weight: 300; }
+        .content { padding: 40px 30px; }
+        .content h2 { color: #667eea; margin-top: 0; }
+        .tracking-info { background-color: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; }
+        .footer { background-color: #f8f9fa; padding: 30px; text-align: center; color: #6c757d; font-size: 14px; }
+        .divider { height: 1px; background: linear-gradient(to right, transparent, #e9ecef, transparent); margin: 30px 0; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>📦 Your Order Has Shipped!</h1>
+        </div>
+        
+        <div class="content">
+          <h2>Great news, ${data.customerName}!</h2>
+          
+          <p>Your PawPop ${data.productType} (Order #${data.orderNumber}) has been carefully packaged and is now on its way to you!</p>
+          
+          ${trackingInfo}
+          
+          <p><strong>Delivery Information:</strong></p>
+          <ul>
+            <li>📅 Estimated delivery: 3-5 business days</li>
+            <li>📦 Your artwork is professionally packaged to ensure it arrives in perfect condition</li>
+            <li>🏠 Delivery will be made to the address provided during checkout</li>
+          </ul>
+          
+          <div class="divider"></div>
+          
+          <p>We can't wait for you to see your beautiful PawPop masterpiece in person! The quality and attention to detail will truly amaze you.</p>
+          
+          <p>If you have any questions about your shipment or need to make any changes, please contact us as soon as possible.</p>
+          
+          <p>Thank you for choosing PawPop!</p>
+          
+          <p>Best regards,<br>The PawPop Team</p>
+        </div>
+        
+        <div class="footer">
+          <p>PawPop - The Unforgettable Gift for Pet Moms</p>
+          <p>2006-1323 Homer St, Vancouver BC Canada V6B 5T1</p>
+          <p>Questions? Reply to this email or contact us at pawpopart@gmail.com</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+
+  const result = await sendEmail({
+    to: data.customerEmail,
+    subject: `Your PawPop order #${data.orderNumber} has shipped! 📦`,
+    html
+  })
+
+  return result
+}

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { stripe } from '@/lib/stripe';
 import { processOrder, parseOrderMetadata, handleOrderStatusUpdate } from '@/lib/order-processing';
+import { sendOrderConfirmationEmail } from '@/lib/email';
 
 export async function POST(req: Request) {
   const body = await req.text();
@@ -42,6 +43,29 @@ export async function POST(req: Request) {
         // Process the order (create Printify order for physical products)
         await processOrder({ session, metadata });
         console.log('Order processed successfully:', session.id);
+
+        // Send order confirmation email
+        try {
+          const customerName = session.customer_details?.name || metadata.customerName || 'Valued Customer';
+          const customerEmail = session.customer_details?.email;
+          
+          if (customerEmail) {
+            await sendOrderConfirmationEmail({
+              customerName,
+              customerEmail,
+              orderNumber: session.id,
+              productType: metadata.productType || 'PawPop Print',
+              productSize: metadata.size,
+              amount: session.amount_total || 0,
+              currency: session.currency || 'usd',
+              petName: metadata.petName
+            });
+            console.log('Order confirmation email sent successfully');
+          }
+        } catch (emailError) {
+          console.error('Failed to send order confirmation email:', emailError);
+          // Don't fail the request if email fails
+        }
         
       } catch (error) {
         console.error('Error processing checkout session:', error);

@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { updateArtwork, getArtworkById } from '@/lib/supabase-artworks'
 import { isValidUUID } from '@/lib/utils'
+import { sendMasterpieceReadyEmail } from '@/lib/email'
 
 export async function PATCH(request: NextRequest) {
   try {
@@ -42,6 +43,25 @@ export async function PATCH(request: NextRequest) {
 
     // Update artwork
     const updatedArtwork = await updateArtwork(artwork_id, updateData)
+
+    // Send "masterpiece ready" email if generation just completed
+    if (generation_status === 'completed' && existingArtwork.generation_status !== 'completed' && generated_image_url) {
+      const artworkUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://pawpopart.com'}/artwork/${existingArtwork.access_token}`
+      
+      try {
+        await sendMasterpieceReadyEmail({
+          customerName: existingArtwork.customer_name,
+          customerEmail: existingArtwork.customer_email,
+          petName: updatedArtwork.pet_name || existingArtwork.pet_name,
+          artworkUrl,
+          generatedImageUrl: generated_image_url
+        })
+        console.log('Masterpiece ready email sent successfully')
+      } catch (emailError) {
+        console.error('Failed to send masterpiece ready email:', emailError)
+        // Don't fail the request if email fails
+      }
+    }
 
     return NextResponse.json({
       success: true,

@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { handleOrderStatusUpdate } from '@/lib/order-processing';
 import { updateOrderFromPrintify } from '@/lib/supabase-orders';
+import { getArtworkById } from '@/lib/supabase-artworks';
+import { sendShippingNotificationEmail } from '@/lib/email';
 
 export async function POST(req: Request) {
   try {
@@ -39,12 +41,34 @@ export async function POST(req: Request) {
 
       case 'order:shipment:created':
         console.log(`Printify order ${body.data.id} shipment created`);
-        // TODO: Send tracking information to customer
+        
+        // Send shipping notification email
+        try {
+          const updatedOrder = await updateOrderFromPrintify(body.data.id, 'shipped');
+          if (updatedOrder) {
+            const artwork = await getArtworkById(updatedOrder.artwork_id);
+            
+            if (artwork) {
+              await sendShippingNotificationEmail({
+                customerName: artwork.customer_name,
+                customerEmail: artwork.customer_email,
+                orderNumber: updatedOrder.stripe_session_id,
+                trackingNumber: body.data.tracking_number,
+                trackingUrl: body.data.tracking_url,
+                carrier: body.data.carrier,
+                productType: updatedOrder.product_type
+              });
+              console.log('Shipping notification email sent successfully');
+            }
+          }
+        } catch (emailError) {
+          console.error('Failed to send shipping notification email:', emailError);
+        }
         break;
 
       case 'order:shipment:delivered':
         console.log(`Printify order ${body.data.id} delivered`);
-        // TODO: Send delivery confirmation to customer
+        // Order delivered - could send delivery confirmation email here if needed
         break;
 
       default:
