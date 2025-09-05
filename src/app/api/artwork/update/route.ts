@@ -44,7 +44,7 @@ export async function PATCH(request: NextRequest) {
     // Update artwork
     const updatedArtwork = await updateArtwork(artwork_id, updateData)
 
-    // Send "masterpiece ready" email if generation just completed
+    // Send "masterpiece ready" email and generate mockups if generation just completed
     if (generation_status === 'completed' && existingArtwork.generation_status !== 'completed' && generated_image_url) {
       const artworkUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://pawpopart.com'}/artwork/${existingArtwork.access_token}`
       
@@ -60,6 +60,34 @@ export async function PATCH(request: NextRequest) {
       } catch (emailError) {
         console.error('Failed to send masterpiece ready email:', emailError)
         // Don't fail the request if email fails
+      }
+
+      // Generate Printify mockups in the background
+      try {
+        console.log('🖼️ Triggering mockup generation for artwork:', artwork_id)
+        
+        // Make async call to generate mockups - don't await to avoid blocking
+        fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/printify/generate-mockups`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            imageUrl: generated_image_url,
+            artworkId: artwork_id
+          })
+        }).then(response => {
+          if (response.ok) {
+            console.log('✅ Mockup generation triggered successfully')
+          } else {
+            console.error('❌ Failed to trigger mockup generation:', response.statusText)
+          }
+        }).catch(error => {
+          console.error('❌ Error triggering mockup generation:', error)
+        })
+      } catch (mockupError) {
+        console.error('Failed to trigger mockup generation:', mockupError)
+        // Don't fail the request if mockup generation fails
       }
     }
 

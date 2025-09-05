@@ -3,6 +3,10 @@ import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
+// Email testing configuration
+const isTestMode = process.env.NODE_ENV === 'development' || process.env.EMAIL_TEST_MODE === 'true'
+const testEmailRecipient = process.env.EMAIL_TEST_RECIPIENT || 'pawpopart@gmail.com'
+
 export interface EmailData {
   to: string
   subject: string
@@ -47,7 +51,7 @@ export interface ShippingNotificationEmailData {
 }
 
 /**
- * Send email using Resend
+ * Send email using Resend with domain reputation protection
  */
 export async function sendEmail(data: EmailData): Promise<{ success: boolean; messageId?: string; error?: string }> {
   try {
@@ -56,19 +60,39 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; me
       return { success: false, error: 'Email service not configured' }
     }
 
-    const result = await resend.emails.send({
-      from: data.from || 'PawPop <noreply@pawpopart.com>',
+    // In test mode, redirect all emails to test recipient and add prefix to subject
+    const emailData = isTestMode ? {
+      from: data.from || 'PawPop <onboarding@resend.dev>',
+      to: testEmailRecipient,
+      subject: `[TEST] ${data.subject} (Original: ${data.to})`,
+      html: `
+        <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+          <strong>🧪 TEST MODE EMAIL</strong><br>
+          <strong>Original Recipient:</strong> ${data.to}<br>
+          <strong>Test Environment:</strong> ${process.env.NODE_ENV || 'development'}<br>
+          <strong>Timestamp:</strong> ${new Date().toISOString()}
+        </div>
+        ${data.html}
+      `,
+    } : {
+      from: data.from || 'PawPop <onboarding@resend.dev>',
       to: data.to,
       subject: data.subject,
       html: data.html,
-    })
+    }
+
+    const result = await resend.emails.send(emailData)
 
     if (result.error) {
       console.error('Resend error:', result.error)
       return { success: false, error: result.error.message }
     }
 
-    console.log('Email sent successfully:', result.data?.id)
+    const logMessage = isTestMode 
+      ? `Test email sent successfully to ${testEmailRecipient} (original: ${data.to}): ${result.data?.id}`
+      : `Email sent successfully: ${result.data?.id}`
+    
+    console.log(logMessage)
     return { success: true, messageId: result.data?.id }
 
   } catch (error) {
@@ -191,14 +215,14 @@ export async function sendMasterpieceReadyEmail(data: MasterpieceReadyEmailData)
           <p>Amazing news! We've completed${petNameText} stunning Mona Lisa transformation. The result is absolutely beautiful!</p>
           
           <div class="artwork-preview">
-            <img src="${data.generatedImageUrl}" alt="Your PawPop Masterpiece" />
+            <img src="${data.generatedImageUrl}" alt="Your PawPop Masterpiece" style="max-width: 200px; height: auto; border-radius: 8px;" />
           </div>
           
-          <p><strong>What would you like to do next?</strong></p>
+          <p><strong>Your unique masterpiece is ready to view!</strong></p>
+          <p>We've created a special page just for you where you can see your artwork in full detail and decide how to make it real.</p>
           
           <div class="buttons-container">
-            <a href="${data.artworkUrl}" class="cta-button">View Full Artwork</a>
-            <a href="${data.artworkUrl}#purchase" class="secondary-button">Order Prints</a>
+            <a href="${data.artworkUrl}" class="cta-button">View Your Masterpiece</a>
           </div>
           
           <div class="divider"></div>

@@ -3,7 +3,6 @@
 import React, { useState, useRef } from 'react';
 import { X, Upload, ArrowRight, ArrowLeft, Check, Camera, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { createArtwork } from '@/lib/supabase-artworks';
 
 interface UploadModalProps {
   isOpen: boolean;
@@ -34,6 +33,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [processing, setProcessing] = useState<ProcessingState | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState<{ petMom: boolean; pet: boolean }>({ petMom: false, pet: false });
   const router = useRouter();
 
   const petMomInputRef = useRef<HTMLInputElement>(null);
@@ -46,6 +46,38 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
       setFormData(prev => ({ ...prev, petMomPhoto: file }));
     } else {
       setFormData(prev => ({ ...prev, petPhoto: file }));
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent, type: 'petMom' | 'pet') => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragEnter = (e: React.DragEvent, type: 'petMom' | 'pet') => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(prev => ({ ...prev, [type]: true }));
+  };
+
+  const handleDragLeave = (e: React.DragEvent, type: 'petMom' | 'pet') => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(prev => ({ ...prev, [type]: false }));
+  };
+
+  const handleDrop = (e: React.DragEvent, type: 'petMom' | 'pet') => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(prev => ({ ...prev, [type]: false }));
+    
+    const files = e.dataTransfer.files;
+    if (files && files[0]) {
+      const file = files[0];
+      // Validate file type
+      if (file.type.startsWith('image/')) {
+        handleFileUpload(file, type);
+      }
     }
   };
 
@@ -68,66 +100,102 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
     setError(null);
     
     try {
-      // Step 1: Create artwork record in Supabase
-      setProcessing({ step: 'uploading', message: 'Creating your artwork...', progress: 10 });
-      
-      const { artwork, access_token } = await createArtwork({
-        customer_name: formData.name,
-        customer_email: formData.email,
-        original_image_url: 'pending', // Will be updated after generation
+      // Create artwork record and send confirmation email immediately
+      const createResponse = await fetch('/api/artwork/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          customer_name: formData.name,
+          customer_email: formData.email,
+          original_image_url: 'pending', // Placeholder, will be updated later
+        }),
       });
 
-      // Step 2: Generate artwork using complete pipeline
-      setProcessing({ step: 'generating', message: 'Transforming you into Mona Lisa...', progress: 30 });
-      
-      const formDataToSend = new FormData();
-      formDataToSend.append('userImage', formData.petMomPhoto);
-      formDataToSend.append('petImage', formData.petPhoto);
-      
-      const response = await fetch('/api/monalisa-complete', {
-        method: 'POST',
-        body: formDataToSend,
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Generation failed' }));
-        throw new Error(errorData.error || `HTTP ${response.status}`);
+      if (!createResponse.ok) {
+        const errorData = await createResponse.json();
+        throw new Error(errorData.error || 'Failed to create artwork record');
+      }
+
+      const { artwork, access_token } = await createResponse.json();
+
+      // Send confirmation email immediately
+      try {
+        await fetch('/api/upload/complete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customer_name: formData.name,
+            customer_email: formData.email,
+            uploaded_file_url: 'pending'
+          })
+        });
+      } catch (emailError) {
+        console.error('Failed to send confirmation email:', emailError);
+        // Don't fail the process if email fails
       }
       
-      setProcessing({ step: 'generating', message: 'Adding your pet to the masterpiece...', progress: 70 });
-      
-      // Get the generated image URL from headers
-      const generatedImageUrl = response.headers.get('X-Generated-Image-URL');
-      if (!generatedImageUrl) {
-        throw new Error('No generated image URL received');
-      }
-      
-      // Step 3: Update artwork with generated image
-      setProcessing({ step: 'saving', message: 'Saving your masterpiece...', progress: 90 });
-      
-      await fetch('/api/artwork/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: artwork.id,
-          generated_image_url: generatedImageUrl,
-          generation_status: 'completed'
-        })
-      });
-      
-      setProcessing({ step: 'complete', message: 'Your masterpiece is ready!', progress: 100 });
+      // Show immediate confirmation
+      setProcessing({ step: 'complete', message: 'Thank you! We\'ve received your photos and started creating your masterpiece. Check your email for confirmation!', progress: 100 });
       
       // Store artwork info for order page
       localStorage.setItem('pawpop-artwork-data', JSON.stringify({
         artworkId: artwork.id,
         accessToken: access_token,
-        generatedImageUrl,
         customerName: formData.name,
         customerEmail: formData.email,
         timestamp: Date.now()
       }));
       
-      // Wait a moment to show completion, then redirect
+      // Start background generation (don't wait for it)
+      const formDataToSend = new FormData();
+      formDataToSend.append('userImage', formData.petMomPhoto);
+      formDataToSend.append('petImage', formData.petPhoto);
+      
+      fetch('/api/monalisa-complete', {
+        method: 'POST',
+        body: formDataToSend,
+      }).then(async (response) => {
+        if (response.ok) {
+          const responseData = await response.json();
+          const generatedImageUrl = responseData.generatedImageUrl;
+          if (generatedImageUrl) {
+            // Update artwork with generated image in background
+            await fetch('/api/artwork/update', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                artwork_id: artwork.id,
+                generated_image_url: generatedImageUrl,
+                generation_status: 'completed'
+              })
+            });
+
+            // Send completion email with the generated image
+            try {
+              await fetch('/api/email/masterpiece-ready', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  customerName: formData.name,
+                  customerEmail: formData.email,
+                  artworkUrl: `${window.location.origin}/artwork/${access_token}`,
+                  generatedImageUrl: generatedImageUrl
+                })
+              });
+              console.log('Completion email sent successfully');
+            } catch (emailError) {
+              console.error('Failed to send completion email:', emailError);
+              // Don't fail the process if email fails
+            }
+          }
+        }
+      }).catch((error) => {
+        console.error('Background generation failed:', error);
+      });
+      
+      // Redirect immediately after showing confirmation
       setTimeout(() => {
         setIsSubmitting(false);
         onClose();
@@ -135,9 +203,9 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
       }, 1500);
       
     } catch (error) {
-      console.error('Artwork generation failed:', error);
+      console.error('Artwork submission failed:', error);
       setError(error instanceof Error ? error.message : 'Something went wrong');
-      setProcessing({ step: 'error', message: 'Generation failed', progress: 0 });
+      setProcessing({ step: 'error', message: 'Submission failed', progress: 0 });
       setIsSubmitting(false);
     }
   };
@@ -204,11 +272,17 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
 
               <div 
                 onClick={() => petMomInputRef.current?.click()}
+                onDragOver={(e) => handleDragOver(e, 'petMom')}
+                onDragEnter={(e) => handleDragEnter(e, 'petMom')}
+                onDragLeave={(e) => handleDragLeave(e, 'petMom')}
+                onDrop={(e) => handleDrop(e, 'petMom')}
                 className={`
                   border-2 border-dashed rounded-lg p-8 cursor-pointer transition-colors
                   ${formData.petMomPhoto 
                     ? 'border-mona-gold bg-mona-gold/10' 
-                    : 'border-gray-300 hover:border-mona-gold hover:bg-mona-gold/5'
+                    : dragActive.petMom 
+                      ? 'border-mona-gold bg-mona-gold/20 border-solid'
+                      : 'border-gray-300 hover:border-mona-gold hover:bg-mona-gold/5'
                   }
                 `}
               >
@@ -265,11 +339,17 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
 
               <div 
                 onClick={() => petInputRef.current?.click()}
+                onDragOver={(e) => handleDragOver(e, 'pet')}
+                onDragEnter={(e) => handleDragEnter(e, 'pet')}
+                onDragLeave={(e) => handleDragLeave(e, 'pet')}
+                onDrop={(e) => handleDrop(e, 'pet')}
                 className={`
                   border-2 border-dashed rounded-lg p-8 cursor-pointer transition-colors
                   ${formData.petPhoto 
                     ? 'border-warm-peach bg-warm-peach/10' 
-                    : 'border-gray-300 hover:border-warm-peach hover:bg-warm-peach/5'
+                    : dragActive.pet 
+                      ? 'border-warm-peach bg-warm-peach/20 border-solid'
+                      : 'border-gray-300 hover:border-warm-peach hover:bg-warm-peach/5'
                   }
                 `}
               >

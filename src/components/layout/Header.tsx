@@ -29,7 +29,7 @@ export const Header = () => {
 
           {/* Single CTA for squeeze page */}
           <Link
-            href="#pricing"
+            href="/create"
             className="
               bg-mona-gold hover:bg-yellow-600
               text-charcoal-frame font-fredoka font-medium
@@ -39,7 +39,7 @@ export const Header = () => {
               focus:outline-none focus:ring-2 focus:ring-mona-gold/50
             "
           >
-            Get Started
+            Upload Photo Now
           </Link>
 
           {/* No mobile menu needed for squeeze page */}

@@ -14,7 +14,13 @@
     "test:contract": "vitest run tests/contract",
     "test:golden": "vitest run tests/golden",
     "test:e2e": "vitest run tests/e2e",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:complete-pipeline": "node scripts/test/test-complete-pipeline.js",
+    "test:flux": "node scripts/test/test-flux.js",
+    "test:monalisa-maker": "node scripts/test/test-monalisa-maker.js",
+    "test:pet-integration": "node scripts/test/test-pet-integration.js",
+    "test:overlay": "node tests/e2e/overlay.test.js",
+    "test:supabase-direct": "node tests/integration/supabase-direct.test.js"
   },
   "dependencies": {
     "@fal-ai/client": "^1.6.2",

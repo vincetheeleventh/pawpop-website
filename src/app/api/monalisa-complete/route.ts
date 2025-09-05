@@ -101,19 +101,12 @@ export async function POST(req: NextRequest) {
       throw new Error("Step 2 failed: No final portrait with pets generated");
     }
 
-    // Fetch the final generated image
-    const finalImageResponse = await fetch(petIntegrationResult.data.images[0].url);
-    const finalImageBuffer = await finalImageResponse.arrayBuffer();
-
-    return new NextResponse(Buffer.from(finalImageBuffer), {
-      status: 200,
-      headers: {
-        'Content-Type': 'image/jpeg',
-        'Cache-Control': 'no-store',
-        'X-Generated-Image-URL': petIntegrationResult.data.images[0].url,
-        'X-Request-ID': petIntegrationResult.requestId,
-        'X-MonaLisa-Portrait-URL': portraitUrl
-      }
+    // Return the image URL in JSON response instead of headers to avoid header size limits
+    return NextResponse.json({
+      success: true,
+      generatedImageUrl: petIntegrationResult.data.images[0].url,
+      requestId: petIntegrationResult.requestId,
+      monaLisaPortraitUrl: portraitUrl
     });
 
   } catch (error) {

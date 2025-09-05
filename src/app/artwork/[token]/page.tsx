@@ -1,9 +1,12 @@
 // src/app/artwork/[token]/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, notFound } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 import { PurchaseModalRouter, getModalVariant, trackModalVariant, type ModalVariant } from '@/components/modals/PurchaseModalRouter';
+import { PurchaseModalPhysicalFirst } from '@/components/modals/PurchaseModalPhysicalFirst';
+import MockupDisplay from '@/components/artwork/MockupDisplay';
 
 interface Artwork {
   id: string;
@@ -24,8 +27,8 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
 
   useEffect(() => {
     fetchArtwork();
-    // Set A/B test variant on component mount
-    setModalVariant(getModalVariant());
+    // Use physical-first variant for artwork pages
+    setModalVariant('physical-first');
   }, [params.token]);
 
   const fetchArtwork = async () => {
@@ -105,19 +108,25 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-mona-gold/20 to-charcoal-frame/10 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
-          <div className="text-6xl mb-4">⏳</div>
+          <div className="text-6xl mb-4">✨</div>
           <h1 className="text-2xl font-playfair font-bold text-charcoal-frame mb-4">
-            Artwork In Progress
+            Artwork Confirmed!
           </h1>
+          <p className="text-gray-600 mb-4">
+            Thank you! We've received your photos and started creating your masterpiece. 
+          </p>
           <p className="text-gray-600 mb-6">
-            Your masterpiece is still being created. Please check back in a few minutes.
+            <strong>Check your email</strong> - we've sent you a confirmation with all the details. Your artwork will be ready shortly!
           </p>
           <button 
             onClick={fetchArtwork}
-            className="btn btn-primary"
+            className="btn btn-primary mb-4"
           >
-            Refresh
+            Check if Ready
           </button>
+          <p className="text-sm text-gray-500">
+            This usually takes just a few minutes to complete.
+          </p>
         </div>
       </div>
     );
@@ -133,49 +142,66 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
               Your Masterpiece is Ready!
             </h1>
             <p className="text-lg text-gray-600">
-              {artwork.pet_name ? `${artwork.customer_name} & ${artwork.pet_name}` : artwork.customer_name} in the style of the Mona Lisa
+              Your personalized Renaissance masterpiece
             </p>
           </div>
 
-          <div className="max-w-4xl mx-auto">
-            {/* Artwork Display */}
-            <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-              <div className="max-w-md mx-auto mb-8">
-                <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4">
-                  <img 
-                    src={artwork.generated_image_url}
-                    alt="Your PawPop Masterpiece"
-                    className="w-full h-full object-cover"
-                  />
+          <div className="max-w-6xl mx-auto">
+            {/* 2-Column Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              
+              {/* Left Column: Artwork Display */}
+              <div className="bg-white rounded-lg shadow-lg p-8">
+                <div className="mb-6">
+                  <div className="bg-gray-100 rounded-lg overflow-hidden mb-4">
+                    <img 
+                      src={artwork.generated_image_url}
+                      alt="Your PawPop Masterpiece"
+                      className="w-full h-auto object-contain"
+                    />
+                  </div>
+                  <p className="text-sm text-gray-500 italic text-center">
+                    "Ah, magnifique! A true Renaissance masterpiece!" - Monsieur Brush
+                  </p>
                 </div>
-                <p className="text-sm text-gray-500 italic">
-                  "Ah, magnifique! A true Renaissance masterpiece!" - Monsieur Brush
-                </p>
+
+                {/* CTA Button */}
+                <div className="text-center">
+                  <button
+                    onClick={handleGetMasterpiece}
+                    className="btn btn-primary btn-lg px-12 text-xl w-full"
+                  >
+                    Make it Real
+                  </button>
+                  
+                  <p className="text-sm text-gray-500 mt-4">
+                    Choose your perfect format and bring your masterpiece home
+                  </p>
+                </div>
               </div>
 
-              {/* CTA Button */}
-              <button
-                onClick={handleGetMasterpiece}
-                className="btn btn-primary btn-lg px-12 text-xl"
-              >
-                Get My Masterpiece
-              </button>
-              
-              <p className="text-sm text-gray-500 mt-4">
-                Choose from digital download, premium prints, or framed canvas
-              </p>
+              {/* Right Column: Product Mockups */}
+              <div className="bg-white rounded-lg shadow-lg p-8">
+                <h3 className="text-xl font-playfair font-semibold text-charcoal-frame mb-6">
+                  See Your Masterpiece Come to Life
+                </h3>
+                
+                <MockupDisplay artwork={artwork} />
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* A/B Test Modal */}
-      <PurchaseModalRouter
-        isOpen={showPurchaseModal}
-        onClose={handleCloseModal}
-        variant={modalVariant}
-        artwork={artwork}
-      />
+      {artwork && (
+        <PurchaseModalRouter
+          isOpen={showPurchaseModal}
+          onClose={handleCloseModal}
+          variant={modalVariant}
+          artwork={artwork}
+        />
+      )}
     </>
   );
 }

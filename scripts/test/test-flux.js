@@ -7,17 +7,36 @@
 
 const fs = require('fs');
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '../.env.local') });
 
-// Note: You'll need to install @fal-ai/client first:
-// npm install @fal-ai/client
+// Load environment variables
+require('dotenv').config({ path: path.join(__dirname, '../../.env.local') });
+
+// Validate required environment variables
+const requiredEnvVars = ['FAL_KEY', 'NEXT_PUBLIC_BASE_URL'];
+const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingVars.length > 0) {
+  console.error('❌ Error: Missing required environment variables:', missingVars.join(', '));
+  console.error('Please check your .env.local file and ensure all required variables are set.');
+  process.exit(1);
+}
+
+// Configure fal client
+const { fal } = require('@fal-ai/client');
+fal.config({
+  credentials: process.env.FAL_KEY
+});
 
 async function testFluxTransformation() {
   try {
-    // Import fal client (will need to be installed)
-    const { fal } = await import('@fal-ai/client');
+    console.log('🚀 Starting Flux transformation test');
+    console.log(`🔗 Using API endpoint: ${process.env.NEXT_PUBLIC_BASE_URL}`);
     
-    // Configure with your API key
+    // Ensure test directory exists
+    const testDir = path.join(__dirname, '../../public/test-output');
+    if (!fs.existsSync(testDir)) {
+      fs.mkdirSync(testDir, { recursive: true });
+    }
     fal.config({
       credentials: process.env.FAL_KEY || process.env.HF_TOKEN
     });
