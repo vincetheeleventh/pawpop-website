@@ -3,6 +3,13 @@ import { supabaseAdmin, type Order, type OrderWithArtwork, type OrderStatusHisto
 import { ProductType } from './printify';
 import crypto from 'crypto';
 
+function ensureSupabaseAdmin() {
+  if (!supabaseAdmin) {
+    throw new Error('Supabase admin client not available - missing SUPABASE_SERVICE_ROLE_KEY');
+  }
+  return supabaseAdmin;
+}
+
 // Create artwork record
 export async function createArtwork(data: {
   user_id?: string;
@@ -10,7 +17,7 @@ export async function createArtwork(data: {
   pet_name?: string;
   customer_name: string;
 }): Promise<Artwork> {
-  const { data: artwork, error } = await supabaseAdmin
+  const { data: artwork, error } = await ensureSupabaseAdmin()
     .from('artworks')
     .insert({
       ...data,
@@ -32,7 +39,7 @@ export async function updateArtworkImage(
   artworkId: string, 
   generatedImageUrl: string
 ): Promise<void> {
-  const { error } = await supabaseAdmin
+  const { error } = await ensureSupabaseAdmin()
     .from('artworks')
     .update({
       generated_image_url: generatedImageUrl,
@@ -57,7 +64,7 @@ export async function createOrder(data: {
   customer_email: string;
   customer_name: string;
 }): Promise<Order> {
-  const { data: order, error } = await supabaseAdmin
+  const { data: order, error } = await ensureSupabaseAdmin()
     .from('orders')
     .insert({
       ...data,
@@ -80,7 +87,7 @@ export async function updateOrderAfterPayment(
   paymentIntentId: string,
   shippingAddress?: any
 ): Promise<void> {
-  const { error } = await supabaseAdmin
+  const { error } = await ensureSupabaseAdmin()
     .from('orders')
     .update({
       order_status: 'paid',
@@ -102,7 +109,7 @@ export async function updateOrderWithPrintify(
   printifyOrderId: string,
   printifyStatus: string
 ): Promise<void> {
-  const { error } = await supabaseAdmin
+  const { error } = await ensureSupabaseAdmin()
     .from('orders')
     .update({
       printify_order_id: printifyOrderId,
@@ -126,7 +133,7 @@ export async function updateOrderFromPrintify(
   // Map Printify status to our order status
   const orderStatus = mapPrintifyStatusToOrderStatus(printifyStatus);
 
-  const { data: order, error } = await supabaseAdmin
+  const { data: order, error } = await ensureSupabaseAdmin()
     .from('orders')
     .update({
       printify_status: printifyStatus,
@@ -150,7 +157,7 @@ export async function updateOrderFromPrintify(
 
 // Get order by Stripe session ID
 export async function getOrderByStripeSession(stripeSessionId: string): Promise<OrderWithArtwork | null> {
-  const { data: order, error } = await supabaseAdmin
+  const { data: order, error } = await ensureSupabaseAdmin()
     .from('orders')
     .select('*, artworks(*)')
     .eq('stripe_session_id', stripeSessionId)
@@ -166,7 +173,7 @@ export async function getOrderByStripeSession(stripeSessionId: string): Promise<
 
 // Get order by ID
 export async function getOrderById(orderId: string): Promise<OrderWithArtwork | null> {
-  const { data: order, error } = await supabaseAdmin
+  const { data: order, error } = await ensureSupabaseAdmin()
     .from('orders')
     .select('*, artworks(*)')
     .eq('id', orderId)
@@ -182,7 +189,7 @@ export async function getOrderById(orderId: string): Promise<OrderWithArtwork | 
 
 // Get orders by user ID
 export async function getOrdersByUser(userId: string): Promise<OrderWithArtwork[]> {
-  const { data: orders, error } = await supabaseAdmin
+  const { data: orders, error } = await ensureSupabaseAdmin()
     .from('orders')
     .select('*, artworks(*)')
     .eq('artworks.user_id', userId)
@@ -198,7 +205,7 @@ export async function getOrdersByUser(userId: string): Promise<OrderWithArtwork[
 
 // Get failed orders for retry
 export async function getFailedOrders(): Promise<OrderWithArtwork[]> {
-  const { data: orders, error } = await supabaseAdmin
+  const { data: orders, error } = await ensureSupabaseAdmin()
     .from('orders')
     .select('*, artworks(*)')
     .eq('order_status', 'paid')
@@ -220,7 +227,7 @@ export async function addOrderStatusHistory(
   status: string,
   notes?: string
 ): Promise<void> {
-  const { error } = await supabaseAdmin
+  const { error } = await ensureSupabaseAdmin()
     .from('order_status_history')
     .insert({
       order_id: orderId,
@@ -235,7 +242,7 @@ export async function addOrderStatusHistory(
 
 // Get order status history
 export async function getOrderStatusHistory(orderId: string): Promise<OrderStatusHistory[]> {
-  const { data: history, error } = await supabaseAdmin
+  const { data: history, error } = await ensureSupabaseAdmin()
     .from('order_status_history')
     .select('*')
     .eq('order_id', orderId)
@@ -270,7 +277,7 @@ function mapPrintifyStatusToOrderStatus(printifyStatus: string): string {
 // Health check for database connection
 export async function checkDatabaseConnection(): Promise<boolean> {
   try {
-    const { error } = await supabaseAdmin
+    const { error } = await ensureSupabaseAdmin()
       .from('orders')
       .select('id')
       .limit(1);
@@ -283,7 +290,7 @@ export async function checkDatabaseConnection(): Promise<boolean> {
 
 // Get artwork by secure token for email delivery
 export async function getArtworkByToken(token: string): Promise<Artwork | null> {
-  const { data: artwork, error } = await supabaseAdmin
+  const { data: artwork, error } = await ensureSupabaseAdmin()
     .from('artworks')
     .select('*')
     .eq('access_token', token)
@@ -302,7 +309,7 @@ export async function getArtworkByToken(token: string): Promise<Artwork | null> 
 export async function generateArtworkToken(artworkId: string): Promise<string | null> {
   const token = crypto.randomUUID();
   
-  const { error } = await supabaseAdmin
+  const { error } = await ensureSupabaseAdmin()
     .from('artworks')
     .update({
       access_token: token,
@@ -327,7 +334,7 @@ export async function createArtworkWithEmail(data: {
   original_pet_mom_url: string;
   original_pet_url: string;
 }): Promise<Artwork | null> {
-  const { data: artwork, error } = await supabaseAdmin
+  const { data: artwork, error } = await ensureSupabaseAdmin()
     .from('artworks')
     .insert({
       customer_email: data.customer_email,

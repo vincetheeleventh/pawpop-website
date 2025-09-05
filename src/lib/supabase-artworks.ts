@@ -2,6 +2,13 @@
 import { supabaseAdmin, type Artwork } from './supabase'
 import { generateSecureToken } from './utils'
 
+function ensureSupabaseAdmin() {
+  if (!supabaseAdmin) {
+    throw new Error('Supabase admin client not available - missing SUPABASE_SERVICE_ROLE_KEY');
+  }
+  return supabaseAdmin;
+}
+
 export interface CreateArtworkData {
   customer_name: string
   customer_email: string
@@ -25,7 +32,7 @@ export async function createArtwork(data: CreateArtworkData): Promise<{ artwork:
   const access_token = generateSecureToken()
   const token_expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
 
-  const { data: artwork, error } = await supabaseAdmin
+  const { data: artwork, error } = await ensureSupabaseAdmin()
     .from('artworks')
     .insert({
       ...data,
@@ -48,7 +55,7 @@ export async function createArtwork(data: CreateArtworkData): Promise<{ artwork:
  * Get artwork by access token (public access)
  */
 export async function getArtworkByToken(token: string): Promise<Artwork | null> {
-  const { data: artwork, error } = await supabaseAdmin
+  const { data: artwork, error } = await ensureSupabaseAdmin()
     .from('artworks')
     .select('*')
     .eq('access_token', token)
@@ -70,7 +77,7 @@ export async function getArtworkByToken(token: string): Promise<Artwork | null> 
  * Get artwork by ID (admin access)
  */
 export async function getArtworkById(id: string): Promise<Artwork | null> {
-  const { data: artwork, error } = await supabaseAdmin
+  const { data: artwork, error } = await ensureSupabaseAdmin()
     .from('artworks')
     .select('*')
     .eq('id', id)
@@ -91,7 +98,7 @@ export async function getArtworkById(id: string): Promise<Artwork | null> {
  * Update artwork data
  */
 export async function updateArtwork(id: string, updates: UpdateArtworkData): Promise<Artwork> {
-  const { data: artwork, error } = await supabaseAdmin
+  const { data: artwork, error } = await ensureSupabaseAdmin()
     .from('artworks')
     .update(updates)
     .eq('id', id)
@@ -110,7 +117,7 @@ export async function updateArtwork(id: string, updates: UpdateArtworkData): Pro
  * Get artworks by status for processing
  */
 export async function getArtworksByStatus(status: 'pending' | 'completed' | 'failed'): Promise<Artwork[]> {
-  const { data: artworks, error } = await supabaseAdmin
+  const { data: artworks, error } = await ensureSupabaseAdmin()
     .from('artworks')
     .select('*')
     .eq('generation_status', status)
@@ -128,7 +135,7 @@ export async function getArtworksByStatus(status: 'pending' | 'completed' | 'fai
  * Get artworks by customer email
  */
 export async function getArtworksByCustomer(email: string): Promise<Artwork[]> {
-  const { data: artworks, error } = await supabaseAdmin
+  const { data: artworks, error } = await ensureSupabaseAdmin()
     .from('artworks')
     .select('*')
     .eq('customer_email', email)
@@ -146,7 +153,7 @@ export async function getArtworksByCustomer(email: string): Promise<Artwork[]> {
  * Delete artwork (admin only)
  */
 export async function deleteArtwork(id: string): Promise<void> {
-  const { error } = await supabaseAdmin
+  const { error } = await ensureSupabaseAdmin()
     .from('artworks')
     .delete()
     .eq('id', id)
@@ -163,7 +170,7 @@ export async function deleteArtwork(id: string): Promise<void> {
 export async function extendArtworkToken(id: string, days: number = 30): Promise<Artwork> {
   const new_expiry = new Date(Date.now() + days * 24 * 60 * 60 * 1000)
   
-  const { data: artwork, error } = await supabaseAdmin
+  const { data: artwork, error } = await ensureSupabaseAdmin()
     .from('artworks')
     .update({ token_expires_at: new_expiry.toISOString() })
     .eq('id', id)
