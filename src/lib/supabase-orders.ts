@@ -1,5 +1,5 @@
 // src/lib/supabase-orders.ts
-import { supabaseAdmin, type Order, type OrderStatusHistory, type Artwork } from './supabase';
+import { supabaseAdmin, type Order, type OrderWithArtwork, type OrderStatusHistory, type Artwork } from './supabase';
 import { ProductType } from './printify';
 import crypto from 'crypto';
 
@@ -122,7 +122,7 @@ export async function updateOrderWithPrintify(
 export async function updateOrderFromPrintify(
   printifyOrderId: string,
   printifyStatus: string
-): Promise<Order | null> {
+): Promise<OrderWithArtwork | null> {
   // Map Printify status to our order status
   const orderStatus = mapPrintifyStatusToOrderStatus(printifyStatus);
 
@@ -149,7 +149,7 @@ export async function updateOrderFromPrintify(
 }
 
 // Get order by Stripe session ID
-export async function getOrderByStripeSession(stripeSessionId: string): Promise<Order | null> {
+export async function getOrderByStripeSession(stripeSessionId: string): Promise<OrderWithArtwork | null> {
   const { data: order, error } = await supabaseAdmin
     .from('orders')
     .select('*, artworks(*)')
@@ -165,7 +165,7 @@ export async function getOrderByStripeSession(stripeSessionId: string): Promise<
 }
 
 // Get order by ID
-export async function getOrderById(orderId: string): Promise<Order | null> {
+export async function getOrderById(orderId: string): Promise<OrderWithArtwork | null> {
   const { data: order, error } = await supabaseAdmin
     .from('orders')
     .select('*, artworks(*)')
@@ -181,7 +181,7 @@ export async function getOrderById(orderId: string): Promise<Order | null> {
 }
 
 // Get orders by user ID
-export async function getOrdersByUser(userId: string): Promise<Order[]> {
+export async function getOrdersByUser(userId: string): Promise<OrderWithArtwork[]> {
   const { data: orders, error } = await supabaseAdmin
     .from('orders')
     .select('*, artworks(*)')
@@ -197,7 +197,7 @@ export async function getOrdersByUser(userId: string): Promise<Order[]> {
 }
 
 // Get failed orders for retry
-export async function getFailedOrders(): Promise<Order[]> {
+export async function getFailedOrders(): Promise<OrderWithArtwork[]> {
   const { data: orders, error } = await supabaseAdmin
     .from('orders')
     .select('*, artworks(*)')

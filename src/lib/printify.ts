@@ -1,7 +1,5 @@
 // src/lib/printify.ts
 
-import { ProductType } from './printify-products';
-
 const PRINTIFY_API_URL = 'https://api.printify.com/v1';
 
 // Upload image to Printify
@@ -66,6 +64,9 @@ export enum ProductType {
   ART_PRINT = 'art_print', 
   FRAMED_CANVAS = 'framed_canvas'
 }
+
+// Type alias for database compatibility
+export type ProductTypeString = 'digital' | 'art_print' | 'framed_canvas';
 
 // Printify product configurations for PawPop
 export const PRINTIFY_PRODUCTS = {

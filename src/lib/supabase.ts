@@ -54,6 +54,11 @@ export interface Order {
   updated_at: string
 }
 
+// Extended Order type with joined artwork data
+export interface OrderWithArtwork extends Order {
+  artworks: Artwork
+}
+
 export interface OrderStatusHistory {
   id: string
   order_id: string

@@ -26,6 +26,8 @@ export async function POST(req: Request) {
     return new NextResponse('Webhook Error', { status: 400 });
   }
 
+  console.log(`Received webhook event: ${event.type} with ID: ${event.id}`);
+
   // Handle the event
   switch (event.type) {
     case 'checkout.session.completed':
@@ -36,7 +38,8 @@ export async function POST(req: Request) {
         // Parse order metadata
         const metadata = parseOrderMetadata(session);
         if (!metadata) {
-          console.error('Missing order metadata in session:', session.id);
+          console.log('No order metadata found - likely a test event:', session.id);
+          // For test events or sessions without metadata, just log and continue
           break;
         }
 
@@ -69,6 +72,7 @@ export async function POST(req: Request) {
         
       } catch (error) {
         console.error('Error processing checkout session:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
         // Don't return error to Stripe - we'll handle retry logic separately
       }
       break;

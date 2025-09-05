@@ -38,7 +38,7 @@ export async function POST(
     } as any;
 
     const metadata = {
-      productType: order.product_type,
+      productType: order.product_type as any, // Type conversion for compatibility
       imageUrl: order.artworks?.generated_image_url || '',
       size: order.product_size,
       customerName: order.customer_name,

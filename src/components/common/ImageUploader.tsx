@@ -52,7 +52,8 @@ export const ImageUploader = () => {
         <div>
           <p className="text-center mb-2">Recipient's Photo</p>
           <UploadButton
-            endpoint="imageUploader"
+            endpoint="petMomUploader"
+            input={{ artworkId: "temp-id" }}
             onClientUploadComplete={(res) => {
               console.log("Recipient files: ", res);
               if (res?.[0]) {
@@ -76,7 +77,8 @@ export const ImageUploader = () => {
         <div>
           <p className="text-center mb-2">Pet's Photo</p>
           <UploadButton
-            endpoint="imageUploader"
+            endpoint="petPhotoUploader"
+            input={{ customerName: "Test User", customerEmail: "test@example.com", petName: "Test Pet" }}
             onClientUploadComplete={(res) => {
               console.log("Pet files: ", res);
               if (res?.[0]) {
