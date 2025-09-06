@@ -12,20 +12,31 @@ The core PawPop application is feature-complete and production-ready. The primar
 
 The project is currently in the **Launch & Optimization** phase. The immediate focus is on ensuring a smooth, reliable, and legally compliant production environment while continuing to optimize for conversion and user experience.
 
-### Next Priority: Pre-Launch Hardening & Analytics
+### Next Priority: Post-Purchase Image Upscaling Pipeline
 
-The next highest priority is to harden the application for its initial public launch and to ensure that all necessary analytics and monitoring are in place to measure success and iterate effectively. This involves three key areas:
+The next highest priority is implementing the post-purchase image upscaling pipeline to ensure physical products are printed with optimal quality. This involves integrating high-resolution image enhancement after successful Stripe payments.
 
-1.  **Production Readiness:** Finalize all legal and compliance requirements, including a thorough review of the Privacy Policy and Terms of Service. Set up production-level monitoring and error alerting to ensure any issues are addressed proactively.
+**Implementation Phases:**
 
-2.  **A/B Testing & Conversion Optimization:** The A/B testing framework for the purchase modals is in place. The next step is to launch these tests and begin gathering data to determine the most effective purchase flow. This is critical for achieving the conversion rate targets outlined in the PRD.
+1.  **Image Upscaling Service Integration:** Build `/api/upscale` endpoint using fal.ai Real-ESRGAN for 4x resolution enhancement of generated artworks (targeting 4K+ quality for print).
 
-3.  **Documentation Consolidation:** While the project has excellent, detailed documentation for each component, creating a top-level guide that links to these individual documents will improve onboarding and long-term maintainability.
+2.  **Stripe Webhook Enhancement:** Extend existing webhook to trigger upscaling pipeline for physical product purchases, extracting artwork metadata and orchestrating the print-ready process.
+
+3.  **Print-Ready Processing:** Create `/api/printify/prepare-artwork` to handle DPI adjustment (300 DPI), color profile conversion, and format optimization before Printify integration.
+
+4.  **Enhanced Printify Integration:** Update existing Printify workflows to accept high-resolution images with proper validation and fallback mechanisms.
+
+**Secondary Priorities:**
+
+- **Production Readiness:** Finalize legal compliance and monitoring setup
+- **A/B Testing Optimization:** Continue purchase modal conversion testing  
+- **Documentation Consolidation:** Create unified onboarding guide
 
 ---
 
 ### Finished
 
+- **September 2025:** Connected complete image generation pipeline from frontend to backend with real-time processing UI, secure token-based artwork viewing, and comprehensive test coverage.
 - **September 2025:** Implemented a comprehensive testing framework for the MonaLisa Maker pipeline, including unit, integration, contract, and golden image tests.
 - **September 2025:** Transformed the website into a minimal, high-conversion squeeze page, focusing on a single call-to-action.
 - **August 2025:** Implemented a complete testing framework for the A/B testing of purchase modals.

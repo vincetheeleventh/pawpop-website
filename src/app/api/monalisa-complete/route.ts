@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
         output_format: "jpeg",
         safety_tolerance: "2",
         image_urls: [portraitUrl, petImageUrl],
-        aspect_ratio: "9:16"
+        aspect_ratio: "2:3"
       },
       logs: true,
       onQueueUpdate: (update) => {

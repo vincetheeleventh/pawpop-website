@@ -96,8 +96,10 @@ async function resolveVariantIds() {
     console.log('✅ Using art print variants:', catalogCache.artPrintVariants)
   } catch (error) {
     console.error('❌ Failed to resolve art print variants:', error)
-    // Fallback to empty array - will be handled in product creation
-    catalogCache.artPrintVariants = []
+    // Fallback: Use the same variants as framed canvas since they use the same blueprint
+    // This ensures art print mockups are still generated
+    catalogCache.artPrintVariants = PRODUCT_CONFIG.FRAMED_CANVAS.variants.map(v => v.id)
+    console.log('🔄 Using fallback art print variants (same as canvas):', catalogCache.artPrintVariants)
   }
 
   console.log('✅ Variant IDs resolved:', catalogCache)

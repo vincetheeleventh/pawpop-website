@@ -267,12 +267,172 @@ echo $FAL_KEY
 file public/images/flux-test.png
 ```
 
+## Post-Purchase Image Upscaling Pipeline
+
+### Overview
+After successful Stripe payment, implement a high-resolution upscaling pipeline to prepare images for physical product printing via Printify.
+
+### Architecture Flow
+```
+Stripe Payment Success → Webhook Trigger → Image Upscaling → Printify Integration
+```
+
+### Components to Build
+
+#### 1. Image Upscaling API (`/src/app/api/upscale/route.ts`)
+- **Purpose**: Enhance generated artwork resolution for print quality
+- **Input**: Generated artwork URL from completed pipeline (2:3 aspect ratio)
+- **Output**: High-resolution version (4K+ for print quality)
+- **Service Options**:
+  - **Real-ESRGAN**: General purpose upscaling (4x enhancement)
+  - **ESRGAN**: Photo-realistic enhancement
+  - **fal.ai upscaling models**: `fal-ai/real-esrgan` or `fal-ai/esrgan`
+  - **Topaz Gigapixel AI**: Premium option via API
+
+#### 2. Stripe Webhook Enhancement (`/src/app/api/webhook/route.ts`)
+- **Trigger**: `checkout.session.completed` event
+- **Process**:
+  1. Verify payment success for physical products
+  2. Extract artwork ID from session metadata
+  3. Trigger upscaling pipeline
+  4. Update order status to "processing_print"
+
+#### 3. Print-Ready Processing API (`/src/app/api/printify/prepare-artwork/route.ts`)
+- **Purpose**: Prepare upscaled images for Printify specifications
+- **Features**:
+  - Format conversion (PNG/JPEG optimization)
+  - DPI adjustment (300 DPI for print)
+  - Color profile conversion (sRGB/CMYK)
+  - Size validation per product type
+
+#### 4. Enhanced Printify Integration
+- **Update**: `/src/lib/printify.ts`
+- **Enhancement**: Accept high-resolution image URLs
+- **Validation**: Ensure minimum resolution requirements per product
+- **Fallback**: Use original resolution if upscaling fails
+
+### Implementation Plan
+
+#### Phase 1: Upscaling Service Integration
+```typescript
+// /src/app/api/upscale/route.ts
+export async function POST(req: NextRequest) {
+  const { imageUrl, targetResolution = "4x" } = await req.json();
+  
+  // Call upscaling service (Real-ESRGAN via fal.ai)
+  const result = await fal.subscribe("fal-ai/real-esrgan", {
+    input: {
+      image_url: imageUrl,
+      scale: 4,
+      model_name: "RealESRGAN_x4plus"
+    }
+  });
+  
+  return NextResponse.json({
+    originalUrl: imageUrl,
+    upscaledUrl: result.data.image.url,
+    resolution: result.data.resolution
+  });
+}
+```
+
+#### Phase 2: Webhook Integration
+```typescript
+// Enhanced webhook in /src/app/api/webhook/route.ts
+if (event.type === 'checkout.session.completed') {
+  const session = event.data.object;
+  const artworkId = session.metadata?.artwork_id;
+  
+  // For physical products only
+  if (session.metadata?.product_type !== 'digital') {
+    // Trigger upscaling pipeline
+    await fetch('/api/upscale-and-print', {
+      method: 'POST',
+      body: JSON.stringify({ artworkId, orderId: session.id })
+    });
+  }
+}
+```
+
+#### Phase 3: Print Pipeline Orchestration
+```typescript
+// /src/app/api/upscale-and-print/route.ts
+export async function POST(req: NextRequest) {
+  const { artworkId, orderId } = await req.json();
+  
+  // 1. Get original artwork
+  const artwork = await getArtworkById(artworkId);
+  
+  // 2. Upscale image
+  const upscaled = await fetch('/api/upscale', {
+    method: 'POST',
+    body: JSON.stringify({ imageUrl: artwork.generated_image_url })
+  });
+  
+  // 3. Create Printify product with high-res image
+  const printifyProduct = await createPrintifyProduct({
+    imageUrl: upscaled.upscaledUrl,
+    productType: session.metadata.product_type
+  });
+  
+  // 4. Update order status
+  await updateOrderStatus(orderId, 'print_ready');
+}
+```
+
+### Service Provider Options
+
+#### Option 1: fal.ai Real-ESRGAN (Recommended)
+- **Pros**: Same provider, consistent API, good quality
+- **Cons**: Additional cost per upscale
+- **Endpoint**: `fal-ai/real-esrgan`
+- **Cost**: ~$0.02-0.05 per upscale
+
+#### Option 2: Replicate ESRGAN
+- **Pros**: Multiple model options, competitive pricing
+- **Cons**: Additional service integration
+- **Models**: `nightmareai/real-esrgan`, `jingyunliang/swinir`
+
+#### Option 3: Topaz Gigapixel AI
+- **Pros**: Industry standard, highest quality
+- **Cons**: Higher cost, complex integration
+- **Use case**: Premium tier products
+
+### Database Schema Updates
+
+```sql
+-- Add upscaling tracking to artworks table
+ALTER TABLE artworks ADD COLUMN upscaled_image_url TEXT;
+ALTER TABLE artworks ADD COLUMN upscale_status VARCHAR(20) DEFAULT 'pending';
+ALTER TABLE artworks ADD COLUMN upscale_resolution VARCHAR(20);
+ALTER TABLE artworks ADD COLUMN upscaled_at TIMESTAMP;
+
+-- Add print preparation tracking
+ALTER TABLE orders ADD COLUMN print_ready_at TIMESTAMP;
+ALTER TABLE orders ADD COLUMN high_res_image_url TEXT;
+```
+
+### Error Handling & Fallbacks
+
+1. **Upscaling Failure**: Use original resolution with warning
+2. **Service Timeout**: Retry with exponential backoff
+3. **Quality Issues**: Fallback to alternative upscaling service
+4. **Printify Rejection**: Auto-adjust format/resolution
+
+### Monitoring & Analytics
+
+- Track upscaling success rates
+- Monitor processing times
+- Quality comparison metrics
+- Cost per upscale analysis
+
 ## Next Steps
 
 1. **Production Integration**: Replace overlay endpoints with flux-direct
 2. **UI Updates**: Add progress indicators for streaming
 3. **Batch Processing**: Handle multiple images efficiently
 4. **Quality Optimization**: Fine-tune LoRA parameters
+5. **🆕 Post-Purchase Pipeline**: Implement upscaling and print-ready processing
 
 ---
 
