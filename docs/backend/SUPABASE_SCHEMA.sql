@@ -18,6 +18,9 @@ CREATE TABLE artworks (
   user_id UUID REFERENCES users(id) ON DELETE SET NULL,
   original_image_url TEXT NOT NULL,
   generated_image_url TEXT,
+  upscaled_image_url TEXT,
+  upscale_status TEXT DEFAULT 'pending' CHECK (upscale_status IN ('pending', 'processing', 'completed', 'failed', 'not_required')),
+  upscaled_at TIMESTAMP WITH TIME ZONE,
   pet_name TEXT,
   customer_name TEXT NOT NULL,
   customer_email TEXT NOT NULL,
@@ -66,6 +69,7 @@ CREATE INDEX idx_orders_status ON orders(order_status);
 CREATE INDEX idx_orders_printify ON orders(printify_order_id);
 CREATE INDEX idx_artworks_user ON artworks(user_id);
 CREATE INDEX idx_artworks_status ON artworks(generation_status);
+CREATE INDEX idx_artworks_upscale_status ON artworks(upscale_status);
 CREATE INDEX idx_artworks_token ON artworks(access_token);
 CREATE INDEX idx_artworks_email ON artworks(customer_email);
 CREATE INDEX idx_order_history_order ON order_status_history(order_id);

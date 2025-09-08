@@ -18,6 +18,10 @@ import {
   getOrderByStripeSession,
   addOrderStatusHistory
 } from './supabase-orders';
+import {
+  getArtworkById,
+  updateArtworkUpscaleStatus
+} from './supabase-artworks';
 
 export interface OrderMetadata {
   productType: ProductType;
@@ -65,6 +69,43 @@ async function getShippingMethod(countryCode: string): Promise<number> {
   return 1;
 }
 
+// Trigger upscaling for physical products
+async function triggerUpscaling(artworkId: string): Promise<string> {
+  console.log(`🔍 Triggering upscaling for artwork ${artworkId}`);
+  
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/upscale`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ artworkId }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Upscaling API returned ${response.status}: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Upscaling failed');
+    }
+
+    console.log(`✅ Upscaling completed for artwork ${artworkId}: ${result.upscaled_image_url}`);
+    return result.upscaled_image_url;
+    
+  } catch (error) {
+    console.error(`❌ Upscaling failed for artwork ${artworkId}:`, error);
+    
+    // Mark as failed in database
+    await updateArtworkUpscaleStatus(artworkId, 'failed');
+    
+    // Re-throw to let caller handle fallback
+    throw error;
+  }
+}
+
 // Process a completed Stripe checkout session
 export async function processOrder({ session, metadata }: ProcessOrderParams): Promise<void> {
   const { productType, imageUrl, size, customerName, petName } = metadata;
@@ -85,8 +126,35 @@ export async function processOrder({ session, metadata }: ProcessOrderParams): P
   // Skip Printify for digital products
   if (productType === ProductType.DIGITAL) {
     console.log(`Digital product order processed for session: ${session.id}`);
+    // For digital products, mark upscaling as not required
+    if (order?.artwork_id) {
+      await updateArtworkUpscaleStatus(order.artwork_id, 'not_required');
+    }
     // TODO: Send digital download email
     return;
+  }
+
+  // For physical products, trigger upscaling before Printify order creation
+  let finalImageUrl = imageUrl;
+  if (order?.artwork_id) {
+    try {
+      console.log(`🎨 Starting upscaling process for physical product order ${session.id}`);
+      finalImageUrl = await triggerUpscaling(order.artwork_id);
+      console.log(`✅ Using upscaled image for Printify: ${finalImageUrl}`);
+      
+      if (order) {
+        await addOrderStatusHistory(order.id, 'processing', 'Image upscaled successfully, creating Printify order');
+      }
+    } catch (upscaleError) {
+      console.warn(`⚠️ Upscaling failed for order ${session.id}, using original image:`, upscaleError);
+      
+      if (order) {
+        await addOrderStatusHistory(order.id, 'processing', 'Upscaling failed, using original image for Printify order');
+      }
+      
+      // Continue with original image - don't fail the entire order
+      finalImageUrl = imageUrl;
+    }
   }
 
   // Extract shipping information
@@ -96,7 +164,7 @@ export async function processOrder({ session, metadata }: ProcessOrderParams): P
   }
 
   // Validate order data
-  const validation = validateOrderData(productType, size, shippingAddress.country, imageUrl);
+  const validation = validateOrderData(productType, size, shippingAddress.country, finalImageUrl);
   if (!validation.isValid) {
     throw new Error(`Order validation failed: ${validation.error}`);
   }
@@ -105,7 +173,7 @@ export async function processOrder({ session, metadata }: ProcessOrderParams): P
   const { productId, variantId } = await getOrCreatePrintifyProduct(
     productType,
     size,
-    imageUrl,
+    finalImageUrl,
     shippingAddress.country,
     customerName,
     petName
@@ -124,7 +192,7 @@ export async function processOrder({ session, metadata }: ProcessOrderParams): P
         variant_id: variantId,
         quantity: 1,
         print_areas: {
-          front: imageUrl
+          front: finalImageUrl
         }
       }
     ],

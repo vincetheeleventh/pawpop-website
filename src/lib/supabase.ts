@@ -35,6 +35,9 @@ export interface Artwork {
   user_id?: string
   original_image_url: string
   generated_image_url?: string
+  upscaled_image_url?: string
+  upscale_status: 'pending' | 'processing' | 'completed' | 'failed' | 'not_required'
+  upscaled_at?: string
   pet_name?: string
   customer_name: string
   customer_email: string

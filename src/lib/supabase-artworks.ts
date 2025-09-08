@@ -22,6 +22,9 @@ export interface UpdateArtworkData {
   original_pet_mom_url?: string
   original_pet_url?: string
   generation_status?: 'pending' | 'completed' | 'failed'
+  upscaled_image_url?: string
+  upscale_status?: 'pending' | 'processing' | 'completed' | 'failed' | 'not_required'
+  upscaled_at?: string
   pet_name?: string
 }
 
@@ -38,7 +41,8 @@ export async function createArtwork(data: CreateArtworkData): Promise<{ artwork:
       ...data,
       access_token,
       token_expires_at: token_expires_at.toISOString(),
-      generation_status: 'pending'
+      generation_status: 'pending',
+      upscale_status: 'pending'
     })
     .select()
     .single()
@@ -183,4 +187,57 @@ export async function extendArtworkToken(id: string, days: number = 30): Promise
   }
 
   return artwork
+}
+
+/**
+ * Update artwork upscale status and URL
+ */
+export async function updateArtworkUpscaleStatus(
+  id: string, 
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'not_required',
+  upscaled_image_url?: string
+): Promise<Artwork> {
+  const updateData: any = { 
+    upscale_status: status,
+    upscaled_at: status === 'completed' ? new Date().toISOString() : undefined
+  }
+  
+  if (upscaled_image_url) {
+    updateData.upscaled_image_url = upscaled_image_url
+  }
+
+  const { data: artwork, error } = await ensureSupabaseAdmin()
+    .from('artworks')
+    .update(updateData)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error updating artwork upscale status:', error)
+    throw new Error(`Failed to update upscale status: ${error.message}`)
+  }
+
+  return artwork
+}
+
+/**
+ * Get artworks that need upscaling (for batch processing)
+ */
+export async function getArtworksNeedingUpscale(): Promise<Artwork[]> {
+  const { data: artworks, error } = await ensureSupabaseAdmin()
+    .from('artworks')
+    .select('*')
+    .eq('generation_status', 'completed')
+    .eq('upscale_status', 'pending')
+    .not('generated_image_url', 'is', null)
+    .order('created_at', { ascending: true })
+    .limit(10) // Process in batches
+
+  if (error) {
+    console.error('Error getting artworks needing upscale:', error)
+    throw new Error(`Failed to get artworks needing upscale: ${error.message}`)
+  }
+
+  return artworks || []
 }
