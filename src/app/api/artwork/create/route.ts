@@ -9,12 +9,15 @@ export async function POST(request: NextRequest) {
     const { customer_name, customer_email, original_image_url, pet_name } = body
 
     // Validate required fields
-    if (!customer_name || !customer_email || !original_image_url) {
+    if (!customer_name || !customer_email) {
       return NextResponse.json(
-        { error: 'Missing required fields: customer_name, customer_email, original_image_url' },
+        { error: 'Missing required fields: customer_name, customer_email' },
         { status: 400 }
       )
     }
+
+    // Set default for original_image_url if not provided
+    const imageUrl = original_image_url || 'pending'
 
     // Validate email format
     if (!isValidEmail(customer_email)) {
@@ -28,7 +31,7 @@ export async function POST(request: NextRequest) {
     const { artwork, access_token } = await createArtwork({
       customer_name,
       customer_email,
-      original_image_url,
+      original_image_url: imageUrl,
       pet_name
     })
 
@@ -39,9 +42,13 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error creating artwork:', error)
+    console.error('Error creating artwork:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      error: error
+    })
     return NextResponse.json(
-      { error: 'Failed to create artwork' },
+      { error: error instanceof Error ? error.message : 'Failed to create artwork' },
       { status: 500 }
     )
   }

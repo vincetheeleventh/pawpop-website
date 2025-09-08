@@ -21,10 +21,30 @@ export interface UpdateArtworkData {
   generated_image_url?: string
   original_pet_mom_url?: string
   original_pet_url?: string
-  generation_status?: 'pending' | 'completed' | 'failed'
-  upscaled_image_url?: string
-  upscale_status?: 'pending' | 'processing' | 'completed' | 'failed' | 'not_required'
-  upscaled_at?: string
+  generation_status?: 'pending' | 'processing' | 'completed' | 'failed'
+  generation_step?: 'pending' | 'monalisa_generation' | 'pet_integration' | 'upscaling' | 'mockup_generation' | 'completed' | 'failed'
+  source_images?: {
+    pet_photo?: string
+    pet_mom_photo?: string
+    uploadthing_keys?: Record<string, any>
+  }
+  generated_images?: {
+    monalisa_base?: string
+    artwork_preview?: string
+    artwork_full_res?: string
+    generation_steps?: any[]
+  }
+  delivery_images?: {
+    digital_download?: string
+    print_ready?: string
+    mockups?: Record<string, any>
+  }
+  processing_status?: {
+    artwork_generation?: 'pending' | 'processing' | 'completed' | 'failed'
+    upscaling?: 'not_required' | 'pending' | 'processing' | 'completed' | 'failed'
+    mockup_generation?: 'pending' | 'processing' | 'completed' | 'failed'
+  }
+  generation_metadata?: Record<string, any>
   pet_name?: string
 }
 
@@ -42,7 +62,29 @@ export async function createArtwork(data: CreateArtworkData): Promise<{ artwork:
       access_token,
       token_expires_at: token_expires_at.toISOString(),
       generation_status: 'pending',
-      upscale_status: 'pending'
+      generation_step: 'pending',
+      source_images: {
+        pet_photo: '',
+        pet_mom_photo: '',
+        uploadthing_keys: {}
+      },
+      generated_images: {
+        monalisa_base: '',
+        artwork_preview: '',
+        artwork_full_res: '',
+        generation_steps: []
+      },
+      delivery_images: {
+        digital_download: '',
+        print_ready: '',
+        mockups: {}
+      },
+      processing_status: {
+        artwork_generation: 'pending',
+        upscaling: 'not_required',
+        mockup_generation: 'pending'
+      },
+      generation_metadata: {}
     })
     .select()
     .single()
@@ -245,8 +287,7 @@ export async function getArtworksNeedingUpscale(): Promise<Artwork[]> {
     .from('artworks')
     .select('*')
     .eq('generation_status', 'completed')
-    .eq('upscale_status', 'pending')
-    .not('generated_image_url', 'is', null)
+    .contains('processing_status', { upscaling: 'pending' })
     .order('created_at', { ascending: true })
     .limit(10) // Process in batches
 

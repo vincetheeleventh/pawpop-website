@@ -33,12 +33,57 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    // Prepare update data
+    // Prepare update data for new schema
     const updateData: any = {}
-    if (generated_image_url) updateData.generated_image_url = generated_image_url
-    if (original_pet_mom_url) updateData.original_pet_mom_url = original_pet_mom_url
-    if (original_pet_url) updateData.original_pet_url = original_pet_url
-    if (generation_status) updateData.generation_status = generation_status
+    
+    // Handle legacy fields
+    if (generated_image_url) {
+      updateData.generated_image_url = generated_image_url
+      // Also update new schema structure
+      updateData.generated_images = {
+        ...existingArtwork.generated_images,
+        artwork_preview: generated_image_url,
+        digital_download: generated_image_url
+      }
+      updateData.delivery_images = {
+        ...existingArtwork.delivery_images,
+        digital_download: generated_image_url
+      }
+    }
+    
+    if (original_pet_mom_url) {
+      updateData.original_pet_mom_url = original_pet_mom_url
+      updateData.source_images = {
+        ...existingArtwork.source_images,
+        pet_mom_photo: original_pet_mom_url
+      }
+    }
+    
+    if (original_pet_url) {
+      updateData.original_pet_url = original_pet_url
+      updateData.source_images = {
+        ...existingArtwork.source_images,
+        pet_photo: original_pet_url
+      }
+    }
+    
+    if (generation_status) {
+      updateData.generation_status = generation_status
+      // Update processing status
+      updateData.processing_status = {
+        ...existingArtwork.processing_status,
+        artwork_generation: generation_status
+      }
+      // Update generation step
+      if (generation_status === 'completed') {
+        updateData.generation_step = 'completed'
+      } else if (generation_status === 'processing') {
+        updateData.generation_step = 'pet_integration'
+      } else if (generation_status === 'failed') {
+        updateData.generation_step = 'failed'
+      }
+    }
+    
     if (pet_name !== undefined) updateData.pet_name = pet_name
 
     // Update artwork

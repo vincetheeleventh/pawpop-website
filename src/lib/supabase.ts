@@ -33,16 +33,11 @@ export const supabaseAdmin = (() => {
 export interface Artwork {
   id: string
   user_id?: string
-  original_image_url: string
-  generated_image_url?: string
   pet_name?: string
   customer_name: string
   customer_email: string
-  original_pet_mom_url?: string
-  original_pet_url?: string
   access_token?: string
   token_expires_at?: string
-  generation_status: 'pending' | 'processing' | 'completed' | 'failed'
   
   // New organized image fields
   source_images: {

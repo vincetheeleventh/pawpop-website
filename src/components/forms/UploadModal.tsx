@@ -203,7 +203,11 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
       }, 1500);
       
     } catch (error) {
-      console.error('Artwork submission failed:', error);
+      console.error('Artwork submission failed:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        error: error
+      });
       setError(error instanceof Error ? error.message : 'Something went wrong');
       setProcessing({ step: 'error', message: 'Submission failed', progress: 0 });
       setIsSubmitting(false);
