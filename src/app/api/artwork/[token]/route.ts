@@ -27,7 +27,9 @@ export async function GET(
         pet_name: artwork.pet_name,
         customer_name: artwork.customer_name,
         customer_email: artwork.customer_email,
-        generation_status: artwork.generation_status
+        generation_status: artwork.generation_status,
+        mockup_urls: artwork.mockup_urls,
+        mockup_generated_at: artwork.mockup_generated_at
       }
     });
 

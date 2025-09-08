@@ -14,6 +14,8 @@ interface MockupDisplayProps {
   artwork: {
     id: string
     generated_image_url: string
+    mockup_urls?: Mockup[]
+    mockup_generated_at?: string
   }
 }
 
@@ -23,16 +25,25 @@ export default function MockupDisplay({ artwork }: MockupDisplayProps) {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const generateMockups = async () => {
+    const loadMockups = async () => {
       if (!artwork.generated_image_url) {
         setError('No artwork image available')
         setLoading(false)
         return
       }
 
+      // Check if we have pre-generated mockups in Supabase
+      if (artwork.mockup_urls && artwork.mockup_urls.length > 0) {
+        console.log('✅ Loading mockups from Supabase cache:', artwork.mockup_urls.length)
+        setMockups(artwork.mockup_urls)
+        setLoading(false)
+        return
+      }
+
+      // Fallback: Generate mockups in real-time (slower)
       try {
         setLoading(true)
-        console.log('🖼️ Fetching mockups for artwork:', artwork.id)
+        console.log('🖼️ No cached mockups found, generating from Printify API for artwork:', artwork.id)
         
         const response = await fetch('/api/printify/generate-mockups', {
           method: 'POST',
@@ -45,8 +56,6 @@ export default function MockupDisplay({ artwork }: MockupDisplayProps) {
           })
         })
 
-        console.log('📡 Mockup API response status:', response.status)
-
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
           console.error('❌ Mockup API error:', errorData)
@@ -54,10 +63,9 @@ export default function MockupDisplay({ artwork }: MockupDisplayProps) {
         }
 
         const data = await response.json()
-        console.log('📦 Mockup API response:', data)
         
         if (data.success && data.mockups && data.mockups.length > 0) {
-          console.log('✅ Using real Printify mockups:', data.mockups.length)
+          console.log('✅ Generated real-time Printify mockups:', data.mockups.length)
           setMockups(data.mockups)
         } else {
           throw new Error('No mockups generated')
@@ -66,21 +74,21 @@ export default function MockupDisplay({ artwork }: MockupDisplayProps) {
         console.error('❌ Error generating mockups:', err)
         setError(err instanceof Error ? err.message : 'Failed to load mockups')
         
-        // Create mockups with the actual artwork image overlaid on product templates
-        console.log('🎨 Using artwork-based mockups as fallback')
+        // Final fallback: Use artwork image as placeholder
+        console.log('🎨 Using artwork-based mockups as final fallback')
         setMockups([
           {
             type: 'framed_canvas',
             title: 'Framed Canvas',
             description: 'Gallery-wrapped, ready to hang',
-            mockupUrl: artwork.generated_image_url, // Use actual artwork for now
+            mockupUrl: artwork.generated_image_url,
             productId: 'fallback-canvas'
           },
           {
             type: 'art_print',
             title: 'Premium Art Print',
             description: 'Museum-quality paper',
-            mockupUrl: artwork.generated_image_url, // Use actual artwork for now
+            mockupUrl: artwork.generated_image_url,
             productId: 'fallback-print'
           }
         ])
@@ -89,8 +97,8 @@ export default function MockupDisplay({ artwork }: MockupDisplayProps) {
       }
     }
 
-    generateMockups()
-  }, [artwork.generated_image_url, artwork.id])
+    loadMockups()
+  }, [artwork.generated_image_url, artwork.id, artwork.mockup_urls])
 
   if (loading) {
     return (

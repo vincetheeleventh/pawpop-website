@@ -26,6 +26,8 @@ CREATE TABLE artworks (
   access_token TEXT UNIQUE,
   token_expires_at TIMESTAMP WITH TIME ZONE,
   generation_status TEXT DEFAULT 'pending' CHECK (generation_status IN ('pending', 'completed', 'failed')),
+  mockup_urls JSONB,
+  mockup_generated_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

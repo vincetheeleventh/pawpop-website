@@ -372,6 +372,29 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Generated ${mockups.length} mockups successfully`)
 
+    // Store mockups in Supabase for faster future loading
+    try {
+      const { supabase } = await import('@/lib/supabase')
+      
+      const mockupData = {
+        mockup_urls: mockups,
+        mockup_generated_at: new Date().toISOString()
+      }
+      
+      const { error: updateError } = await supabase
+        .from('artworks')
+        .update(mockupData)
+        .eq('id', artworkId)
+      
+      if (updateError) {
+        console.error('❌ Failed to store mockups in Supabase:', updateError)
+      } else {
+        console.log('✅ Mockups stored in Supabase successfully')
+      }
+    } catch (dbError) {
+      console.error('❌ Error storing mockups in database:', dbError)
+    }
+
     return NextResponse.json({
       success: true,
       mockups

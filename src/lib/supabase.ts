@@ -43,6 +43,14 @@ export interface Artwork {
   access_token?: string
   token_expires_at?: string
   generation_status: 'pending' | 'completed' | 'failed'
+  mockup_urls?: Array<{
+    type: string
+    title: string
+    description: string
+    mockupUrl: string
+    productId: string
+  }>
+  mockup_generated_at?: string
   created_at: string
   updated_at: string
 }
