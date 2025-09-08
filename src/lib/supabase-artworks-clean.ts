@@ -29,7 +29,12 @@ export interface UpdateArtworkData {
   upscale_completed_at?: string
   fal_request_id?: string
   generation_params?: object
-  mockup_urls?: object
+  delivery_images?: object
+  generated_images?: object
+  source_images?: object
+  generation_step?: 'pending' | 'monalisa_generation' | 'pet_integration' | 'upscaling' | 'mockup_generation' | 'completed' | 'failed'
+  processing_status?: object
+  generation_metadata?: object
 }
 
 /**

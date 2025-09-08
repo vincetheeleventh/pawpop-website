@@ -28,11 +28,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No generated image to upscale' }, { status: 400 });
     }
 
-    // Check if already upscaled
-    if (artwork.upscale_status === 'completed' && artwork.upscaled_image_url) {
+    // Check if already upscaled using new schema
+    if (artwork.processing_status?.upscaling === 'completed' && artwork.generated_images?.artwork_full_res) {
       return NextResponse.json({ 
         success: true, 
-        upscaled_image_url: artwork.upscaled_image_url,
+        upscaled_image_url: artwork.generated_images.artwork_full_res,
         message: 'Already upscaled'
       });
     }
@@ -113,9 +113,9 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({
-      upscale_status: artwork.upscale_status,
-      upscaled_image_url: artwork.upscaled_image_url,
-      upscaled_at: artwork.upscaled_at
+      upscale_status: artwork.processing_status?.upscaling || 'not_started',
+      upscaled_image_url: artwork.generated_images?.artwork_full_res || null,
+      upscaled_at: artwork.generation_metadata?.upscale_completed_at || null
     });
 
   } catch (error) {

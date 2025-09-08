@@ -28,8 +28,10 @@ export async function GET(
         customer_name: artwork.customer_name,
         customer_email: artwork.customer_email,
         generation_status: artwork.generation_status,
-        mockup_urls: artwork.mockup_urls,
-        mockup_generated_at: artwork.mockup_generated_at
+        delivery_images: artwork.delivery_images,
+        generated_images: artwork.generated_images,
+        generation_step: artwork.generation_step,
+        processing_status: artwork.processing_status
       }
     });
 

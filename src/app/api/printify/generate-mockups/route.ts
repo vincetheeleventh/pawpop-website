@@ -376,9 +376,17 @@ export async function POST(request: NextRequest) {
     try {
       const { supabase } = await import('@/lib/supabase')
       
+      // Update delivery_images with new mockup structure
       const mockupData = {
-        mockup_urls: mockups,
-        mockup_generated_at: new Date().toISOString()
+        delivery_images: {
+          mockups: {
+            framed_canvas: mockups.find(m => m.type === 'framed_canvas')?.mockupUrl || '',
+            art_print: mockups.find(m => m.type === 'art_print')?.mockupUrl || ''
+          }
+        },
+        processing_status: {
+          mockup_generation: 'completed'
+        }
       }
       
       const { error: updateError } = await supabase

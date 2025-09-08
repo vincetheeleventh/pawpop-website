@@ -29,7 +29,8 @@
     "migration:apply:local": "MIGRATION_ENV=local npm run migration:apply",
     "migration:apply:staging": "MIGRATION_ENV=staging npm run migration:apply",
     "migration:apply:production": "MIGRATION_ENV=production npm run migration:apply",
-    "migration:test": "node scripts/test-migration-system.js"
+    "migration:test": "node scripts/test-migration-system.js",
+    "test:new-schema-e2e": "node scripts/test/test-new-schema-e2e.js"
   },
   "dependencies": {
     "@fal-ai/client": "^1.6.2",

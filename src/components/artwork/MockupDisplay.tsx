@@ -14,8 +14,12 @@ interface MockupDisplayProps {
   artwork: {
     id: string
     generated_image_url: string
-    mockup_urls?: Mockup[]
-    mockup_generated_at?: string
+    delivery_images?: {
+      mockups?: Record<string, any>
+    }
+    processing_status?: {
+      mockup_generation?: string
+    }
   }
 }
 
@@ -33,11 +37,37 @@ export default function MockupDisplay({ artwork }: MockupDisplayProps) {
       }
 
       // Check if we have pre-generated mockups in Supabase
-      if (artwork.mockup_urls && artwork.mockup_urls.length > 0) {
-        console.log('✅ Loading mockups from Supabase cache:', artwork.mockup_urls.length)
-        setMockups(artwork.mockup_urls)
-        setLoading(false)
-        return
+      if (artwork.delivery_images?.mockups) {
+        const mockupData = artwork.delivery_images.mockups
+        // Convert JSONB mockup data to Mockup array format
+        const cachedMockups: Mockup[] = []
+        
+        if (mockupData.framed_canvas) {
+          cachedMockups.push({
+            type: 'framed_canvas',
+            title: 'Framed Canvas',
+            description: 'Gallery-wrapped, ready to hang',
+            mockupUrl: mockupData.framed_canvas,
+            productId: 'canvas'
+          })
+        }
+        
+        if (mockupData.art_print) {
+          cachedMockups.push({
+            type: 'art_print',
+            title: 'Premium Art Print',
+            description: 'Museum-quality paper',
+            mockupUrl: mockupData.art_print,
+            productId: 'print'
+          })
+        }
+        
+        if (cachedMockups.length > 0) {
+          console.log('✅ Loading mockups from Supabase cache:', cachedMockups.length)
+          setMockups(cachedMockups)
+          setLoading(false)
+          return
+        }
       }
 
       // Fallback: Generate mockups in real-time (slower)
@@ -98,7 +128,7 @@ export default function MockupDisplay({ artwork }: MockupDisplayProps) {
     }
 
     loadMockups()
-  }, [artwork.generated_image_url, artwork.id, artwork.mockup_urls])
+  }, [artwork.generated_image_url, artwork.id, artwork.delivery_images?.mockups])
 
   if (loading) {
     return (

@@ -197,13 +197,29 @@ export async function updateArtworkUpscaleStatus(
   status: 'pending' | 'processing' | 'completed' | 'failed' | 'not_required',
   upscaled_image_url?: string
 ): Promise<Artwork> {
-  const updateData: any = { 
-    upscale_status: status,
-    upscaled_at: status === 'completed' ? new Date().toISOString() : undefined
+  // First get current artwork to preserve existing data
+  const { data: currentArtwork } = await ensureSupabaseAdmin()
+    .from('artworks')
+    .select('processing_status, generated_images, generation_metadata')
+    .eq('id', id)
+    .single()
+
+  const updateData: any = {
+    processing_status: {
+      ...currentArtwork?.processing_status,
+      upscaling: status
+    },
+    generation_metadata: {
+      ...currentArtwork?.generation_metadata,
+      ...(status === 'completed' ? { upscale_completed_at: new Date().toISOString() } : {})
+    }
   }
   
   if (upscaled_image_url) {
-    updateData.upscaled_image_url = upscaled_image_url
+    updateData.generated_images = {
+      ...currentArtwork?.generated_images,
+      artwork_full_res: upscaled_image_url
+    }
   }
 
   const { data: artwork, error } = await ensureSupabaseAdmin()
