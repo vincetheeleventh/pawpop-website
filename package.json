@@ -20,7 +20,16 @@
     "test:monalisa-maker": "node scripts/test/test-monalisa-maker.js",
     "test:pet-integration": "node scripts/test/test-pet-integration.js",
     "test:overlay": "node tests/e2e/overlay.test.js",
-    "test:supabase-direct": "node tests/integration/supabase-direct.test.js"
+    "test:supabase-direct": "node tests/integration/supabase-direct.test.js",
+    "migration:status": "node scripts/migration-manager.js status",
+    "migration:create": "node scripts/migration-manager.js create",
+    "migration:apply": "node scripts/migration-manager.js apply",
+    "migration:rollback": "node scripts/migration-manager.js rollback",
+    "migration:health": "node scripts/migration-manager.js health",
+    "migration:apply:local": "MIGRATION_ENV=local npm run migration:apply",
+    "migration:apply:staging": "MIGRATION_ENV=staging npm run migration:apply",
+    "migration:apply:production": "MIGRATION_ENV=production npm run migration:apply",
+    "migration:test": "node scripts/test-migration-system.js"
   },
   "dependencies": {
     "@fal-ai/client": "^1.6.2",

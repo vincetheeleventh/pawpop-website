@@ -1,0 +1,146 @@
+name: Database Schema Migration
+
+on:
+  push:
+    paths: 
+      - 'supabase/migrations/**'
+      - 'supabase/rollbacks/**'
+  pull_request:
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/rollbacks/**'
+
+jobs:
+  validate-migration:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Validate migration files
+        run: |
+          echo "🔍 Validating migration files..."
+          
+          # Check that migration files follow naming convention
+          for file in supabase/migrations/*.sql; do
+            if [[ ! $(basename "$file") =~ ^[0-9]{3}_[a-z_]+\.sql$ ]]; then
+              echo "❌ Invalid migration filename: $(basename "$file")"
+              echo "Expected format: 001_description.sql"
+              exit 1
+            fi
+          done
+          
+          # Check that rollback files exist for each migration
+          for migration in supabase/migrations/*.sql; do
+            migration_num=$(basename "$migration" | cut -d'_' -f1)
+            rollback_pattern="supabase/rollbacks/${migration_num}_rollback_*.sql"
+            
+            if ! ls $rollback_pattern 1> /dev/null 2>&1; then
+              echo "❌ Missing rollback file for migration: $(basename "$migration")"
+              echo "Expected: ${rollback_pattern}"
+              exit 1
+            fi
+          done
+          
+          echo "✅ All migration files validated"
+
+  test-migration-staging:
+    runs-on: ubuntu-latest
+    needs: validate-migration
+    if: github.event_name == 'pull_request'
+    
+    environment: staging
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Test migration on staging
+        env:
+          MIGRATION_ENV: staging
+          SUPABASE_STAGING_URL: ${{ secrets.SUPABASE_STAGING_URL }}
+          SUPABASE_STAGING_SERVICE_KEY: ${{ secrets.SUPABASE_STAGING_SERVICE_KEY }}
+        run: |
+          echo "🧪 Testing migration on staging environment..."
+          
+          # Get the latest migration file
+          LATEST_MIGRATION=$(ls supabase/migrations/*.sql | sort | tail -n1 | xargs basename)
+          
+          # Apply migration to staging
+          npm run migration:apply:staging "$LATEST_MIGRATION"
+          
+          # Run health checks
+          npm run migration:health
+          
+          echo "✅ Migration tested successfully on staging"
+
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: [validate-migration, test-migration-staging]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Deploy to production
+        env:
+          MIGRATION_ENV: production
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          echo "🚀 Deploying migration to production..."
+          
+          # Get the latest migration file
+          LATEST_MIGRATION=$(ls supabase/migrations/*.sql | sort | tail -n1 | xargs basename)
+          
+          # Apply migration to production (with automatic backup)
+          npm run migration:apply:production "$LATEST_MIGRATION"
+          
+          # Run comprehensive health checks
+          npm run migration:health
+          
+          echo "✅ Migration deployed successfully to production"
+          
+      - name: Notify deployment
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#deployments'
+          text: |
+            Database migration deployment ${{ job.status }}
+            Migration: ${{ env.LATEST_MIGRATION }}
+            Environment: Production
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

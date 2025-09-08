@@ -35,9 +35,6 @@ export interface Artwork {
   user_id?: string
   original_image_url: string
   generated_image_url?: string
-  upscaled_image_url?: string
-  upscale_status: 'pending' | 'processing' | 'completed' | 'failed' | 'not_required'
-  upscaled_at?: string
   pet_name?: string
   customer_name: string
   customer_email: string
@@ -45,15 +42,35 @@ export interface Artwork {
   original_pet_url?: string
   access_token?: string
   token_expires_at?: string
-  generation_status: 'pending' | 'completed' | 'failed'
-  mockup_urls?: Array<{
-    type: string
-    title: string
-    description: string
-    mockupUrl: string
-    productId: string
-  }>
-  mockup_generated_at?: string
+  generation_status: 'pending' | 'processing' | 'completed' | 'failed'
+  
+  // New organized image fields
+  source_images: {
+    pet_photo: string
+    pet_mom_photo: string
+    uploadthing_keys: Record<string, any>
+  }
+  generated_images: {
+    monalisa_base: string
+    artwork_preview: string
+    artwork_full_res: string
+    generation_steps: any[]
+  }
+  delivery_images: {
+    digital_download: string
+    print_ready: string
+    mockups: Record<string, any>
+  }
+  
+  // New workflow tracking
+  generation_step: 'pending' | 'monalisa_generation' | 'pet_integration' | 'upscaling' | 'mockup_generation' | 'completed' | 'failed'
+  generation_metadata: Record<string, any>
+  processing_status: {
+    artwork_generation: 'pending' | 'processing' | 'completed' | 'failed'
+    upscaling: 'not_required' | 'pending' | 'processing' | 'completed' | 'failed'
+    mockup_generation: 'pending' | 'processing' | 'completed' | 'failed'
+  }
+  
   created_at: string
   updated_at: string
 }
