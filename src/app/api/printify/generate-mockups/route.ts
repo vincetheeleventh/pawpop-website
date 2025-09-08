@@ -372,31 +372,40 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Generated ${mockups.length} mockups successfully`)
 
-    // Store mockups in Supabase for faster future loading
+    // Store mockups in Supabase for faster future loading (new schema)
     try {
-      const { supabase } = await import('@/lib/supabase')
+      const { supabaseAdmin } = await import('@/lib/supabase')
       
-      // Update delivery_images with new mockup structure
-      const mockupData = {
-        delivery_images: {
-          mockups: {
-            framed_canvas: mockups.find(m => m.type === 'framed_canvas')?.mockupUrl || '',
-            art_print: mockups.find(m => m.type === 'art_print')?.mockupUrl || ''
-          }
-        },
-        processing_status: {
+      if (supabaseAdmin) {
+        // Get current artwork data
+        const { data: currentArtwork } = await supabaseAdmin
+          .from('artworks')
+          .select('delivery_images, processing_status')
+          .eq('id', artworkId)
+          .single()
+
+        // Update delivery_images.mockups with new mockup data
+        const updatedDeliveryImages = {
+          ...currentArtwork?.delivery_images,
+          mockups: mockups
+        }
+
+        // Update processing_status.mockup_generation
+        const updatedProcessingStatus = {
+          ...currentArtwork?.processing_status,
           mockup_generation: 'completed'
         }
-      }
-      
-      const { error: updateError } = await supabase
-        .from('artworks')
-        .update(mockupData)
-        .eq('id', artworkId)
-      
-      if (updateError) {
-        console.error('❌ Failed to store mockups in Supabase:', updateError)
-      } else {
+
+        await supabaseAdmin
+          .from('artworks')
+          .update({
+            delivery_images: updatedDeliveryImages,
+            processing_status: updatedProcessingStatus,
+            generation_step: 'mockup_generation',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', artworkId)
+        
         console.log('✅ Mockups stored in Supabase successfully')
       }
     } catch (dbError) {

@@ -102,12 +102,28 @@ All emails feature:
 
 ### Environment Variables
 
+#### Development (.env.local)
 ```bash
 # Required
 RESEND_API_KEY=re_xxxxxxxxxx
 
 # Optional (defaults to pawpopart.com)
 NEXT_PUBLIC_BASE_URL=https://pawpopart.com
+
+# Email Testing Configuration
+EMAIL_TEST_MODE=true
+EMAIL_TEST_RECIPIENT=pawpopart@gmail.com
+EMAIL_MOCK_MODE=false
+EMAIL_LOG_MODE=true
+```
+
+#### Production (.env.production)
+```bash
+# Production Email Configuration
+RESEND_API_KEY=your_production_resend_api_key
+NEXT_PUBLIC_BASE_URL=https://pawpopart.com
+EMAIL_TEST_MODE=false
+EMAIL_MOCK_MODE=false
 ```
 
 ### Resend Setup
@@ -123,6 +139,8 @@ The system uses `pawpopart.com` as the sender domain:
 - **From Address**: `PawPop <noreply@pawpopart.com>`
 - **Reply-To**: Customers can reply to emails
 - **Domain Verification**: Required for deliverability
+- **SPF/DKIM Records**: Must be configured for authentication
+- **DMARC Policy**: Recommended for enhanced security
 
 ## Email Content
 
@@ -182,7 +200,64 @@ The system uses `pawpopart.com` as the sender domain:
 3. **Invalid Email Addresses** - Validation prevents sending
 4. **Network Issues** - Timeout handling and error logging
 
-## Testing
+## Testing and Domain Protection
+
+### 🛡️ Domain Reputation Protection
+
+**Why It Matters:**
+- **Deliverability**: Poor domain reputation leads to emails landing in spam folders
+- **Blacklisting**: Sending too many test emails can get your domain blacklisted
+- **Customer Trust**: Production emails from blacklisted domains damage brand credibility
+- **Cost**: Email service providers may suspend accounts with poor reputation
+
+### 🧪 Testing Modes
+
+#### 1. Mock Mode (Safest)
+```bash
+node scripts/safe-email-test.js --mode=mock
+```
+- **No real emails sent** - Complete protection
+- All emails logged to console only
+- Perfect for development and debugging
+- Zero impact on domain reputation
+
+#### 2. Test Mode (Safe)
+```bash
+node scripts/safe-email-test.js --mode=test
+```
+- All emails redirected to single test recipient
+- Rate limited (10 emails/hour per recipient)
+- Clear test indicators in subject and content
+- Minimal domain reputation impact
+
+#### 3. Live Mode (Production Only)
+```bash
+node scripts/safe-email-test.js --mode=live
+```
+- Emails sent to actual recipients
+- Only allowed in production environment
+- Full domain reputation impact
+
+### 🚦 Rate Limiting
+
+The system includes built-in rate limiting to prevent spam:
+- **Limit**: 10 emails per hour per recipient
+- **Automatic**: Enforced in test mode
+- **Logging**: Warns when limits are approached
+- **Reset**: Hourly automatic reset
+
+### Automatic Test Mode Detection
+```typescript
+// Automatically detects development environment
+const isTestMode = process.env.NODE_ENV === 'development' || process.env.EMAIL_TEST_MODE === 'true'
+```
+
+### Test Email Wrapping
+In test mode, all emails include:
+- Clear test indicators
+- Original recipient information
+- Environment details
+- Timestamp for tracking
 
 ### Unit Tests (`/tests/unit/email.test.ts`)
 - Email service function testing
@@ -201,6 +276,8 @@ The system uses `pawpopart.com` as the sender domain:
 - ✅ Error scenarios covered
 - ✅ Integration points validated
 - ✅ Template content verification
+- ✅ Domain protection mechanisms
+- ✅ Rate limiting functionality
 
 ## Monitoring and Analytics
 
@@ -224,8 +301,10 @@ The system uses `pawpopart.com` as the sender domain:
 
 ### Email Security
 - **SPF/DKIM** - Domain authentication configured
+- **DMARC** - Domain-based Message Authentication, Reporting & Conformance
 - **Unsubscribe** - Not implemented (transactional emails)
-- **Rate Limiting** - Resend handles sending limits
+- **Rate Limiting** - Both Resend and application-level limits
+- **Domain Reputation** - Protected through testing modes and rate limiting
 
 ## Performance Considerations
 
@@ -270,6 +349,9 @@ The system uses `pawpopart.com` as the sender domain:
 - **Delivery Optimization** - Send time optimization
 - **Rich Content** - Interactive email elements
 - **Integration** - CRM system integration
+- **Enhanced Rate Limiting** - Redis-based distributed rate limiting
+- **Domain Reputation Monitoring** - Automated reputation tracking
+- **Advanced Testing Modes** - Staging environment email routing
 
 ## Troubleshooting
 
@@ -279,22 +361,66 @@ The system uses `pawpopart.com` as the sender domain:
 - Check RESEND_API_KEY environment variable
 - Verify domain verification in Resend dashboard
 - Check API rate limits
+- Ensure test mode is properly configured
 
 **Emails going to spam**
 - Verify SPF/DKIM records
 - Check sender reputation
 - Review email content for spam triggers
+- Monitor bounce rates and spam complaints
 
 **Template rendering issues**
 - Validate HTML structure
 - Test across email clients
 - Check image URLs and accessibility
 
+**Rate limiting issues**
+- Check remaining email quota with `EmailRateLimit.getRemainingEmails()`
+- Switch to mock mode for development
+- Monitor hourly reset cycles
+
+### 🚨 Emergency Procedures
+
+**If Domain Gets Blacklisted:**
+1. **Stop all email sending** immediately
+2. **Contact Resend support** for assistance
+3. **Review sending patterns** for issues
+4. **Implement stricter rate limiting**
+5. **Consider using subdomain** for testing
+
+**If Emails Go to Spam:**
+1. **Check domain authentication** (SPF, DKIM, DMARC)
+2. **Review email content** for spam triggers
+3. **Monitor sender reputation** tools
+4. **Reduce sending frequency** temporarily
+
+### 📋 Best Practices
+
+**Development:**
+1. **Always use mock mode** for initial development
+2. **Use test mode sparingly** for integration testing
+3. **Never use live mode** in development
+4. **Monitor rate limits** to avoid hitting caps
+
+**Testing:**
+1. **Use dedicated test email addresses**
+2. **Clear test indicators** in all test emails
+3. **Limit test frequency** to protect reputation
+4. **Document test scenarios** for team members
+
+**Production:**
+1. **Verify domain ownership** in Resend dashboard
+2. **Set up SPF/DKIM records** for authentication
+3. **Monitor bounce rates** and spam complaints
+4. **Use proper unsubscribe mechanisms**
+
 ### Debug Steps
 1. Check application logs for email errors
 2. Verify Resend dashboard for delivery status
 3. Test email functions in development
 4. Validate environment configuration
+5. Monitor rate limiting status
+6. Check domain reputation tools
 
 ## Contact and Support
 
@@ -303,6 +429,15 @@ For email system issues:
 - **Template Updates**: Modify `/src/lib/email.ts`
 - **Configuration**: Update environment variables
 - **Monitoring**: Use Resend analytics dashboard
+- **Domain Issues**: Check Resend dashboard for domain status
+- **Resend Support**: [support@resend.com](mailto:support@resend.com)
+
+### 🔗 Useful Resources
+
+- [Resend Domain Setup](https://resend.com/docs/dashboard/domains/introduction)
+- [Email Authentication Guide](https://resend.com/docs/dashboard/domains/authentication)
+- [Sender Reputation Tools](https://www.mail-tester.com/)
+- [Email Deliverability Best Practices](https://resend.com/docs/knowledge-base/deliverability)
 
 ---
 

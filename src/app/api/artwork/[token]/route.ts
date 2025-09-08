@@ -20,18 +20,18 @@ export async function GET(
       return new NextResponse('Artwork not found or link expired', { status: 404 });
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
+      success: true,
       artwork: {
         id: artwork.id,
-        generated_image_url: artwork.generated_image_url,
         pet_name: artwork.pet_name,
         customer_name: artwork.customer_name,
         customer_email: artwork.customer_email,
-        generation_status: artwork.generation_status,
-        delivery_images: artwork.delivery_images,
-        generated_images: artwork.generated_images,
-        generation_step: artwork.generation_step,
-        processing_status: artwork.processing_status
+        generated_image_url: artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res,
+        generation_status: artwork.generation_step === 'completed' ? 'completed' : 
+                          artwork.generation_step === 'failed' ? 'failed' : 'pending',
+        mockup_urls: artwork.delivery_images?.mockups || [],
+        mockup_generated_at: artwork.processing_status?.mockup_generation === 'completed' ? artwork.updated_at : null
       }
     });
 

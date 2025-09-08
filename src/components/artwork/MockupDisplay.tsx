@@ -14,6 +14,8 @@ interface MockupDisplayProps {
   artwork: {
     id: string
     generated_image_url: string
+    mockup_urls?: Mockup[] | Record<string, any>
+    mockup_generated_at?: string
     delivery_images?: {
       mockups?: Record<string, any>
     }
@@ -36,38 +38,30 @@ export default function MockupDisplay({ artwork }: MockupDisplayProps) {
         return
       }
 
-      // Check if we have pre-generated mockups in Supabase
-      if (artwork.delivery_images?.mockups) {
-        const mockupData = artwork.delivery_images.mockups
-        // Convert JSONB mockup data to Mockup array format
-        const cachedMockups: Mockup[] = []
-        
-        if (mockupData.framed_canvas) {
-          cachedMockups.push({
-            type: 'framed_canvas',
-            title: 'Framed Canvas',
-            description: 'Gallery-wrapped, ready to hang',
-            mockupUrl: mockupData.framed_canvas,
-            productId: 'canvas'
-          })
+      // Check if we have pre-generated mockups in Supabase (new schema)
+      let cachedMockups: Mockup[] = []
+      
+      // Handle both old array format and new JSONB format
+      if (artwork.mockup_urls) {
+        if (Array.isArray(artwork.mockup_urls)) {
+          cachedMockups = artwork.mockup_urls
+        } else if (typeof artwork.mockup_urls === 'object') {
+          // Convert new schema format to array
+          cachedMockups = Object.entries(artwork.mockup_urls).map(([key, value]) => ({
+            type: key,
+            title: key === 'framed_canvas' ? 'Framed Canvas' : 'Premium Art Print',
+            description: key === 'framed_canvas' ? 'Gallery-wrapped, ready to hang' : 'Museum-quality paper',
+            mockupUrl: typeof value === 'string' ? value : value?.mockupUrl || '',
+            productId: `cached-${key}`
+          })).filter(m => m.mockupUrl)
         }
-        
-        if (mockupData.art_print) {
-          cachedMockups.push({
-            type: 'art_print',
-            title: 'Premium Art Print',
-            description: 'Museum-quality paper',
-            mockupUrl: mockupData.art_print,
-            productId: 'print'
-          })
-        }
-        
-        if (cachedMockups.length > 0) {
-          console.log('✅ Loading mockups from Supabase cache:', cachedMockups.length)
-          setMockups(cachedMockups)
-          setLoading(false)
-          return
-        }
+      }
+      
+      if (cachedMockups.length > 0) {
+        console.log('✅ Loading mockups from Supabase cache:', cachedMockups.length)
+        setMockups(cachedMockups)
+        setLoading(false)
+        return
       }
 
       // Fallback: Generate mockups in real-time (slower)
