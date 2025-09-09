@@ -12,9 +12,9 @@ function ensureSupabaseAdmin() {
 export interface CreateArtworkData {
   customer_name: string
   customer_email: string
-  original_image_url: string
   pet_name?: string
   user_id?: string
+  original_image_url?: string
 }
 
 export interface UpdateArtworkData {
@@ -61,7 +61,6 @@ export async function createArtwork(data: CreateArtworkData): Promise<{ artwork:
       ...data,
       access_token,
       token_expires_at: token_expires_at.toISOString(),
-      generation_status: 'pending',
       generation_step: 'pending',
       source_images: {
         pet_photo: '',

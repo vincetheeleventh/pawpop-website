@@ -24,7 +24,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Artwork not found' }, { status: 404 });
     }
 
-    if (!artwork.generated_image_url) {
+    const generatedImageUrl = artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res;
+    if (!generatedImageUrl) {
       return NextResponse.json({ error: 'No generated image to upscale' }, { status: 400 });
     }
 
@@ -40,12 +41,12 @@ export async function POST(req: NextRequest) {
     // Update status to processing
     await updateArtworkUpscaleStatus(artworkId, 'processing');
 
-    console.log(`🔍 Starting upscaling for artwork ${artworkId} with image: ${artwork.generated_image_url}`);
+    console.log(`🔍 Starting upscaling for artwork ${artworkId} with image: ${generatedImageUrl}`);
 
     // Upscale the image using fal.ai clarity-upscaler
     const result = await fal.subscribe("fal-ai/clarity-upscaler", {
       input: {
-        image_url: artwork.generated_image_url,
+        image_url: generatedImageUrl,
         prompt: "masterpiece, best quality, highres, visible paintstroke texture, oil painting style",
         upscale_factor: 3,
         negative_prompt: "(worst quality, low quality, normal quality:2), blurry, pixelated, artifacts",
@@ -64,10 +65,6 @@ export async function POST(req: NextRequest) {
     });
 
     console.log(`✅ Upscaling completed for artwork ${artworkId}`);
-    console.log('Upscaled image URL:', result.data.image.url);
-
-    // Update artwork with upscaled image URL
-    await updateArtworkUpscaleStatus(artworkId, 'completed', result.data.image.url);
 
     return NextResponse.json({
       success: true,

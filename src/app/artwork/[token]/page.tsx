@@ -15,6 +15,7 @@ interface Artwork {
   customer_name: string;
   customer_email: string;
   generation_status: string;
+  generation_step?: string;
 }
 
 export default function ArtworkPage({ params }: { params: { token: string } }) {
@@ -104,7 +105,10 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
     );
   }
 
-  if (artwork.generation_status !== 'completed') {
+  // Check both old and new schema fields for completion status
+  const isCompleted = artwork.generation_status === 'completed' || artwork.generation_step === 'completed';
+  
+  if (!isCompleted) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-mona-gold/20 to-charcoal-frame/10 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">

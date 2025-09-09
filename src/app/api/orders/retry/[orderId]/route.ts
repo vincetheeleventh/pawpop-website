@@ -39,7 +39,7 @@ export async function POST(
 
     const metadata = {
       productType: order.product_type as any, // Type conversion for compatibility
-      imageUrl: order.artworks?.generated_image_url || '',
+      imageUrl: order.artworks?.generated_images?.artwork_preview || order.artworks?.generated_images?.artwork_full_res || '',
       size: order.product_size,
       customerName: order.customer_name,
       petName: order.artworks?.pet_name

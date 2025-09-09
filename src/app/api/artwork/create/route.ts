@@ -6,7 +6,7 @@ import { isValidEmail } from '@/lib/utils'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { customer_name, customer_email, original_image_url, pet_name } = body
+    const { customer_name, customer_email, pet_name } = body
 
     // Validate required fields
     if (!customer_name || !customer_email) {
@@ -15,9 +15,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-
-    // Set default for original_image_url if not provided
-    const imageUrl = original_image_url || 'pending'
 
     // Validate email format
     if (!isValidEmail(customer_email)) {
@@ -31,7 +28,6 @@ export async function POST(request: NextRequest) {
     const { artwork, access_token } = await createArtwork({
       customer_name,
       customer_email,
-      original_image_url: imageUrl,
       pet_name
     })
 

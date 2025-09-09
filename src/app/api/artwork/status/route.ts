@@ -23,9 +23,9 @@ export async function GET(request: NextRequest) {
         customer_name: artwork.customer_name,
         customer_email: artwork.customer_email,
         pet_name: artwork.pet_name,
-        generation_status: artwork.generation_status,
-        original_image_url: artwork.original_image_url,
-        generated_image_url: artwork.generated_image_url,
+        generation_step: artwork.generation_step,
+        source_images: artwork.source_images,
+        generated_images: artwork.generated_images,
         created_at: artwork.created_at,
         updated_at: artwork.updated_at
       })),

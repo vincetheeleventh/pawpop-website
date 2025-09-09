@@ -109,7 +109,6 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
         body: JSON.stringify({
           customer_name: formData.name,
           customer_email: formData.email,
-          original_image_url: 'pending', // Placeholder, will be updated later
         }),
       });
 
@@ -168,7 +167,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
               body: JSON.stringify({
                 artwork_id: artwork.id,
                 generated_image_url: generatedImageUrl,
-                generation_status: 'completed'
+                generation_step: 'completed'
               })
             });
 

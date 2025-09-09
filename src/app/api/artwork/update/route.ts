@@ -7,7 +7,7 @@ import { sendMasterpieceReadyEmail } from '@/lib/email'
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json()
-    const { artwork_id, generated_image_url, original_pet_mom_url, original_pet_url, generation_status, pet_name } = body
+    const { artwork_id, generated_image_url, original_pet_mom_url, original_pet_url, generation_step, pet_name } = body
 
     // Validate required fields
     if (!artwork_id) {
@@ -33,17 +33,13 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    // Prepare update data for new schema
+    // Prepare update data for clean schema
     const updateData: any = {}
     
-    // Handle legacy fields
     if (generated_image_url) {
-      updateData.generated_image_url = generated_image_url
-      // Also update new schema structure
       updateData.generated_images = {
         ...existingArtwork.generated_images,
-        artwork_preview: generated_image_url,
-        digital_download: generated_image_url
+        artwork_preview: generated_image_url
       }
       updateData.delivery_images = {
         ...existingArtwork.delivery_images,
@@ -52,7 +48,6 @@ export async function PATCH(request: NextRequest) {
     }
     
     if (original_pet_mom_url) {
-      updateData.original_pet_mom_url = original_pet_mom_url
       updateData.source_images = {
         ...existingArtwork.source_images,
         pet_mom_photo: original_pet_mom_url
@@ -60,27 +55,30 @@ export async function PATCH(request: NextRequest) {
     }
     
     if (original_pet_url) {
-      updateData.original_pet_url = original_pet_url
       updateData.source_images = {
         ...existingArtwork.source_images,
         pet_photo: original_pet_url
       }
     }
     
-    if (generation_status) {
-      updateData.generation_status = generation_status
-      // Update processing status
-      updateData.processing_status = {
-        ...existingArtwork.processing_status,
-        artwork_generation: generation_status
-      }
-      // Update generation step
-      if (generation_status === 'completed') {
-        updateData.generation_step = 'completed'
-      } else if (generation_status === 'processing') {
-        updateData.generation_step = 'pet_integration'
-      } else if (generation_status === 'failed') {
-        updateData.generation_step = 'failed'
+    if (generation_step) {
+      updateData.generation_step = generation_step
+      // Update processing status based on generation step
+      if (generation_step === 'completed') {
+        updateData.processing_status = {
+          ...existingArtwork.processing_status,
+          artwork_generation: 'completed'
+        }
+      } else if (generation_step === 'pet_integration') {
+        updateData.processing_status = {
+          ...existingArtwork.processing_status,
+          artwork_generation: 'processing'
+        }
+      } else if (generation_step === 'failed') {
+        updateData.processing_status = {
+          ...existingArtwork.processing_status,
+          artwork_generation: 'failed'
+        }
       }
     }
     
@@ -90,7 +88,7 @@ export async function PATCH(request: NextRequest) {
     const updatedArtwork = await updateArtwork(artwork_id, updateData)
 
     // Send "masterpiece ready" email and generate mockups if generation just completed
-    if (generation_status === 'completed' && existingArtwork.generation_status !== 'completed' && generated_image_url) {
+    if (generation_step === 'completed' && existingArtwork.generation_step !== 'completed' && generated_image_url) {
       const artworkUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://pawpopart.com'}/artwork/${existingArtwork.access_token}`
       
       try {
@@ -140,8 +138,8 @@ export async function PATCH(request: NextRequest) {
       success: true,
       artwork: {
         id: updatedArtwork.id,
-        generation_status: updatedArtwork.generation_status,
-        generated_image_url: updatedArtwork.generated_image_url,
+        generation_step: updatedArtwork.generation_step,
+        generated_images: updatedArtwork.generated_images,
         pet_name: updatedArtwork.pet_name,
         updated_at: updatedArtwork.updated_at
       }
