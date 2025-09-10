@@ -20,6 +20,12 @@
 .env.*
 !.env.example
 
+# Google Ads MCP secrets
+src/mcp/google-ads/client_secret.json
+src/mcp/google-ads/.env
+src/mcp/google-ads/token.json
+mcp_config.json
+
 # System files
 .DS_Store
 Thumbs.db
