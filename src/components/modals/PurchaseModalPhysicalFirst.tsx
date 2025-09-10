@@ -15,7 +15,10 @@ interface PurchaseModalPhysicalFirstProps {
   onClose: () => void;
   artwork: {
     id: string;
-    generated_image_url: string;
+    generated_images?: {
+      artwork_preview?: string;
+      artwork_full_res?: string;
+    };
     customer_name: string;
     customer_email: string;
     pet_name?: string;
@@ -55,7 +58,7 @@ export const PurchaseModalPhysicalFirst = ({ isOpen, onClose, artwork }: Purchas
               customerEmail: artwork.customer_email,
               customerName: artwork.customer_name,
               petName: artwork.pet_name,
-              imageUrl: artwork.generated_image_url,
+              imageUrl: artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res || '',
               variant: 'physical-first',
               testMode: true // Flag for test mode
             })
@@ -107,7 +110,7 @@ Check console for detailed error logs.`);
           customerEmail: artwork.customer_email,
           customerName: artwork.customer_name,
           petName: artwork.pet_name,
-          imageUrl: artwork.generated_image_url,
+          imageUrl: artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res || '',
           variant: 'physical-first' // For A/B testing analytics
         })
       });
@@ -187,7 +190,7 @@ Check console for detailed error logs.`);
           <div className="text-center mb-8">
             <div className="relative inline-block">
               <img 
-                src={artwork.generated_image_url}
+                src={artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res}
                 alt="Your masterpiece"
                 className="w-40 h-40 rounded-lg object-cover shadow-lg"
               />

@@ -14,8 +14,12 @@ interface Artwork {
   pet_name?: string;
   customer_name: string;
   customer_email: string;
-  generation_status: string;
-  generation_step?: string;
+  generation_step: string;
+  generated_images?: {
+    artwork_preview?: string;
+    artwork_full_res?: string;
+  };
+  processing_status?: Record<string, any>;
 }
 
 export default function ArtworkPage({ params }: { params: { token: string } }) {
@@ -105,8 +109,8 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
     );
   }
 
-  // Check both old and new schema fields for completion status
-  const isCompleted = artwork.generation_status === 'completed' || artwork.generation_step === 'completed';
+  // Check generation step for completion status
+  const isCompleted = artwork.generation_step === 'completed';
   
   if (!isCompleted) {
     return (

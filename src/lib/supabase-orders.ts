@@ -21,7 +21,12 @@ export async function createArtwork(data: {
     .from('artworks')
     .insert({
       ...data,
-      generation_status: 'pending'
+      generation_step: 'pending',
+      processing_status: {
+        artwork_generation: 'pending',
+        upscaling: 'pending',
+        mockup_generation: 'pending'
+      }
     })
     .select()
     .single();
@@ -42,8 +47,15 @@ export async function updateArtworkImage(
   const { error } = await ensureSupabaseAdmin()
     .from('artworks')
     .update({
-      generated_image_url: generatedImageUrl,
-      generation_status: 'completed',
+      generation_step: 'completed',
+      generated_images: {
+        artwork_preview: generatedImageUrl
+      },
+      processing_status: {
+        artwork_generation: 'completed',
+        upscaling: 'pending',
+        mockup_generation: 'pending'
+      },
       updated_at: new Date().toISOString()
     })
     .eq('id', artworkId);

@@ -13,7 +13,10 @@ interface Mockup {
 interface MockupDisplayProps {
   artwork: {
     id: string
-    generated_image_url: string
+    generated_images?: {
+      artwork_preview?: string
+      artwork_full_res?: string
+    }
     mockup_urls?: Mockup[] | Record<string, any>
     mockup_generated_at?: string
     delivery_images?: {
@@ -32,7 +35,8 @@ export default function MockupDisplay({ artwork }: MockupDisplayProps) {
 
   useEffect(() => {
     const loadMockups = async () => {
-      if (!artwork.generated_image_url) {
+      const artworkImageUrl = artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res
+      if (!artworkImageUrl) {
         setError('No artwork image available')
         setLoading(false)
         return
@@ -59,6 +63,15 @@ export default function MockupDisplay({ artwork }: MockupDisplayProps) {
       
       if (cachedMockups.length > 0) {
         console.log('✅ Loading mockups from Supabase cache:', cachedMockups.length)
+        
+        // Preload mockup images for faster display
+        cachedMockups.forEach(mockup => {
+          if (mockup.mockupUrl) {
+            const img = new Image()
+            img.src = mockup.mockupUrl
+          }
+        })
+        
         setMockups(cachedMockups)
         setLoading(false)
         return
@@ -75,7 +88,7 @@ export default function MockupDisplay({ artwork }: MockupDisplayProps) {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            imageUrl: artwork.generated_image_url,
+            imageUrl: artworkImageUrl,
             artworkId: artwork.id
           })
         })
@@ -105,14 +118,14 @@ export default function MockupDisplay({ artwork }: MockupDisplayProps) {
             type: 'framed_canvas',
             title: 'Framed Canvas',
             description: 'Gallery-wrapped, ready to hang',
-            mockupUrl: artwork.generated_image_url,
+            mockupUrl: artworkImageUrl,
             productId: 'fallback-canvas'
           },
           {
             type: 'art_print',
             title: 'Premium Art Print',
             description: 'Museum-quality paper',
-            mockupUrl: artwork.generated_image_url,
+            mockupUrl: artworkImageUrl,
             productId: 'fallback-print'
           }
         ])
@@ -122,7 +135,7 @@ export default function MockupDisplay({ artwork }: MockupDisplayProps) {
     }
 
     loadMockups()
-  }, [artwork.generated_image_url, artwork.id, artwork.delivery_images?.mockups])
+  }, [artwork.generated_images?.artwork_preview, artwork.id, artwork.delivery_images?.mockups])
 
   if (loading) {
     return (

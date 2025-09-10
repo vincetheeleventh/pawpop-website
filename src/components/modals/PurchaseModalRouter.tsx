@@ -14,7 +14,10 @@ interface PurchaseModalRouterProps {
   variant: ModalVariant;
   artwork: {
     id: string;
-    generated_image_url: string;
+    generated_images?: {
+      artwork_preview?: string;
+      artwork_full_res?: string;
+    };
     customer_name: string;
     customer_email: string;
     pet_name?: string;

@@ -14,8 +14,11 @@ export interface CreateArtworkData {
   customer_name: string
   customer_email: string
   pet_name?: string
-  pet_mom_image_url: string
-  pet_image_url: string
+  source_images: {
+    pet_photo: string
+    pet_mom_photo: string
+    uploadthing_keys: Record<string, any>
+  }
 }
 
 export interface UpdateArtworkData {
@@ -69,12 +72,18 @@ export async function createArtwork(data: CreateArtworkData): Promise<{ artwork:
       customer_name: data.customer_name,
       customer_email: data.customer_email,
       pet_name: data.pet_name,
-      pet_mom_image_url: data.pet_mom_image_url,
-      pet_image_url: data.pet_image_url,
+      source_images: data.source_images,
       access_token,
       token_expires_at: token_expires_at.toISOString(),
-      generation_status: 'pending',
-      upscale_status: 'not_started'
+      generation_step: 'pending',
+      processing_status: {
+        artwork_generation: 'pending',
+        upscaling: 'not_required',
+        mockup_generation: 'pending'
+      },
+      generated_images: {},
+      delivery_images: {},
+      generation_metadata: {}
     })
     .select()
     .single()

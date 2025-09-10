@@ -25,13 +25,21 @@ async function generateTestArtwork() {
       .from('artworks')
       .insert({
         original_image_url: testImageUrl,
-        generated_image_url: testImageUrl, // Using test image as generated for demo
         pet_name: 'Buddy',
         customer_name: 'Test User',
         customer_email: 'test@pawpopart.com',
         access_token: accessToken,
         token_expires_at: tokenExpiresAt.toISOString(),
-        generation_status: 'completed'
+        generation_step: 'completed',
+        source_images: {
+          pet_photo: testImageUrl
+        },
+        generated_images: {
+          artwork_preview: testImageUrl
+        },
+        processing_status: {
+          artwork_generation: 'completed'
+        }
       })
       .select()
       .single();
@@ -64,14 +72,13 @@ async function generateTestArtwork() {
       // Verify mockups were cached in database
       const { data: updatedArtwork } = await supabase
         .from('artworks')
-        .select('mockup_urls, mockup_generated_at')
+        .select('delivery_images')
         .eq('id', artwork.id)
         .single();
         
-      if (updatedArtwork?.mockup_urls) {
+      if (updatedArtwork?.delivery_images?.mockups) {
         console.log("✅ Mockups successfully cached in Supabase!");
-        console.log("   - Cache timestamp:", updatedArtwork.mockup_generated_at);
-        console.log("   - Cached mockups:", updatedArtwork.mockup_urls.length);
+        console.log("   - Cached mockups:", Object.keys(updatedArtwork.delivery_images.mockups).length);
       }
     } else {
       console.log("⚠️ Mockup generation failed, but artwork page will still work with fallbacks");

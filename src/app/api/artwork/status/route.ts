@@ -1,42 +1,52 @@
 // src/app/api/artwork/status/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { getArtworksByStatus } from '@/lib/supabase-artworks'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const status = searchParams.get('status') as 'pending' | 'completed' | 'failed'
-
-    if (!status || !['pending', 'completed', 'failed'].includes(status)) {
-      return NextResponse.json(
-        { error: 'Invalid or missing status parameter. Must be: pending, completed, or failed' },
-        { status: 400 }
-      )
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status');
+    
+    if (!status) {
+      return NextResponse.json({ error: 'Status parameter is required' }, { status: 400 });
+    }
+    
+    // Check if supabaseAdmin is available
+    if (!supabaseAdmin) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 500 });
     }
 
-    const artworks = await getArtworksByStatus(status)
+    // Query artworks by generation_step
+    const { data: artworks, error } = await supabaseAdmin
+      .from('artworks')
+      .select(`
+        id,
+        customer_name,
+        customer_email,
+        pet_name,
+        generation_step,
+        processing_status,
+        generated_images,
+        delivery_images,
+        created_at,
+        updated_at
+      `)
+      .eq('generation_step', status)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching artworks:', error);
+      return NextResponse.json({ error: 'Failed to fetch artworks' }, { status: 500 });
+    }
 
     return NextResponse.json({
       success: true,
-      artworks: artworks.map(artwork => ({
-        id: artwork.id,
-        customer_name: artwork.customer_name,
-        customer_email: artwork.customer_email,
-        pet_name: artwork.pet_name,
-        generation_step: artwork.generation_step,
-        source_images: artwork.source_images,
-        generated_images: artwork.generated_images,
-        created_at: artwork.created_at,
-        updated_at: artwork.updated_at
-      })),
-      count: artworks.length
-    })
+      artworks: artworks || [],
+      count: artworks?.length || 0
+    });
 
   } catch (error) {
-    console.error('Error fetching artworks by status:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch artworks' },
-      { status: 500 }
-    )
+    console.error('Error in artwork status endpoint:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

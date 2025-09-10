@@ -92,8 +92,13 @@ async function testEmailFlow() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         artwork_id: artwork.id,
-        generated_image_url: generationResult.generatedImageUrl,
-        generation_status: 'completed'
+        generation_step: 'completed',
+        generated_images: {
+          artwork_preview: generationResult.generatedImageUrl
+        },
+        processing_status: {
+          artwork_generation: 'completed'
+        }
       })
     });
 
@@ -134,7 +139,7 @@ async function testEmailFlow() {
 
     const artworkData = await artworkPageResponse.json();
     console.log('✅ Artwork page accessible');
-    console.log('🎯 Status:', artworkData.artwork.generation_status);
+    console.log('🎯 Status:', artworkData.artwork.generation_step);
 
     console.log('\n🎉 SUCCESS! Complete email flow tested');
     console.log('=====================================');

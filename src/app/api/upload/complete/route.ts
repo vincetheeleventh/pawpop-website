@@ -1,6 +1,6 @@
 // src/app/api/upload/complete/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { createArtwork } from '@/lib/supabase-artworks'
+import { createArtwork } from '@/lib/supabase-artworks-clean'
 import { isValidEmail } from '@/lib/utils'
 import { sendMasterpieceCreatingEmail } from '@/lib/email'
 
@@ -29,8 +29,12 @@ export async function POST(request: NextRequest) {
     const { artwork, access_token } = await createArtwork({
       customer_name,
       customer_email,
-      original_image_url: uploaded_file_url,
-      pet_name
+      pet_name,
+      source_images: {
+        pet_photo: uploaded_file_url,
+        pet_mom_photo: '',
+        uploadthing_keys: {}
+      }
     })
 
     // Send "masterpiece being created" email

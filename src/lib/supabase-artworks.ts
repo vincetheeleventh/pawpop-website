@@ -18,10 +18,6 @@ export interface CreateArtworkData {
 }
 
 export interface UpdateArtworkData {
-  generated_image_url?: string
-  original_pet_mom_url?: string
-  original_pet_url?: string
-  generation_status?: 'pending' | 'processing' | 'completed' | 'failed'
   generation_step?: 'pending' | 'monalisa_generation' | 'pet_integration' | 'upscaling' | 'mockup_generation' | 'completed' | 'failed'
   source_images?: {
     pet_photo?: string
@@ -161,11 +157,11 @@ export async function updateArtwork(id: string, updates: UpdateArtworkData): Pro
 /**
  * Get artworks by status for processing
  */
-export async function getArtworksByStatus(status: 'pending' | 'completed' | 'failed'): Promise<Artwork[]> {
+export async function getArtworksByGenerationStatus(status: 'pending' | 'processing' | 'completed' | 'failed'): Promise<Artwork[]> {
   const { data: artworks, error } = await ensureSupabaseAdmin()
     .from('artworks')
     .select('*')
-    .eq('generation_status', status)
+    .eq('generation_step', status)
     .order('created_at', { ascending: true })
 
   if (error) {
@@ -285,7 +281,7 @@ export async function getArtworksNeedingUpscale(): Promise<Artwork[]> {
   const { data: artworks, error } = await ensureSupabaseAdmin()
     .from('artworks')
     .select('*')
-    .eq('generation_status', 'completed')
+    .eq('generation_step', 'completed')
     .contains('processing_status', { upscaling: 'pending' })
     .order('created_at', { ascending: true })
     .limit(10) // Process in batches

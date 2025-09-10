@@ -15,7 +15,10 @@ interface PurchaseModalEqualTiersProps {
   onClose: () => void;
   artwork: {
     id: string;
-    generated_image_url: string;
+    generated_images?: {
+      artwork_preview?: string;
+      artwork_full_res?: string;
+    };
     customer_name: string;
     customer_email: string;
     pet_name?: string;
@@ -51,7 +54,7 @@ export const PurchaseModalEqualTiers = ({ isOpen, onClose, artwork }: PurchaseMo
           customerEmail: artwork.customer_email,
           customerName: artwork.customer_name,
           petName: artwork.pet_name,
-          imageUrl: artwork.generated_image_url,
+          imageUrl: artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res || '',
           variant: 'equal-tiers' // For A/B testing analytics
         })
       });
@@ -134,7 +137,7 @@ export const PurchaseModalEqualTiers = ({ isOpen, onClose, artwork }: PurchaseMo
           {/* Artwork Preview */}
           <div className="flex justify-center mb-8">
             <img 
-              src={artwork.generated_image_url}
+              src={artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res}
               alt="Your masterpiece"
               className="w-32 h-32 rounded-lg object-cover shadow-lg"
             />

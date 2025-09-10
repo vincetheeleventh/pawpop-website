@@ -43,8 +43,13 @@ async function createTestArtwork() {
       },
       body: JSON.stringify({
         artwork_id: artworkData.artwork.id,
-        generated_image_url: testImageUrl,
-        generation_status: 'completed'
+        generation_step: 'completed',
+        generated_images: {
+          artwork_preview: testImageUrl
+        },
+        processing_status: {
+          artwork_generation: 'completed'
+        }
       })
     });
 

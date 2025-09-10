@@ -7,7 +7,7 @@ import { sendMasterpieceReadyEmail } from '@/lib/email'
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json()
-    const { artwork_id, generated_image_url, original_pet_mom_url, original_pet_url, generation_step, pet_name } = body
+    const { artwork_id, generated_image_url, source_images, generation_step, pet_name } = body
 
     // Validate required fields
     if (!artwork_id) {
@@ -47,17 +47,10 @@ export async function PATCH(request: NextRequest) {
       }
     }
     
-    if (original_pet_mom_url) {
+    if (source_images) {
       updateData.source_images = {
         ...existingArtwork.source_images,
-        pet_mom_photo: original_pet_mom_url
-      }
-    }
-    
-    if (original_pet_url) {
-      updateData.source_images = {
-        ...existingArtwork.source_images,
-        pet_photo: original_pet_url
+        ...source_images
       }
     }
     

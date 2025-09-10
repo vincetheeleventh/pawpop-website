@@ -13,11 +13,9 @@ async function generateDemoArtwork() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        petName: 'Demo Pet',
-        customerName: 'Demo User',
-        customerEmail: 'demo@pawpopart.com',
-        petImageUrl: `${baseUrl}/images/test pets/test-corgi.png`,
-        petMomImageUrl: `${baseUrl}/images/test headshots/test-headshot-1.jpg`
+        customer_name: 'Demo User',
+        customer_email: 'demo@pawpopart.com',
+        uploaded_file_url: `${baseUrl}/images/test pets/test-corgi.png`
       })
     });
 

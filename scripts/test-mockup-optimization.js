@@ -15,9 +15,9 @@ async function testMockupOptimization() {
     console.log("\n📊 Step 1: Finding artwork with cached mockups...");
     const { data: artworksWithMockups, error: fetchError } = await supabase
       .from('artworks')
-      .select('id, generated_image_url, mockup_urls, mockup_generated_at')
-      .not('mockup_urls', 'is', null)
-      .not('generated_image_url', 'is', null)
+      .select('id, generated_images, delivery_images')
+      .not('delivery_images', 'is', null)
+      .not('generated_images', 'is', null)
       .limit(1);
 
     if (fetchError) {
@@ -28,15 +28,14 @@ async function testMockupOptimization() {
     if (artworksWithMockups && artworksWithMockups.length > 0) {
       testArtwork = artworksWithMockups[0];
       console.log("✅ Found artwork with cached mockups:", testArtwork.id);
-      console.log("   - Mockups cached at:", testArtwork.mockup_generated_at);
-      console.log("   - Number of cached mockups:", testArtwork.mockup_urls?.length || 0);
+      console.log("   - Number of cached mockups:", Object.keys(testArtwork.delivery_images?.mockups || {}).length);
     } else {
       // Find any artwork with generated image for testing
       console.log("⚠️ No cached mockups found, finding artwork for real-time test...");
       const { data: anyArtwork, error: anyError } = await supabase
         .from('artworks')
-        .select('id, generated_image_url, mockup_urls, mockup_generated_at')
-        .not('generated_image_url', 'is', null)
+        .select('id, generated_images, delivery_images')
+        .not('generated_images', 'is', null)
         .limit(1);
 
       if (anyError || !anyArtwork || anyArtwork.length === 0) {
@@ -48,19 +47,19 @@ async function testMockupOptimization() {
     }
 
     // Step 2: Test cached mockup loading (fast path)
-    if (testArtwork.mockup_urls && testArtwork.mockup_urls.length > 0) {
+    if (testArtwork.delivery_images?.mockups && Object.keys(testArtwork.delivery_images.mockups).length > 0) {
       console.log("\n⚡ Step 2: Testing cached mockup loading (FAST PATH)...");
       const startTime = Date.now();
       
       // Simulate MockupDisplay component loading from cache
-      const cachedMockups = testArtwork.mockup_urls;
+      const cachedMockups = testArtwork.delivery_images.mockups;
       const loadTime = Date.now() - startTime;
       
       console.log("✅ Cached mockups loaded instantly!");
       console.log("   - Load time:", loadTime, "ms");
-      console.log("   - Mockups found:", cachedMockups.length);
-      cachedMockups.forEach((mockup, i) => {
-        console.log(`   - Mockup ${i + 1}: ${mockup.type} - ${mockup.title}`);
+      console.log("   - Mockups found:", Object.keys(cachedMockups).length);
+      Object.entries(cachedMockups).forEach(([key, mockup], i) => {
+        console.log(`   - Mockup ${i + 1}: ${key} - ${mockup.title || 'Unknown'}`);
       });
     }
 
@@ -75,7 +74,7 @@ async function testMockupOptimization() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          imageUrl: testArtwork.generated_image_url,
+          imageUrl: testArtwork.generated_images?.artwork_preview,
           artworkId: testArtwork.id
         })
       });
@@ -91,13 +90,13 @@ async function testMockupOptimization() {
         // Verify mockups were cached in database
         const { data: updatedArtwork } = await supabase
           .from('artworks')
-          .select('mockup_urls, mockup_generated_at')
+          .select('delivery_images')
           .eq('id', testArtwork.id)
           .single();
           
-        if (updatedArtwork?.mockup_urls) {
+        if (updatedArtwork?.delivery_images?.mockups) {
           console.log("✅ Mockups successfully cached in Supabase!");
-          console.log("   - Cache timestamp:", updatedArtwork.mockup_generated_at);
+          console.log("   - Cached mockups:", Object.keys(updatedArtwork.delivery_images.mockups).length);
         }
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
@@ -113,7 +112,7 @@ async function testMockupOptimization() {
     // Step 4: Performance comparison
     console.log("\n📊 Step 4: Performance Analysis");
     console.log("==========================================");
-    if (testArtwork.mockup_urls && testArtwork.mockup_urls.length > 0) {
+    if (testArtwork.delivery_images?.mockups && Object.keys(testArtwork.delivery_images.mockups).length > 0) {
       console.log("✅ CACHED MOCKUPS (Optimized):");
       console.log("   - Load time: ~1-5ms (instant)");
       console.log("   - User experience: Immediate display");

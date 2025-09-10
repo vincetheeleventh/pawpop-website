@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
-import { POST } from '@/app/api/pet-integration/route';
+import { POST } from '../../../src/app/api/pet-integration/route';
 import { loadTestImage, createTestFormData, TEST_IMAGES } from '../../fixtures/test-images';
 
 // Mock fal.ai client
@@ -125,7 +125,7 @@ describe('/api/pet-integration', () => {
             num_images: 1,
             output_format: 'jpeg',
             safety_tolerance: '2',
-            aspect_ratio: '9:16'
+            aspect_ratio: '2:3'
           })
         })
       );
