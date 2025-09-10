@@ -1,0 +1,118 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--read-only",
+        "--project-ref=YOUR_SUPABASE_PROJECT_REF"
+      ],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "YOUR_SUPABASE_ACCESS_TOKEN"
+      },
+      "disabledTools": [],
+      "disabled": false
+    },
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "env": {
+        "MEMORY_FILE_PATH": ""
+      },
+      "disabled": false
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/vincexi/Code/pawpop-website"
+      ],
+      "env": {},
+      "disabled": false
+    },
+    "google-ads": {
+      "command": "/Users/vincexi/Code/pawpop-website/src/mcp/google-ads/.venv/bin/python",
+      "args": [
+        "/Users/vincexi/Code/pawpop-website/src/mcp/google-ads/google_ads_server.py"
+      ],
+      "env": {
+        "GOOGLE_ADS_AUTH_TYPE": "oauth",
+        "GOOGLE_ADS_CREDENTIALS_PATH": "/Users/vincexi/Code/pawpop-website/src/mcp/google-ads/client_secret.json",
+        "GOOGLE_ADS_DEVELOPER_TOKEN": "YOUR_DEVELOPER_TOKEN_HERE",
+        "GOOGLE_ADS_LOGIN_CUSTOMER_ID": ""
+      },
+      "disabled": false
+    },
+    "mcp-playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest"
+      ],
+      "env": {},
+      "disabled": true
+    },
+    "stripe": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@stripe/mcp",
+        "--tools=all",
+        "--api-key=YOUR_STRIPE_TEST_API_KEY"
+      ],
+      "env": {},
+      "disabled": true
+    },
+    "mcp.run": {
+      "serverUrl": "https://www.mcp.run/api/mcp/sse?nonce=YOUR_NONCE&username=YOUR_USERNAME&exp=YOUR_EXPIRY&profile=YOUR_PROFILE&sig=YOUR_SIGNATURE",
+      "disabled": true
+    },
+    "supabase-mcp-server": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--access-token",
+        "YOUR_SUPABASE_ACCESS_TOKEN"
+      ],
+      "env": {},
+      "disabledTools": [
+        "search_docs",
+        "list_organizations",
+        "get_organization",
+        "list_projects",
+        "get_project",
+        "get_cost",
+        "confirm_cost",
+        "create_project",
+        "pause_project",
+        "restore_project",
+        "list_tables",
+        "list_extensions",
+        "list_migrations",
+        "apply_migration",
+        "execute_sql",
+        "get_logs",
+        "get_advisors",
+        "get_project_url",
+        "get_anon_key",
+        "generate_typescript_types",
+        "list_edge_functions",
+        "get_edge_function",
+        "deploy_edge_function",
+        "create_branch",
+        "list_branches",
+        "delete_branch",
+        "merge_branch",
+        "reset_branch",
+        "rebase_branch"
+      ],
+      "disabled": true
+    }
+  }
+}
