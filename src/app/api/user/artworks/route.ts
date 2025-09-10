@@ -15,6 +15,14 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Check if supabaseAdmin is available
+    if (!supabaseAdmin) {
+      return NextResponse.json(
+        { error: 'Database admin access not configured' },
+        { status: 500 }
+      )
+    }
+
     // Get all artworks for this email
     const { data: artworks, error } = await supabaseAdmin
       .from('artworks')
