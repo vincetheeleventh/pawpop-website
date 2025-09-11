@@ -1,6 +1,8 @@
 // app/providers.tsx
 'use client'
 
+import { GoogleAdsTracking } from '@/components/analytics/GoogleAdsTracking';
+
 export function Providers({ 
     children 
   }: { 
@@ -8,6 +10,7 @@ export function Providers({
   }) {
   return (
     <div data-theme="pawpop">
+      <GoogleAdsTracking />
       {children}
     </div>
   )

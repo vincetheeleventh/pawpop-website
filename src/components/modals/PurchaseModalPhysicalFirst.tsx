@@ -35,6 +35,14 @@ export const PurchaseModalPhysicalFirst = ({ isOpen, onClose, artwork }: Purchas
   const handlePurchase = async (productType: ProductType, size: string) => {
     setIsCheckingOut(true);
     
+    // Track add to cart and begin checkout events
+    if (typeof window !== 'undefined') {
+      const { trackAddToCart, trackBeginCheckout } = await import('@/lib/google-ads');
+      const price = getProductPricing(productType, size, 'US');
+      trackAddToCart(productType, price);
+      trackBeginCheckout(productType, price);
+    }
+    
     // Test/Demo mode - simulate the full API flow
     const isTestMode = process.env.NODE_ENV === 'development' || !stripePromise;
     

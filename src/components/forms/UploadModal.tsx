@@ -135,6 +135,12 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
         // Don't fail the process if email fails
       }
       
+      // Track photo upload conversion
+      if (typeof window !== 'undefined') {
+        const { trackPhotoUpload } = await import('@/lib/google-ads');
+        trackPhotoUpload(5); // $5 CAD lead value
+      }
+      
       // Show immediate confirmation
       setProcessing({ step: 'complete', message: 'Thank you! We\'ve received your photos and started creating your masterpiece. Check your email for confirmation!', progress: 100 });
       
@@ -170,6 +176,12 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                 generation_step: 'completed'
               })
             });
+
+            // Track artwork generation completion conversion
+            if (typeof window !== 'undefined') {
+              const { trackArtworkGeneration } = await import('@/lib/google-ads');
+              trackArtworkGeneration(artwork.id, 15); // $15 CAD qualified lead value
+            }
 
             // Send completion email with the generated image
             try {

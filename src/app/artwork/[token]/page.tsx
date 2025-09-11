@@ -34,6 +34,13 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
     fetchArtwork();
     // Use physical-first variant for artwork pages
     setModalVariant('physical-first');
+    
+    // Track artwork page view conversion
+    if (typeof window !== 'undefined') {
+      import('@/lib/google-ads').then(({ trackArtworkView }) => {
+        trackArtworkView(params.token, 2); // $2 CAD engagement value
+      });
+    }
   }, [params.token]);
 
   const fetchArtwork = async () => {
