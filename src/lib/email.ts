@@ -135,11 +135,11 @@ export async function sendMasterpieceCreatingEmail(data: MasterpieceCreatingEmai
         <div class="content">
           <h2>Hi ${data.customerName}!</h2>
           
-          <p>Thank you for choosing PawPop! We've received your beautiful photo${petNameText} and our artists are now working their magic to create your one-of-a-kind Mona Lisa masterpiece.</p>
+          <p>Thank you for choosing PawPop! We've received your beautiful photo${petNameText} and our artists are now working their magic to create your handcrafted, one-of-a-kind Mona Lisa masterpiece.</p>
           
           <p><strong>What happens next:</strong></p>
           <ul>
-            <li>🎨 Our AI artists are transforming your photo into a stunning Mona Lisa-style portrait</li>
+            <li>🎨 Our artists are transforming your photo into a stunning Mona Lisa-style portrait using modern illustration tools with human finishing touches</li>
             <li>⏱️ This usually takes 2-5 minutes to complete</li>
             <li>📧 You'll receive another email as soon as your masterpiece is ready</li>
             <li>🖼️ You can then choose to purchase beautiful prints or keep it digital</li>

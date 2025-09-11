@@ -10,7 +10,7 @@ export default function TestFluxPage() {
           </h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
             Test the complete image processing pipeline: headshot overlay + Flux LoRA transformation.
-            Upload a headshot, apply it to the Mona Lisa, and optionally transform it with AI.
+            Upload a headshot, apply it to the Mona Lisa, and optionally transform it with modern illustration tools.
           </p>
         </div>
         

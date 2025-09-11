@@ -189,7 +189,7 @@ User completes purchase → Order processing → Fulfillment
 #### 3. Bounce Scenarios
 **Common Reasons:**
 - Price sensitivity (no pricing visible on landing)
-- Skepticism about AI quality
+- Skepticism about artwork quality
 - Not a pet mom/gift giver
 **Mitigation:** Retargeting campaigns, social proof emphasis
 

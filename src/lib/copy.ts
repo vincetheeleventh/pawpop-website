@@ -13,7 +13,7 @@ export const landingPageCopy = {
   },
   hero: {
     title: 'The Unforgettable Gift for Pet Moms',
-    subtitle: 'AI transforms your photo into a Renaissance masterpiece in 60 seconds',
+    subtitle: 'Custom portrait created from your pet\'s photo in a Renaissance masterpiece style',
     ctaButton: 'Upload Photo Now',
     characterIntro: '"Upload your photo and watch ze magic happen, mon ami!"',
   },
@@ -27,8 +27,8 @@ export const landingPageCopy = {
       },
       {
         icon: '🎨',
-        title: 'Museum-Quality AI Art',
-        description: 'Professional results in 60 seconds, not 60 days'
+        title: 'Handcrafted Process',
+        description: 'Made to order, one of a kind portraits refined by our artists'
       },
       {
         icon: '💕',
@@ -49,8 +49,8 @@ export const landingPageCopy = {
         characterQuote: '"Ah, magnifique! A beautiful subject for my canvas!"',
       },
       {
-        title: 'AI Magic Happens',
-        description: 'Watch as our AI artist transforms you into the iconic Mona Lisa, preserving your likeness with Renaissance elegance.',
+        title: 'Artistic Transformation',
+        description: 'Our artists use modern illustration tools with human finishing touches to transform you into the iconic Mona Lisa style.',
         icon: '🎨',
         characterQuote: '"Now I add ze artistic flair... mixing ze perfect colors..."',
       },
@@ -129,7 +129,7 @@ export const landingPageCopy = {
   footer: {
     brand: {
       name: "PawPop",
-      description: "Transform your beloved pet into stunning Renaissance masterpieces. Where AI artistry meets the timeless bond between pet moms and their furry companions."
+      description: "Transform your beloved pet into stunning Renaissance masterpieces. Where handcrafted artistry meets the timeless bond between pet moms and their furry companions."
     },
     characterMessage: "Merci for visiting my atelier! Remember, every pet mom deserves to be immortalized as a Renaissance masterpiece with her beloved companion.",
     contact: {
@@ -218,8 +218,8 @@ export const pageContent = {
         characterQuote: "Ah, magnifique! A beautiful subject for my canvas!"
       },
       {
-        title: "AI Magic Happens",
-        description: "Our Renaissance AI artist transforms you into a classical masterpiece while preserving your unique beauty.",
+        title: "Artistic Transformation",
+        description: "Our artists use modern illustration tools with human finishing touches to transform you into a classical masterpiece while preserving your unique beauty.",
         icon: "🎨",
         characterQuote: "Now I work my magic... mixing ze perfect colors..."
       },
@@ -249,7 +249,7 @@ export const pageContent = {
   footer: {
     brand: {
       name: "PawPop",
-      description: "Transform your beloved pet into stunning Renaissance masterpieces. Where AI artistry meets the timeless bond between pet moms and their furry companions."
+      description: "Transform your beloved pet into stunning Renaissance masterpieces. Where handcrafted artistry meets the timeless bond between pet moms and their furry companions."
     },
     characterMessage: "Merci for visiting my atelier! Remember, every pet mom deserves to be immortalized as a Renaissance masterpiece with her beloved companion.",
     contact: {
