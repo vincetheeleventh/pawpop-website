@@ -14,7 +14,11 @@ export interface CreateArtworkData {
   customer_email: string
   pet_name?: string
   user_id?: string
-  original_image_url?: string
+  source_images?: {
+    pet_photo?: string
+    pet_mom_photo?: string
+    uploadthing_keys?: Record<string, any>
+  }
 }
 
 export interface UpdateArtworkData {
@@ -45,20 +49,60 @@ export interface UpdateArtworkData {
 }
 
 /**
+ * Create or get user by email
+ */
+async function ensureUser(email: string): Promise<string> {
+  // First try to find existing user
+  const { data: existingUser, error: findError } = await ensureSupabaseAdmin()
+    .from('users')
+    .select('id')
+    .eq('email', email)
+    .single()
+
+  if (existingUser) {
+    return existingUser.id
+  }
+
+  // Create new user if not found
+  const { data: newUser, error: createError } = await ensureSupabaseAdmin()
+    .from('users')
+    .insert({
+      email,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    })
+    .select('id')
+    .single()
+
+  if (createError) {
+    console.error('Error creating user:', createError)
+    throw new Error(`Failed to create user: ${createError.message}`)
+  }
+
+  return newUser.id
+}
+
+/**
  * Create a new artwork record with access token
  */
 export async function createArtwork(data: CreateArtworkData): Promise<{ artwork: Artwork; access_token: string }> {
   const access_token = generateSecureToken()
   const token_expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
 
+  // Ensure user exists and get user_id
+  const user_id = await ensureUser(data.customer_email)
+
   const { data: artwork, error } = await ensureSupabaseAdmin()
     .from('artworks')
     .insert({
-      ...data,
+      customer_name: data.customer_name,
+      customer_email: data.customer_email,
+      pet_name: data.pet_name,
+      user_id,
       access_token,
       token_expires_at: token_expires_at.toISOString(),
       generation_step: 'pending',
-      source_images: {
+      source_images: data.source_images || {
         pet_photo: '',
         pet_mom_photo: '',
         uploadthing_keys: {}
