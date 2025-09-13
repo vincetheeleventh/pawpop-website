@@ -1,5 +1,47 @@
 campaign,ad_group,keyword,match_type
-Dog Portraits,Custom Pet Art,"custom dog portrait",Broad
-Dog Portraits,Custom Pet Art,"personalized pet painting",Phrase
-Cat Portraits,Custom Pet Art,"custom cat portrait",Broad
-Cat Portraits,Custom Pet Art,"personalized cat painting",Phrase
+Pawpop-webtraffic-search,Pet Mom Gifts,[best dog mom gifts],Exact
+Pawpop-webtraffic-search,Pet Mom Gifts,"""best dog mom gifts""",Phrase
+Pawpop-webtraffic-search,Pet Mom Gifts,[dog mom presents],Exact
+Pawpop-webtraffic-search,Pet Mom Gifts,"""dog mom gifts""",Phrase
+Pawpop-webtraffic-search,Pet Mom Gifts,[gift for dog mom],Exact
+Pawpop-webtraffic-search,Pet Mom Gifts,"""dog mom gift ideas""",Phrase
+Pawpop-webtraffic-search,Pet Mom Gifts,[cat mom gifts],Exact
+Pawpop-webtraffic-search,Pet Mom Gifts,"""cat mom gifts""",Phrase
+Pawpop-webtraffic-search,Custom Pet Portraits,[custom pet portrait],Exact
+Pawpop-webtraffic-search,Custom Pet Portraits,"""custom pet portraits""",Phrase
+Pawpop-webtraffic-search,Custom Pet Portraits,[dog portrait painting],Exact
+Pawpop-webtraffic-search,Custom Pet Portraits,"""dog portrait painting""",Phrase
+Pawpop-webtraffic-search,Custom Pet Portraits,[cat portrait],Exact
+Pawpop-webtraffic-search,Custom Pet Portraits,"""cat portrait""",Phrase
+Pawpop-webtraffic-search,Custom Pet Portraits,[custom dog portrait],Exact
+Pawpop-webtraffic-search,Custom Pet Portraits,"""custom dog portrait""",Phrase
+Pawpop-webtraffic-search,Custom Pet Portraits,[custom cat portrait],Exact
+Pawpop-webtraffic-search,Custom Pet Portraits,"""custom cat portrait""",Phrase
+Pawpop-webtraffic-search,Custom Pet Portraits,[digital pet portraits],Exact
+Pawpop-webtraffic-search,Custom Pet Portraits,"""digital pet portraits""",Phrase
+Pawpop-webtraffic-search,Canvas & Print,[custom canvas prints],Exact
+Pawpop-webtraffic-search,Canvas & Print,"""custom canvas prints""",Phrase
+Pawpop-webtraffic-search,Canvas & Print,[personalized canvas art],Exact
+Pawpop-webtraffic-search,Canvas & Print,"""personalized canvas prints""",Phrase
+Pawpop-webtraffic-search,Canvas & Print,[dog canvas art],Exact
+Pawpop-webtraffic-search,Canvas & Print,"""dog canvas""",Phrase
+Pawpop-webtraffic-search,Canvas & Print,[pet canvas art],Exact
+Pawpop-webtraffic-search,Canvas & Print,"""pet canvas art""",Phrase
+Pawpop-webtraffic-search,Canvas & Print,[custom pet painting],Exact
+Pawpop-webtraffic-search,Canvas & Print,"""custom pet painting""",Phrase
+Pawpop-webtraffic-search,Artistic Styles,[dog oil painting],Exact
+Pawpop-webtraffic-search,Artistic Styles,"""dog oil painting""",Phrase
+Pawpop-webtraffic-search,Artistic Styles,[watercolor dog portrait],Exact
+Pawpop-webtraffic-search,Artistic Styles,"""watercolor pet portrait""",Phrase
+Pawpop-webtraffic-search,Artistic Styles,[hand painted pet portraits],Exact
+Pawpop-webtraffic-search,Artistic Styles,"""hand painted dog portraits""",Phrase
+Pawpop-webtraffic-search,Artistic Styles,[dog renaissance painting],Exact
+Pawpop-webtraffic-search,Artistic Styles,"""renaissance dog painting""",Phrase
+Pawpop-webtraffic-search,Artistic Styles,[royal pet portraits],Exact
+Pawpop-webtraffic-search,Artistic Styles,"""royal dog painting""",Phrase
+Pawpop-webtraffic-search,Branded & Marketplace,[crown and paw portraits],Exact
+Pawpop-webtraffic-search,Branded & Marketplace,"""crown and paw""",Phrase
+Pawpop-webtraffic-search,Branded & Marketplace,[west willow pet portraits],Exact
+Pawpop-webtraffic-search,Branded & Marketplace,"""willow pet portrait""",Phrase
+Pawpop-webtraffic-search,Branded & Marketplace,[etsy pet portraits],Exact
+Pawpop-webtraffic-search,Branded & Marketplace,"""etsy dog painting""",Phrase

@@ -8,6 +8,7 @@ interface Mockup {
   description: string
   mockupUrl: string
   productId: string
+  size: string
 }
 
 interface MockupDisplayProps {
@@ -26,9 +27,10 @@ interface MockupDisplayProps {
       mockup_generation?: string
     }
   }
+  onProductClick?: (productType: string, mockups: Mockup[]) => void
 }
 
-export default function MockupDisplay({ artwork }: MockupDisplayProps) {
+export default function MockupDisplay({ artwork, onProductClick }: MockupDisplayProps) {
   const [mockups, setMockups] = useState<Mockup[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -42,42 +44,37 @@ export default function MockupDisplay({ artwork }: MockupDisplayProps) {
         return
       }
 
-      // Check if we have pre-generated mockups in Supabase (new schema)
-      let cachedMockups: Mockup[] = []
-      
-      // Handle both old array format and new JSONB format
-      if (artwork.mockup_urls) {
-        if (Array.isArray(artwork.mockup_urls)) {
-          cachedMockups = artwork.mockup_urls
-        } else if (typeof artwork.mockup_urls === 'object') {
-          // Convert new schema format to array
-          cachedMockups = Object.entries(artwork.mockup_urls).map(([key, value]) => ({
-            type: key,
-            title: key === 'framed_canvas' ? 'Framed Canvas' : 'Premium Art Print',
-            description: key === 'framed_canvas' ? 'Gallery-wrapped, ready to hang' : 'Museum-quality paper',
-            mockupUrl: typeof value === 'string' ? value : value?.mockupUrl || '',
-            productId: `cached-${key}`
-          })).filter(m => m.mockupUrl)
-        }
-      }
-      
-      if (cachedMockups.length > 0) {
-        console.log('✅ Loading mockups from Supabase cache:', cachedMockups.length)
+      // Check if we have pre-generated mockups in Supabase
+      // Check if mockups are already cached in delivery_images.mockups (current schema)
+      if (artwork.delivery_images?.mockups && typeof artwork.delivery_images.mockups === 'object') {
+        console.log('✅ Using cached mockups from delivery_images.mockups')
+        const cachedMockups: Mockup[] = []
         
-        // Preload mockup images for faster display
-        cachedMockups.forEach(mockup => {
-          if (mockup.mockupUrl) {
-            const img = new Image()
-            img.src = mockup.mockupUrl
+        // Extract mockups from JSONB structure
+        Object.entries(artwork.delivery_images.mockups).forEach(([productType, productMockups]) => {
+          if (Array.isArray(productMockups)) {
+            productMockups.forEach((mockup: any) => {
+              cachedMockups.push({
+                type: productType,
+                title: mockup.title || `${productType} mockup`,
+                description: mockup.description || '',
+                mockupUrl: mockup.mockupUrl || mockup.url || '',
+                productId: mockup.productId || `${productType}-${mockup.size || 'default'}`,
+                size: mockup.size || '20x30'
+              })
+            })
           }
         })
         
-        setMockups(cachedMockups)
-        setLoading(false)
-        return
+        if (cachedMockups.length > 0) {
+          console.log('✅ Loading mockups from Supabase cache:', cachedMockups.length)
+          setMockups(cachedMockups)
+          setLoading(false)
+          return
+        }
       }
 
-      // Fallback: Generate mockups in real-time (slower)
+      // Fallback: Generate mockups in real-time
       try {
         setLoading(true)
         console.log('🖼️ No cached mockups found, generating from Printify API for artwork:', artwork.id)
@@ -94,16 +91,19 @@ export default function MockupDisplay({ artwork }: MockupDisplayProps) {
         })
 
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-          console.error('❌ Mockup API error:', errorData)
-          throw new Error(errorData.error || 'Failed to generate mockups')
+          throw new Error('Failed to generate mockups')
         }
 
         const data = await response.json()
         
         if (data.success && data.mockups && data.mockups.length > 0) {
           console.log('✅ Generated real-time Printify mockups:', data.mockups.length)
-          setMockups(data.mockups)
+          // Add size property to generated mockups
+          const mocksWithSize = data.mockups.map((m: any) => ({
+            ...m,
+            size: m.size || '20x30'
+          }))
+          setMockups(mocksWithSize)
         } else {
           throw new Error('No mockups generated')
         }
@@ -112,21 +112,30 @@ export default function MockupDisplay({ artwork }: MockupDisplayProps) {
         setError(err instanceof Error ? err.message : 'Failed to load mockups')
         
         // Final fallback: Use artwork image as placeholder
-        console.log('🎨 Using artwork-based mockups as final fallback')
         setMockups([
-          {
-            type: 'framed_canvas',
-            title: 'Framed Canvas',
-            description: 'Gallery-wrapped, ready to hang',
-            mockupUrl: artworkImageUrl,
-            productId: 'fallback-canvas'
-          },
           {
             type: 'art_print',
             title: 'Premium Art Print',
             description: 'Museum-quality paper',
             mockupUrl: artworkImageUrl,
-            productId: 'fallback-print'
+            productId: 'fallback-print',
+            size: '20x30'
+          },
+          {
+            type: 'canvas_stretched',
+            title: 'Canvas Stretched',
+            description: 'Gallery-wrapped, ready to hang',
+            mockupUrl: artworkImageUrl,
+            productId: 'fallback-canvas-stretched',
+            size: '20x30'
+          },
+          {
+            type: 'canvas_framed',
+            title: 'Canvas Framed',
+            description: 'Professional framing included',
+            mockupUrl: artworkImageUrl,
+            productId: 'fallback-canvas-framed',
+            size: '20x30'
           }
         ])
       } finally {
@@ -135,7 +144,54 @@ export default function MockupDisplay({ artwork }: MockupDisplayProps) {
     }
 
     loadMockups()
-  }, [artwork.generated_images?.artwork_preview, artwork.id, artwork.delivery_images?.mockups])
+  }, [artwork.generated_images?.artwork_preview, artwork.id, artwork.mockup_urls])
+
+  // Filter to show art print, canvas stretched, and canvas framed, prioritize 20x30 size
+  const getDisplayMockups = () => {
+    const artPrintMockups = mockups.filter(m => m.type === 'art_print')
+    const canvasStretchedMockups = mockups.filter(m => m.type === 'canvas_stretched')
+    const canvasFramedMockups = mockups.filter(m => m.type === 'canvas_framed')
+    
+    // Get 20x30 mockups first, fallback to any available size
+    const artPrint20x30 = artPrintMockups.find(m => m.size === '20x30') || artPrintMockups[0]
+    const canvasStretched20x30 = canvasStretchedMockups.find(m => m.size === '20x30') || canvasStretchedMockups[0]
+    const canvasFramed20x30 = canvasFramedMockups.find(m => m.size === '20x30') || canvasFramedMockups[0]
+    
+    const displayMockups = []
+    
+    // Always include art print (create fallback if none exists)
+    if (artPrint20x30) {
+      displayMockups.push(artPrint20x30)
+    } else {
+      displayMockups.push({
+        type: 'art_print',
+        title: 'Premium Art Print',
+        description: 'Museum-quality paper',
+        mockupUrl: artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res || '',
+        productId: 'fallback-art-print',
+        size: '20x30'
+      })
+    }
+    
+    // Always include canvas stretched
+    if (canvasStretched20x30) {
+      displayMockups.push(canvasStretched20x30)
+    }
+    
+    // Always include canvas framed
+    if (canvasFramed20x30) {
+      displayMockups.push(canvasFramed20x30)
+    }
+    
+    return displayMockups.filter(Boolean)
+  }
+
+  const handleProductClick = (productType: string) => {
+    if (onProductClick) {
+      const productMockups = mockups.filter(m => m.type === productType)
+      onProductClick(productType, productMockups)
+    }
+  }
 
   if (loading) {
     return (
@@ -154,33 +210,35 @@ export default function MockupDisplay({ artwork }: MockupDisplayProps) {
     )
   }
 
+  const displayMockups = getDisplayMockups()
+
   return (
     <div className="space-y-6">
-      {mockups.map((mockup, index) => (
-        <div key={`${mockup.type}-${index}`} className="text-center">
+      {displayMockups.map((mockup, index) => (
+        <div 
+          key={`${mockup.type}-${index}`} 
+          className="text-center cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
+          onClick={() => handleProductClick(mockup.type)}
+        >
           <div className="bg-gray-100 rounded-lg p-4 mb-3">
             <img 
               src={mockup.mockupUrl}
               alt={mockup.title}
               className="w-full h-48 object-cover rounded"
               onError={(e) => {
-                // Fallback to placeholder if mockup image fails to load
-                e.currentTarget.src = mockup.type === 'framed_canvas' 
-                  ? 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxyZWN0IHg9IjUwIiB5PSI0MCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiNFNUU3RUIiIHN0cm9rZT0iIzlDQTNBRiIgc3Ryb2tlLXdpZHRoPSIyIi8+Cjx0ZXh0IHg9IjE1MCIgeT0iMTA1IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNkI3MjgwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCI+RnJhbWVkIENhbnZhczwvdGV4dD4KPC9zdmc+'
-                  : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxyZWN0IHg9IjgwIiB5PSI1MCIgd2lkdGg9IjE0MCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiNGRkZGRkYiIHN0cm9rZT0iIzlDQTNBRiIgc3Ryb2tlLXdpZHRoPSIxIi8+Cjx0ZXh0IHg9IjE1MCIgeT0iMTA1IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNkI3MjgwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCI+QXJ0IFByaW50PC90ZXh0Pgo8L3N2Zz4='
+                const placeholderSvg = mockup.type === 'canvas_stretched'
+                  ? 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxyZWN0IHg9IjYwIiB5PSI1MCIgd2lkdGg9IjE4MCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiNGRkZGRkYiIHN0cm9rZT0iIzlDQTNBRiIgc3Ryb2tlLXdpZHRoPSIxIi8+Cjx0ZXh0IHg9IjE1MCIgeT0iMTA1IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNkI3MjgwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCI+Q2FudmFzIFN0cmV0Y2hlZDwvdGV4dD4KPC9zdmc+'
+                  : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxyZWN0IHg9IjgwIiB5PSI1MCIgd2lkdGg9IjE0MCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiNGRkZGRkYiIHN0cm9rZT0iIzlDQTNBRiIgc3Ryb2tlLXdpZHRoPSIxIi8+Cjx0ZXh0IHg9IjE1MCIgeT0iMTA1IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNkI3MjgwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCI+QXJ0IFByaW50PC90ZXh0Pgo8L3N2Zz4=';
+                e.currentTarget.src = placeholderSvg;
               }}
             />
           </div>
           <h4 className="font-semibold text-charcoal-frame">{mockup.title}</h4>
           <p className="text-sm text-gray-600">{mockup.description}</p>
+          <p className="text-xs text-gray-500 mt-1">Click to see all sizes</p>
         </div>
       ))}
       
-      {error && (
-        <div className="text-center text-sm text-gray-500 mt-4">
-          <p>Using preview mockups - full integration coming soon!</p>
-        </div>
-      )}
     </div>
   )
 }

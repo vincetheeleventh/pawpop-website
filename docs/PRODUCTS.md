@@ -4,10 +4,11 @@ This document provides a comprehensive overview of all products offered by PawPo
 
 ## Product Types Overview
 
-PawPop offers three main product categories:
+PawPop offers four main product categories:
 1. **Digital Download** - Instant digital artwork delivery
 2. **Art Print** - High-quality paper prints 
-3. **Framed Canvas** - Premium framed canvas prints
+3. **Matte Canvas (Stretched)** - Premium stretched canvas with optional framing
+4. **Matte Canvas (Framed)** - Premium framed canvas prints
 
 ---
 
@@ -15,7 +16,7 @@ PawPop offers three main product categories:
 
 ### Product Details
 - **Product Type**: `digital`
-- **Price**: $9.99
+- **Price**: $15.00 CAD
 - **Delivery**: Instant email delivery after payment
 - **File Format**: High-resolution PNG/JPEG
 - **No Physical Shipping Required**
@@ -31,20 +32,21 @@ PawPop offers three main product categories:
 
 Premium paper prints available in multiple regions with different specifications.
 
-### US/Canada Region
+### North America Region
 
 **Blueprint Configuration:**
 - **Blueprint ID**: 1191 (Photo Art Paper Posters)
 - **Print Provider ID**: 1 (Generic Brand)
 - **Product Type**: `art_print`
-- **Region**: `US_CA`
+- **Region**: `NORTH_AMERICA`
+- **Printify URL**: https://printify.com/app/products/1191/generic-brand/photo-art-paper-posters
 
 **Available Sizes & Pricing:**
-| Size | Variant ID | Price | Description |
-|------|------------|-------|-------------|
-| 12x18 | poster_12x18 | $29.99 | 12″ × 18″ Portrait |
-| 18x24 | poster_18x24 | $39.99 | 18″ × 24″ Portrait |
-| 20x30 | poster_20x30 | $49.99 | 20″ × 30″ Portrait |
+| Size | Variant ID | Price (CAD) | Description |
+|------|------------|-------------|-------------|
+| 12x18 | poster_12x18 | $29.00 | 12″ × 18″ Portrait |
+| 18x24 | poster_18x24 | $36.00 | 18″ × 24″ Portrait |
+| 20x30 | poster_20x30 | $48.00 | 20″ × 30″ Portrait |
 
 ### Europe Region
 
@@ -53,41 +55,72 @@ Premium paper prints available in multiple regions with different specifications
 - **Print Provider ID**: 1 (Generic Brand)
 - **Product Type**: `art_print`
 - **Region**: `EUROPE`
+- **Printify URL**: https://printify.com/app/products/494/generic-brand/giclee-art-print
 
 **Available Sizes & Pricing:**
-| Size | Variant ID | Price | Description |
-|------|------------|-------|-------------|
-| 12x18 | giclee_12x18 | $34.99 | 12″ × 18″ Portrait |
-| 18x24 | giclee_18x24 | $44.99 | 18″ × 24″ Portrait |
-| 20x30 | giclee_20x30 | $54.99 | 20″ × 30″ Portrait |
+| Size | Variant ID | Price (CAD) | Description |
+|------|------------|-------------|-------------|
+| 12x18 | giclee_12x18 | $29.00 | 12″ × 18″ Portrait |
+| 18x24 | giclee_18x24 | $36.00 | 18″ × 24″ Portrait |
+| 20x30 | giclee_20x30 | $48.00 | 20″ × 30″ Portrait |
 
 **European Countries Supported:**
 Germany (DE), France (FR), Italy (IT), Spain (ES), Netherlands (NL), Belgium (BE), Austria (AT), Portugal (PT), Ireland (IE), Finland (FI), Sweden (SE), Denmark (DK), Norway (NO), Poland (PL), Czech Republic (CZ), Hungary (HU), Slovakia (SK), Slovenia (SI), Croatia (HR), Bulgaria (BG), Romania (RO), Lithuania (LT), Latvia (LV), Estonia (EE), Malta (MT), Cyprus (CY), Luxembourg (LU), Greece (GR)
 
 ---
 
-## 3. Framed Canvas
+## 3. Matte Canvas (Stretched)
 
-Premium framed canvas prints available globally.
+Premium stretched canvas prints with optional framing upgrade.
 
 ### Global Configuration
 
 **Blueprint Configuration:**
-- **Blueprint ID**: 1191 (Photo Art Paper Posters)
-- **Print Provider ID**: 27 (Print Geek)
-- **Product Type**: `framed_canvas`
+- **Blueprint ID**: 1159 (Matte Canvas, Stretched, 1.25")
+- **Print Provider ID**: 1 (Generic Brand)
+- **Product Type**: `canvas_stretched`
 - **Region**: `GLOBAL`
+- **Printify URL**: https://printify.com/app/products/1159/generic-brand/matte-canvas-stretched-125
 
 **Available Sizes & Pricing:**
-| Size | Variant ID | Price | Description | Printify Specification |
-|------|------------|-------|-------------|----------------------|
-| 12x18 | 91677 | $79.99 | 12″ × 18″ Portrait | 12″ × 18″ (Vertical) / Satin |
-| 18x24 | 91693 | $99.99 | 18″ × 24″ Portrait | 18″ × 24″ (Vertical) / Satin |
-| 20x30 | 91695 | $129.99 | 20″ × 30″ Portrait | 20″ × 30″ (Vertical) / Satin |
+| Size | Variant ID | Price (CAD) | Description | Frame Upgrade |
+|------|------------|-------------|-------------|---------------|
+| 12x18 | canvas_12x18 | $59.00 | 12″ × 18″ Portrait | +$40.00 CAD |
+| 18x24 | canvas_18x24 | $79.00 | 18″ × 24″ Portrait | +$40.00 CAD |
+| 20x30 | canvas_20x30 | $99.00 | 20″ × 30″ Portrait | +$40.00 CAD |
 
 **Canvas Features:**
-- High-quality satin finish
-- Professional framing
+- High-quality matte finish
+- Stretched on 1.25" wooden frame
+- Portrait orientation optimized
+- Optional framing upgrade available
+- Global shipping available
+
+---
+
+## 4. Matte Canvas (Framed)
+
+Premium framed canvas prints - sold as upsell option.
+
+### Global Configuration
+
+**Blueprint Configuration:**
+- **Blueprint ID**: 944 (Matte Canvas, Framed Multi-color)
+- **Print Provider ID**: 1 (Generic Brand)
+- **Product Type**: `canvas_framed`
+- **Region**: `GLOBAL`
+- **Printify URL**: https://printify.com/app/products/944/generic-brand/matte-canvas-framed-multi-color
+
+**Available Sizes & Pricing:**
+| Size | Variant ID | Price (CAD) | Description |
+|------|------------|-------------|-------------|
+| 12x18 | framed_12x18 | $99.00 | 12″ × 18″ Portrait |
+| 18x24 | framed_18x24 | $119.00 | 18″ × 24″ Portrait |
+| 20x30 | framed_20x30 | $149.00 | 20″ × 30″ Portrait |
+
+**Canvas Features:**
+- High-quality matte finish
+- Professional multi-color framing
 - Vertical orientation optimized
 - Global shipping available
 
@@ -98,13 +131,13 @@ Premium framed canvas prints available globally.
 ### Region Determination
 ```typescript
 function determineRegion(productType: ProductType, countryCode: string): string {
-  if (productType === ProductType.FRAMED_CANVAS) {
+  if (productType === ProductType.CANVAS_STRETCHED || productType === ProductType.CANVAS_FRAMED) {
     return 'GLOBAL';
   }
   
   if (productType === ProductType.ART_PRINT) {
     const europeanCountries = ['DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'PT', 'IE', 'FI', 'SE', 'DK', 'NO', 'PL', 'CZ', 'HU', 'SK', 'SI', 'HR', 'BG', 'RO', 'LT', 'LV', 'EE', 'MT', 'CY', 'LU', 'GR'];
-    return europeanCountries.includes(countryCode) ? 'EUROPE' : 'US_CA';
+    return europeanCountries.includes(countryCode) ? 'EUROPE' : 'NORTH_AMERICA';
   }
   
   return 'GLOBAL';
@@ -112,11 +145,12 @@ function determineRegion(productType: ProductType, countryCode: string): string 
 ```
 
 ### Pricing Structure
-All prices are in USD cents for Stripe integration:
-- Digital: 999 cents ($9.99)
-- Art Print US/CA: 2999-4999 cents ($29.99-$49.99)
-- Art Print Europe: 3499-5499 cents ($34.99-$54.99)
-- Framed Canvas: 7999-12999 cents ($79.99-$129.99)
+All prices are in CAD cents for Stripe integration:
+- Digital: 1500 cents ($15.00 CAD)
+- Art Print (All Regions): 2900-4800 cents ($29.00-$48.00 CAD)
+- Canvas Stretched: 5900-9900 cents ($59.00-$99.00 CAD)
+- Canvas Framed: 9900-14900 cents ($99.00-$149.00 CAD)
+- Frame Upgrade: +4000 cents (+$40.00 CAD)
 
 ---
 

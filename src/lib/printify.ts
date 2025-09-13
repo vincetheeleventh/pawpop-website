@@ -61,43 +61,68 @@ interface PrintifyErrorResponse {
 // Product type enum for PawPop products
 export enum ProductType {
   DIGITAL = 'digital',
-  ART_PRINT = 'art_print', 
-  FRAMED_CANVAS = 'framed_canvas'
+  ART_PRINT = 'art_print',
+  CANVAS_STRETCHED = 'canvas_stretched',
+  CANVAS_FRAMED = 'canvas_framed'
 }
 
 // Type alias for database compatibility
-export type ProductTypeString = 'digital' | 'art_print' | 'framed_canvas';
+export type ProductTypeString = 'digital' | 'art_print' | 'canvas_stretched' | 'canvas_framed';
+
+// Product configuration interface
+export interface ProductConfig {
+  blueprint_id: number;
+  print_provider_id: number;
+  variants: Array<{
+    id: string;
+    size: string;
+    price: number;
+  }>;
+  frame_upgrade_price?: number; // Optional for canvas stretched products
+}
 
 // Printify product configurations for PawPop
-export const PRINTIFY_PRODUCTS = {
+export const PRINTIFY_PRODUCTS: Partial<Record<ProductType, Record<string, ProductConfig>>> = {
   [ProductType.ART_PRINT]: {
-    US_CA: {
+    NORTH_AMERICA: {
       blueprint_id: 1191, // Photo Art Paper Posters
       print_provider_id: 1, // Generic Brand
       variants: [
-        { id: 'poster_12x18', size: '12x18', price: 2999 }, // $29.99
-        { id: 'poster_18x24', size: '18x24', price: 3999 }, // $39.99
-        { id: 'poster_20x30', size: '20x30', price: 4999 }  // $49.99
+        { id: 'poster_12x18', size: '12x18', price: 2900 }, // $29.00 CAD
+        { id: 'poster_18x24', size: '18x24', price: 3600 }, // $36.00 CAD
+        { id: 'poster_20x30', size: '20x30', price: 4800 }  // $48.00 CAD
       ]
     },
     EUROPE: {
       blueprint_id: 494, // Giclee Art Print
       print_provider_id: 1, // Generic Brand
       variants: [
-        { id: 'giclee_12x18', size: '12x18', price: 3499 }, // $34.99
-        { id: 'giclee_18x24', size: '18x24', price: 4499 }, // $44.99
-        { id: 'giclee_20x30', size: '20x30', price: 5499 }  // $54.99
+        { id: 'giclee_12x18', size: '12x18', price: 2900 }, // $29.00 CAD
+        { id: 'giclee_18x24', size: '18x24', price: 3600 }, // $36.00 CAD
+        { id: 'giclee_20x30', size: '20x30', price: 4800 }  // $48.00 CAD
       ]
     }
   },
-  [ProductType.FRAMED_CANVAS]: {
+  [ProductType.CANVAS_STRETCHED]: {
     GLOBAL: {
-      blueprint_id: 1191, // Photo Art Paper Posters
-      print_provider_id: 27, // Print Geek
+      blueprint_id: 1159,
+      print_provider_id: 105, // Jondo
       variants: [
-        { id: 91677, size: '12x18', price: 7999 }, // $79.99 - 12″ x 18″ (Vertical) / Satin
-        { id: 91693, size: '18x24', price: 9999 }, // $99.99 - 18″ x 24″ (Vertical) / Satin
-        { id: 91695, size: '20x30', price: 12999 } // $129.99 - 20″ x 30″ (Vertical) / Satin
+        { id: 'canvas_12x18', size: '12x18', price: 5900 }, // $59.00 CAD
+        { id: 'canvas_18x24', size: '18x24', price: 7900 }, // $79.00 CAD
+        { id: 'canvas_20x30', size: '20x30', price: 9900 }  // $99.00 CAD
+      ],
+      frame_upgrade_price: 4000 // $40 CAD
+    }
+  },
+  [ProductType.CANVAS_FRAMED]: {
+    GLOBAL: {
+      blueprint_id: 944,
+      print_provider_id: 105, // Jondo
+      variants: [
+        { id: 'framed_12x18', size: '12x18', price: 9900 }, // $99.00 CAD
+        { id: 'framed_18x24', size: '18x24', price: 11900 }, // $119.00 CAD
+        { id: 'framed_20x30', size: '20x30', price: 14900 }  // $149.00 CAD
       ]
     }
   }
@@ -227,8 +252,8 @@ export async function createPrintifyProduct(
     throw new Error(`No product configuration found for ${productType} in US region`);
   }
 
-  // Configure canvas-specific options for framed canvas products
-  const isCanvas = productType === ProductType.FRAMED_CANVAS;
+  // Configure canvas-specific options for canvas products
+  const isCanvas = productType === ProductType.CANVAS_STRETCHED || productType === ProductType.CANVAS_FRAMED;
   
   // Get the actual variant IDs from the product config (ensure they're integers)
   const variantIds = productConfig.variants.map(v => parseInt(String(v.id), 10));
@@ -356,13 +381,17 @@ export async function getShippingMethods(
 }
 
 // Helper function to determine the correct product configuration based on shipping country
-export function getProductConfig(productType: ProductType, countryCode: string) {
+export function getProductConfig(productType: ProductType, countryCode: string): ProductConfig | null {
   if (productType === ProductType.DIGITAL) {
     return null; // No Printify needed for digital products
   }
 
-  if (productType === ProductType.FRAMED_CANVAS) {
-    return PRINTIFY_PRODUCTS[ProductType.FRAMED_CANVAS].GLOBAL;
+  if (productType === ProductType.CANVAS_STRETCHED) {
+    return PRINTIFY_PRODUCTS[ProductType.CANVAS_STRETCHED]?.GLOBAL || null;
+  }
+
+  if (productType === ProductType.CANVAS_FRAMED) {
+    return PRINTIFY_PRODUCTS[ProductType.CANVAS_FRAMED]?.GLOBAL || null;
   }
 
   if (productType === ProductType.ART_PRINT) {
@@ -370,9 +399,9 @@ export function getProductConfig(productType: ProductType, countryCode: string) 
     const europeanCountries = ['DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'PT', 'IE', 'FI', 'SE', 'DK', 'NO', 'PL', 'CZ', 'HU', 'SK', 'SI', 'HR', 'BG', 'RO', 'LT', 'LV', 'EE', 'MT', 'CY', 'LU', 'GR'];
     
     if (europeanCountries.includes(countryCode)) {
-      return PRINTIFY_PRODUCTS[ProductType.ART_PRINT].EUROPE;
+      return PRINTIFY_PRODUCTS[ProductType.ART_PRINT]?.EUROPE || null;
     } else {
-      return PRINTIFY_PRODUCTS[ProductType.ART_PRINT].US_CA;
+      return PRINTIFY_PRODUCTS[ProductType.ART_PRINT]?.NORTH_AMERICA || null;
     }
   }
 

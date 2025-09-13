@@ -7,6 +7,16 @@ import { supabase } from '@/lib/supabase';
 import { PurchaseModalRouter, getModalVariant, trackModalVariant, type ModalVariant } from '@/components/modals/PurchaseModalRouter';
 import { PurchaseModalPhysicalFirst } from '@/components/modals/PurchaseModalPhysicalFirst';
 import MockupDisplay from '@/components/artwork/MockupDisplay';
+import ProductPurchaseModal from '@/components/modals/ProductPurchaseModal';
+
+interface Mockup {
+  type: string;
+  title: string;
+  description: string;
+  mockupUrl: string;
+  productId: string;
+  size: string;
+}
 
 interface Artwork {
   id: string;
@@ -27,6 +37,9 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [selectedProductType, setSelectedProductType] = useState<string>('');
+  const [selectedProductMockups, setSelectedProductMockups] = useState<Mockup[]>([]);
   const [modalVariant, setModalVariant] = useState<ModalVariant>('equal-tiers');
   const router = useRouter();
 
@@ -74,6 +87,18 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
     // Track modal close event
     trackModalVariant(modalVariant, 'modal_closed');
     setShowPurchaseModal(false);
+  };
+
+  const handleProductClick = (productType: string, mockups: Mockup[]) => {
+    setSelectedProductType(productType);
+    setSelectedProductMockups(mockups);
+    setShowProductModal(true);
+  };
+
+  const handleCloseProductModal = () => {
+    setShowProductModal(false);
+    setSelectedProductType('');
+    setSelectedProductMockups([]);
   };
 
 
@@ -201,7 +226,7 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
                   See Your Masterpiece Come to Life
                 </h3>
                 
-                <MockupDisplay artwork={artwork} />
+                <MockupDisplay artwork={artwork} onProductClick={handleProductClick} />
               </div>
             </div>
           </div>
@@ -215,6 +240,18 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
           onClose={handleCloseModal}
           variant={modalVariant}
           artwork={artwork}
+        />
+      )}
+
+      {/* Product-Specific Purchase Modal */}
+      {artwork && (
+        <ProductPurchaseModal
+          isOpen={showProductModal}
+          onClose={handleCloseProductModal}
+          productType={selectedProductType}
+          mockups={selectedProductMockups}
+          artwork={artwork}
+          onProductClick={handleProductClick}
         />
       )}
     </>

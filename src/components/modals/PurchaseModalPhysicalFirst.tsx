@@ -26,19 +26,20 @@ interface PurchaseModalPhysicalFirstProps {
 }
 
 export const PurchaseModalPhysicalFirst = ({ isOpen, onClose, artwork }: PurchaseModalPhysicalFirstProps) => {
-  const [selectedProduct, setSelectedProduct] = useState<{ type: ProductType; size: string } | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<{ type: ProductType; size: string; frameUpgrade?: boolean } | null>(null);
   const [selectedSize, setSelectedSize] = useState<string>('18x24'); // Default to middle size
+  const [frameUpgrade, setFrameUpgrade] = useState<boolean>(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   if (!isOpen) return null;
 
-  const handlePurchase = async (productType: ProductType, size: string) => {
+  const handlePurchase = async (productType: ProductType, size: string, frameUpgrade: boolean = false) => {
     setIsCheckingOut(true);
     
     // Track add to cart and begin checkout events
     if (typeof window !== 'undefined') {
       const { trackAddToCart, trackBeginCheckout } = await import('@/lib/google-ads');
-      const price = getProductPricing(productType, size, 'US');
+      const price = getProductPricing(productType, size, 'US', frameUpgrade);
       trackAddToCart(productType, price);
       trackBeginCheckout(productType, price);
     }
@@ -49,7 +50,7 @@ export const PurchaseModalPhysicalFirst = ({ isOpen, onClose, artwork }: Purchas
     if (isTestMode) {
       setTimeout(async () => {
         const productName = productType === 'art_print' ? 'Premium Art Print' : 'Framed Canvas';
-        const price = formatPrice(getProductPricing(productType, size, 'US'));
+        const price = formatPrice(getProductPricing(productType, size, 'US', frameUpgrade));
         
         // Simulate API calls in test mode
         try {
@@ -68,6 +69,7 @@ export const PurchaseModalPhysicalFirst = ({ isOpen, onClose, artwork }: Purchas
               petName: artwork.pet_name,
               imageUrl: artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res || '',
               variant: 'physical-first',
+              frameUpgrade,
               testMode: true // Flag for test mode
             })
           });
@@ -119,7 +121,8 @@ Check console for detailed error logs.`);
           customerName: artwork.customer_name,
           petName: artwork.pet_name,
           imageUrl: artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res || '',
-          variant: 'physical-first' // For A/B testing analytics
+          variant: 'physical-first', // For A/B testing analytics
+          frameUpgrade
         })
       });
 
@@ -138,7 +141,7 @@ Check console for detailed error logs.`);
     }
   };
 
-  const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+  const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)} CAD`;
 
   const getProductsWithSizes = () => {
     const countryCode = 'US'; // Default to US, could be dynamic based on user location
@@ -151,24 +154,37 @@ Check console for detailed error logs.`);
         description: 'Professional archival paper with vibrant colors',
         icon: Image,
         price: getProductPricing(ProductType.ART_PRINT, selectedSize, countryCode),
-        originalPrice: getProductPricing(ProductType.ART_PRINT, '20x30', countryCode),
         size: selectedSize,
         delivery: '3-5 business days',
         popular: false,
         availableSizes: getAvailableSizes(ProductType.ART_PRINT, countryCode)
       },
       {
-        type: ProductType.FRAMED_CANVAS,
-        title: 'Framed Canvas',
-        subtitle: 'Gallery-Ready Gift',
-        description: 'Stretched canvas with premium frame - ready to hang',
+        type: ProductType.CANVAS_STRETCHED,
+        title: 'Canvas (Stretched)',
+        subtitle: 'Premium Matte Canvas',
+        description: 'High-quality stretched canvas on 1.25" wooden frame',
         icon: Frame,
-        price: getProductPricing(ProductType.FRAMED_CANVAS, selectedSize, countryCode),
-        originalPrice: getProductPricing(ProductType.FRAMED_CANVAS, '20x30', countryCode),
+        price: getProductPricing(ProductType.CANVAS_STRETCHED, selectedSize, countryCode, frameUpgrade),
         size: selectedSize,
         delivery: '5-7 business days',
         popular: true,
-        availableSizes: getAvailableSizes(ProductType.FRAMED_CANVAS, countryCode)
+        availableSizes: getAvailableSizes(ProductType.CANVAS_STRETCHED, countryCode),
+        hasFrameUpgrade: true,
+        frameUpgradePrice: 4000 // $40.00 CAD
+      },
+      {
+        type: ProductType.CANVAS_FRAMED,
+        title: 'Canvas (Framed)',
+        subtitle: 'Gallery-Ready Gift',
+        description: 'Premium framed canvas with multi-color frame - ready to hang',
+        icon: Frame,
+        price: getProductPricing(ProductType.CANVAS_FRAMED, selectedSize, countryCode),
+        size: selectedSize,
+        delivery: '7-10 business days',
+        popular: false,
+        availableSizes: getAvailableSizes(ProductType.CANVAS_FRAMED, countryCode),
+        isUpsell: true
       }
     ];
   };
@@ -243,7 +259,12 @@ Check console for detailed error logs.`);
                     ? 'border-mona-gold bg-mona-gold/5 shadow-lg'
                     : 'border-mona-gold/50 shadow-md hover:border-mona-gold hover:shadow-lg'
                 }`}
-                onClick={() => setSelectedProduct({ type: product.type, size: selectedSize })}
+                onClick={() => {
+                  setSelectedProduct({ type: product.type, size: selectedSize, frameUpgrade });
+                  if (product.type !== ProductType.CANVAS_STRETCHED) {
+                    setFrameUpgrade(false);
+                  }
+                }}
               >
                 {/* Popular Badge */}
                 {product.popular && (
@@ -267,12 +288,42 @@ Check console for detailed error logs.`);
                       {formatPrice(product.price)}
                     </span>
                     <span className="text-sm text-gray-500 ml-2">({selectedSize}")</span>
+                    {product.hasFrameUpgrade && frameUpgrade && (
+                      <div className="text-sm text-green-600 mt-1">
+                        +{formatPrice(product.frameUpgradePrice || 0)} frame upgrade
+                      </div>
+                    )}
                   </div>
 
                   {/* Delivery Info */}
                   <p className="text-xs text-gray-500">Ships in {product.delivery}</p>
                 </div>
 
+                {/* Frame Upgrade Option for Canvas Stretched */}
+                {product.hasFrameUpgrade && selectedProduct?.type === product.type && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={frameUpgrade}
+                        onChange={(e) => {
+                          setFrameUpgrade(e.target.checked);
+                          setSelectedProduct({ type: product.type, size: selectedSize, frameUpgrade: e.target.checked });
+                        }}
+                        className="mr-3 w-4 h-4 text-mona-gold"
+                      />
+                      <div>
+                        <span className="font-medium text-sm text-blue-700">
+                          Add Professional Frame (+{formatPrice(product.frameUpgradePrice || 0)})
+                        </span>
+                        <p className="text-xs text-blue-600 mt-1">
+                          Transform to gallery-ready framed canvas
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                )}
+                
                 {/* Free Digital Copy Highlight */}
                 <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-4">
                   <div className="flex items-center justify-center text-green-700">
@@ -291,7 +342,7 @@ Check console for detailed error logs.`);
           {selectedProduct && (
             <div className="text-center">
               <button
-                onClick={() => handlePurchase(selectedProduct.type, selectedProduct.size)}
+                onClick={() => handlePurchase(selectedProduct.type, selectedProduct.size, selectedProduct.frameUpgrade)}
                 disabled={isCheckingOut}
                 className={`btn btn-primary btn-lg px-12 ${isCheckingOut ? 'loading' : ''}`}
               >

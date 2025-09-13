@@ -20,6 +20,12 @@ export async function GET(
       return new NextResponse('Artwork not found or link expired', { status: 404 });
     }
 
+    // Handle both old and new schema formats
+    const generationStep = artwork.generation_step || (artwork as any).generation_status;
+    const generatedImageUrl = artwork.generated_images?.artwork_preview || 
+                             artwork.generated_images?.artwork_full_res || 
+                             (artwork as any).generated_image_url;
+
     return NextResponse.json({
       success: true,
       artwork: {
@@ -27,10 +33,14 @@ export async function GET(
         pet_name: artwork.pet_name,
         customer_name: artwork.customer_name,
         customer_email: artwork.customer_email,
-        generated_image_url: artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res,
-        generation_status: artwork.generation_step === 'completed' ? 'completed' : 
-                          artwork.generation_step === 'failed' ? 'failed' : 'pending',
-        mockup_urls: artwork.delivery_images?.mockups || [],
+        generated_image_url: generatedImageUrl,
+        generation_step: generationStep === 'completed' ? 'completed' : 
+                        generationStep === 'failed' ? 'failed' : 'pending',
+        generation_status: generationStep === 'completed' ? 'completed' : 
+                          generationStep === 'failed' ? 'failed' : 'pending',
+        generated_images: artwork.generated_images || {},
+        delivery_images: artwork.delivery_images || {},
+        mockup_urls: (artwork as any).mockup_urls || {},
         mockup_generated_at: artwork.processing_status?.mockup_generation === 'completed' ? artwork.updated_at : null
       }
     });

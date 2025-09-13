@@ -102,13 +102,13 @@ export const PurchaseModalEqualTiers = ({ isOpen, onClose, artwork }: PurchaseMo
       badge: 'Best Value'
     },
     {
-      type: ProductType.FRAMED_CANVAS,
+      type: ProductType.CANVAS_FRAMED,
       size: '16x20',
       icon: Frame,
       title: 'Framed Canvas',
       subtitle: 'Gallery Ready',
       description: 'Stretched canvas with premium frame',
-      price: getProductPricing(ProductType.FRAMED_CANVAS, '16x20', 'US'),
+      price: getProductPricing(ProductType.CANVAS_FRAMED, '16x20', 'US'),
       features: ['Gallery-wrapped canvas', 'Premium wood frame', 'Hanging hardware included'],
       delivery: '5-7 days',
       badge: null

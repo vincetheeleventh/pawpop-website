@@ -17,7 +17,8 @@ export interface PawPopProduct {
   imageUrl: string;
   title: string;
   description: string;
-  region: 'US_CA' | 'EUROPE' | 'GLOBAL';
+  region: 'NORTH_AMERICA' | 'EUROPE' | 'GLOBAL';
+  frameUpgrade?: boolean; // For canvas stretched products
 }
 
 // Cache for created Printify products to avoid recreation
@@ -55,11 +56,11 @@ export async function getOrCreatePrintifyProduct(
 
   // Determine region
   let region: string;
-  if (productType === ProductType.FRAMED_CANVAS) {
+  if (productType === ProductType.CANVAS_STRETCHED || productType === ProductType.CANVAS_FRAMED) {
     region = 'GLOBAL';
   } else {
     const europeanCountries = ['DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'PT', 'IE', 'FI', 'SE', 'DK', 'NO', 'PL', 'CZ', 'HU', 'SK', 'SI', 'HR', 'BG', 'RO', 'LT', 'LV', 'EE', 'MT', 'CY', 'LU', 'GR'];
-    region = europeanCountries.includes(countryCode) ? 'EUROPE' : 'US_CA';
+    region = europeanCountries.includes(countryCode) ? 'EUROPE' : 'NORTH_AMERICA';
   }
 
   // Check cache first
@@ -113,8 +114,10 @@ function getProductTypeDisplayName(productType: ProductType): string {
   switch (productType) {
     case ProductType.ART_PRINT:
       return 'Art Print';
-    case ProductType.FRAMED_CANVAS:
-      return 'Framed Canvas';
+    case ProductType.CANVAS_STRETCHED:
+      return 'Canvas (Stretched)';
+    case ProductType.CANVAS_FRAMED:
+      return 'Canvas (Framed)';
     case ProductType.DIGITAL:
       return 'Digital Download';
     default:
@@ -123,9 +126,9 @@ function getProductTypeDisplayName(productType: ProductType): string {
 }
 
 // Get pricing for a product type and size
-export function getProductPricing(productType: ProductType, size: string, countryCode: string): number {
+export function getProductPricing(productType: ProductType, size: string, countryCode: string, frameUpgrade: boolean = false): number {
   if (productType === ProductType.DIGITAL) {
-    return 999; // $9.99 for digital
+    return 1500; // $15.00 CAD for digital
   }
 
   const productConfig = getProductConfig(productType, countryCode);
@@ -138,7 +141,14 @@ export function getProductPricing(productType: ProductType, size: string, countr
     throw new Error(`No variant found for size ${size}`);
   }
 
-  return variant.price;
+  let price = variant.price;
+  
+  // Add frame upgrade cost for stretched canvas
+  if (productType === ProductType.CANVAS_STRETCHED && frameUpgrade && productConfig.frame_upgrade_price) {
+    price += productConfig.frame_upgrade_price;
+  }
+
+  return price;
 }
 
 // Get available sizes for a product type

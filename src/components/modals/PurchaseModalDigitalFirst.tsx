@@ -182,11 +182,11 @@ export const PurchaseModalDigitalFirst = ({ isOpen, onClose, artwork }: Purchase
                 {/* Framed Canvas */}
                 <div 
                   className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                    selectedPhysical?.type === ProductType.FRAMED_CANVAS 
+                    selectedPhysical?.type === ProductType.CANVAS_FRAMED 
                       ? 'border-mona-gold bg-mona-gold/5' 
                       : 'border-gray-200 hover:border-mona-gold/50'
                   }`}
-                  onClick={() => setSelectedPhysical({ type: ProductType.FRAMED_CANVAS, size: '12x16' })}
+                  onClick={() => setSelectedPhysical({ type: ProductType.CANVAS_FRAMED, size: '12x16' })}
                 >
                   <div className="flex justify-between items-center">
                     <div>

@@ -15,6 +15,7 @@ export async function POST(req: Request) {
       customerName, 
       petName, 
       imageUrl,
+      frameUpgrade = false,
       testMode = false
     } = body;
 
@@ -47,8 +48,8 @@ export async function POST(req: Request) {
       return new NextResponse('Missing required fields', { status: 400 });
     }
 
-    // Get pricing
-    const priceInCents = getProductPricing(productType as ProductType, size, 'US');
+    // Get pricing (including frame upgrade if applicable)
+    const priceInCents = getProductPricing(productType as ProductType, size, 'US', frameUpgrade);
     
     // Create order in database first
     const order = await createOrder({
@@ -66,11 +67,13 @@ export async function POST(req: Request) {
       payment_method_types: ['card'],
       line_items: [{
         price_data: {
-          currency: 'usd',
+          currency: 'cad',
           product_data: {
             name: `PawPop ${productType === 'digital' ? 'Digital Download' : 
-                   productType === 'art_print' ? 'Art Print' : 'Framed Canvas'} - ${size}`,
-            description: `Custom artwork featuring ${customerName}${petName ? ` & ${petName}` : ''} in the style of the Mona Lisa`,
+                   productType === 'art_print' ? 'Art Print' :
+                   productType === 'canvas_stretched' ? `Canvas (Stretched)${frameUpgrade ? ' + Frame' : ''}` :
+                   'Canvas (Framed)'} - ${size}`,
+            description: `Custom artwork featuring ${customerName}${petName ? ` & ${petName}` : ''} in the style of the Mona Lisa${frameUpgrade ? ' with professional framing' : ''}`,
             images: [imageUrl]
           },
           unit_amount: priceInCents
@@ -88,11 +91,12 @@ export async function POST(req: Request) {
         customerName,
         petName: petName || '',
         imageUrl,
+        frameUpgrade: frameUpgrade.toString(),
         orderId: order.id
       },
       // Collect shipping address for physical products
       shipping_address_collection: productType !== 'digital' ? {
-        allowed_countries: ['US', 'CA', 'GB', 'DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'PT', 'IE']
+        allowed_countries: ['US', 'CA', 'GB', 'DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'PT', 'IE', 'FI', 'SE', 'DK', 'NO', 'PL', 'CZ', 'HU', 'SK', 'SI', 'HR', 'BG', 'RO', 'LT', 'LV', 'EE', 'MT', 'CY', 'LU', 'GR']
       } : undefined
     });
 

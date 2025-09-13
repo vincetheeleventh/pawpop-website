@@ -50,7 +50,7 @@ export const CANVAS_SPECS: Record<string, Record<string, ProductCanvasSpecs>> = 
       marginRight: 250
     }
   },
-  [ProductType.FRAMED_CANVAS]: {
+  [ProductType.CANVAS_FRAMED]: {
     '12x16': {
       printAreaWidth: 3600,   // 12" at 300 DPI
       printAreaHeight: 4800,  // 16" at 300 DPI
@@ -128,7 +128,7 @@ export function calculateImagePlacement(
     if (imageAspectRatio < 1) { // Portrait orientation
       y = 0.45; // Slightly higher than center
     }
-  } else if (productType === ProductType.FRAMED_CANVAS) {
+  } else if (productType === ProductType.CANVAS_FRAMED) {
     // For framed canvas, account for frame and matting
     // Keep centered but ensure adequate border
     x = 0.5;
@@ -182,7 +182,7 @@ export function calculateFaceOptimizedPlacement(
   const faceCenterY = (faceBox.y + faceBox.height / 2) / imageDimensions.height;
 
   // For portrait-style products, try to center the face in the upper portion
-  if (productType === ProductType.ART_PRINT || productType === ProductType.FRAMED_CANVAS) {
+  if (productType === ProductType.ART_PRINT || productType === ProductType.CANVAS_FRAMED) {
     // Adjust positioning to center the face in the "rule of thirds" upper area
     const targetY = 0.35; // Upper third position
     const targetX = 0.5;  // Center horizontally

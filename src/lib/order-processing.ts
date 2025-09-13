@@ -29,6 +29,7 @@ export interface OrderMetadata {
   size: string;
   customerName: string;
   petName?: string;
+  frameUpgrade?: boolean;
 }
 
 export interface ProcessOrderParams {
@@ -108,7 +109,7 @@ async function triggerUpscaling(artworkId: string): Promise<string> {
 
 // Process a completed Stripe checkout session
 export async function processOrder({ session, metadata }: ProcessOrderParams): Promise<void> {
-  const { productType, imageUrl, size, customerName, petName } = metadata;
+  const { productType, imageUrl, size, customerName, petName, frameUpgrade } = metadata;
 
   // Update order status to paid in database
   await updateOrderAfterPayment(
@@ -157,6 +158,17 @@ export async function processOrder({ session, metadata }: ProcessOrderParams): P
     }
   }
 
+  // Handle frame upgrade for canvas stretched products
+  let finalProductType = productType;
+  if (productType === ProductType.CANVAS_STRETCHED && frameUpgrade) {
+    console.log(`🖼️ Frame upgrade requested for canvas stretched product`);
+    finalProductType = ProductType.CANVAS_FRAMED;
+    
+    if (order) {
+      await addOrderStatusHistory(order.id, 'processing', 'Frame upgrade applied - using framed canvas product');
+    }
+  }
+
   // Extract shipping information
   const shippingAddress = extractShippingAddress(session);
   if (!shippingAddress) {
@@ -171,7 +183,7 @@ export async function processOrder({ session, metadata }: ProcessOrderParams): P
 
   // Create or get Printify product
   const { productId, variantId } = await getOrCreatePrintifyProduct(
-    productType,
+    finalProductType,
     size,
     finalImageUrl,
     shippingAddress.country,
@@ -185,7 +197,7 @@ export async function processOrder({ session, metadata }: ProcessOrderParams): P
   // Create Printify order
   const orderData: PrintifyOrderRequest = {
     external_id: session.id,
-    label: `PawPop Order - ${customerName}${petName ? ` (${petName})` : ''}`,
+    label: `PawPop Order - ${customerName}${petName ? ` (${petName})` : ''}${frameUpgrade ? ' (Framed)' : ''}`,
     line_items: [
       {
         product_id: productId,
@@ -240,7 +252,8 @@ export function parseOrderMetadata(session: Stripe.Checkout.Session): OrderMetad
     imageUrl: metadata.imageUrl,
     size: metadata.size,
     customerName: metadata.customerName,
-    petName: metadata.petName || undefined
+    petName: metadata.petName || undefined,
+    frameUpgrade: metadata.frameUpgrade === 'true'
   };
 }
 
