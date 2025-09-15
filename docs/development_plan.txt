@@ -32,7 +32,7 @@
 - **Task 4: Upload Interface**
   - Single-purpose upload component (drag/drop + click)
   - Mobile-optimized file picker integration
-  - Instant upload feedback with Monsieur Brush encouragement
+  - Instant upload feedback with encouraging messages
   - Error handling for unsupported files
 
 - **Task 5: AI Processing Flow**
@@ -60,7 +60,7 @@
 - **Task 8: A/B Testing Setup**
   - Test headline variations
   - CTA button colors and text
-  - Monsieur Brush messaging
+  - Brand messaging variations
   - Social proof placement
 
 - **Task 9: Analytics & Tracking**

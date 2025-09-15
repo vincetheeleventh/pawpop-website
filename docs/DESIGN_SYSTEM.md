@@ -23,7 +23,7 @@ Technical implementation guide for the PawPop squeeze page with singular focus: 
 ### Conversion-Optimized Palette
 
 #### CTA Hierarchy
-- **Primary CTA**: `#D4AF37` (Mona Lisa Gold) - Upload buttons only
+- **Primary CTA**: `#D4AF37` (Renaissance Gold) - Upload buttons only
 - **Background**: `#FEFEFE` (Gallery White) - Zero distractions
 - **Text**: `#2C2C2C` (Charcoal Frame) - Maximum readability
 - **Trust Elements**: `#4A90E2` (French Blue) - Social proof, ratings
@@ -72,7 +72,7 @@ colors: {
 - **Charcoal Frame**: Text, borders, sophisticated elements
 
 #### Character Integration
-- **French Blue**: Monsieur Brush elements, playful CTAs
+- **French Blue**: Brand elements, playful CTAs
 - **Warm Peach**: Gentle feedback, welcoming messages
 - **Sage Green**: Calm states, natural elements
 
@@ -257,7 +257,7 @@ colors: {
 
 ### Character Integration
 
-#### Monsieur Brush Dialogue
+#### PawPop Dialogue
 ```tsx
 <div className="
   relative bg-warm-peach/20 rounded-2xl p-6
@@ -274,7 +274,7 @@ colors: {
         "Ah, magnifique! Let me paint you as ze Mona Lisa!"
       </p>
       <span className="font-inter text-sm text-gray-600 mt-1 block">
-        - Monsieur Brush
+        - PawPop
       </span>
     </div>
   </div>
@@ -386,7 +386,7 @@ colors: {
     Magnifique! Your masterpiece is ready!
   </h3>
   <p className="font-inter text-gray-600">
-    Monsieur Brush has created something truly special
+    PawPop has created something truly special
   </p>
 </div>
 ```
@@ -405,7 +405,7 @@ colors: {
       Oops! Please upload a clearer photo
     </p>
     <p className="font-inter text-gray-600 text-sm">
-      Monsieur Brush needs at least 1200x1200 pixels to work his magic
+      PawPop needs at least 1200x1200 pixels to work his magic
     </p>
   </div>
 </div>
@@ -469,7 +469,7 @@ colors: {
   
   <div className="text-center">
     <h3 className="font-fredoka text-xl text-magic-purple mb-2">
-      Monsieur Brush is painting...
+      PawPop is painting...
     </h3>
     <p className="font-inter text-gray-600">
       Adding artistic flair to your portrait
@@ -517,7 +517,7 @@ colors: {
         Masterpiece Complete!
       </h4>
       <p className="font-inter text-gray-600 text-sm">
-        Monsieur Brush has outdone himself
+        PawPop has outdone himself
       </p>
     </div>
   </div>
@@ -528,7 +528,7 @@ colors: {
 
 ### Component Architecture
 1. **Atomic Design**: Build from atoms (buttons) → molecules (cards) → organisms (sections)
-2. **Character Integration**: Include Monsieur Brush interactions in key components
+2. **Character Integration**: Include PawPop interactions in key components
 3. **Gallery Aesthetics**: Every component should feel museum-quality
 4. **Whimsical Details**: Subtle animations and playful micro-interactions
 
@@ -536,7 +536,7 @@ colors: {
 - **Mobile-First**: Start with mobile, enhance for larger screens
 - **Gallery Proportions**: Maintain elegant spacing across all devices
 - **Touch-Friendly**: Large tap targets, swipe gestures for galleries
-- **Character Adaptation**: Monsieur Brush scales appropriately
+- **Character Adaptation**: PawPop scales appropriately
 
 ### Accessibility Standards
 - **WCAG 2.1 AA**: Full compliance for inclusive experience
@@ -554,7 +554,7 @@ colors: {
 ### Brand Consistency
 - **Color Usage**: Stick to defined palette and usage guidelines
 - **Typography Hierarchy**: Consistent font pairings and scales
-- **Character Voice**: Maintain Monsieur Brush's personality
+- **Character Voice**: Maintain PawPop's personality
 - **Gallery Quality**: Every element should feel premium and artistic
 
 ### Tailwind Configuration
@@ -626,4 +626,4 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 ---
 
-**This unified design system bridges our whimsical brand vision with practical implementation, ensuring every component feels like part of Monsieur Brush's magical art studio.**
+**This unified design system bridges our whimsical brand vision with practical implementation, ensuring every component feels like part of PawPop's magical art studio.**

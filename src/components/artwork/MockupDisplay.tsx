@@ -111,7 +111,8 @@ export default function MockupDisplay({ artwork, onProductClick }: MockupDisplay
         console.error('❌ Error generating mockups:', err)
         setError(err instanceof Error ? err.message : 'Failed to load mockups')
         
-        // Final fallback: Use artwork image as placeholder
+        // Final fallback: Use artwork image directly
+        console.log('⚠️ Using artwork image as mockup fallback')
         setMockups([
           {
             type: 'art_print',
@@ -224,12 +225,13 @@ export default function MockupDisplay({ artwork, onProductClick }: MockupDisplay
             <img 
               src={mockup.mockupUrl}
               alt={mockup.title}
-              className="w-full h-48 object-cover rounded"
+              className="w-full h-48 object-contain rounded"
               onError={(e) => {
-                const placeholderSvg = mockup.type === 'canvas_stretched'
-                  ? 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxyZWN0IHg9IjYwIiB5PSI1MCIgd2lkdGg9IjE4MCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiNGRkZGRkYiIHN0cm9rZT0iIzlDQTNBRiIgc3Ryb2tlLXdpZHRoPSIxIi8+Cjx0ZXh0IHg9IjE1MCIgeT0iMTA1IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNkI3MjgwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCI+Q2FudmFzIFN0cmV0Y2hlZDwvdGV4dD4KPC9zdmc+'
-                  : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxyZWN0IHg9IjgwIiB5PSI1MCIgd2lkdGg9IjE0MCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiNGRkZGRkYiIHN0cm9rZT0iIzlDQTNBRiIgc3Ryb2tlLXdpZHRoPSIxIi8+Cjx0ZXh0IHg9IjE1MCIgeT0iMTA1IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNkI3MjgwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCI+QXJ0IFByaW50PC90ZXh0Pgo8L3N2Zz4=';
-                e.currentTarget.src = placeholderSvg;
+                // Fallback to artwork image if mockup fails to load
+                const artworkImageUrl = artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res;
+                if (artworkImageUrl && e.currentTarget.src !== artworkImageUrl) {
+                  e.currentTarget.src = artworkImageUrl;
+                }
               }}
             />
           </div>

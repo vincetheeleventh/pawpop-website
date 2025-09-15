@@ -33,13 +33,13 @@ export const Header = () => {
             className="
               bg-mona-gold hover:bg-yellow-600
               text-charcoal-frame font-fredoka font-medium
-              px-6 py-2 rounded-full
+              px-6 py-2
               transition-all duration-200
               hover:scale-105 hover:shadow-lg
               focus:outline-none focus:ring-2 focus:ring-mona-gold/50
             "
           >
-            Upload Photo Now
+            {header.ctaButton}
           </Link>
 
           {/* No mobile menu needed for squeeze page */}

@@ -46,7 +46,7 @@
 
 ---
 
-## Monsieur Brush (Conversion Role)
+## PawPop (Conversion Role)
 
 ### Social Proof Function
 - **Credibility**: "I've transformed 10,000+ pet moms into masterpieces!"
@@ -110,7 +110,7 @@
 ## Character Design: The French Orangutan Artist
 
 ### Character Profile
-- **Name**: "Monsieur Brush" (or "Brosse")
+- **Name**: "PawPop" (or "Brosse")
 - **Appearance**: 
   - Charming orangutan with a classic French artist's mustache
   - Black beret tilted at a jaunty angle
@@ -140,23 +140,23 @@
 - **Hero Visual**: Split-screen showing ordinary pet mom photo → stunning Mona Lisa transformation
 - **Headline**: "Become the Mona Lisa with Your Pet"
 - **CTA**: Single, prominent "Upload Your Photo" button
-- **Character**: Monsieur Brush welcoming visitors with open arms
+- **Character**: PawPop welcoming visitors with open arms
 
 #### 2. **Upload Simplicity** (3-10 seconds)
 - **Interface**: Drag-and-drop zone with clear visual feedback
 - **Guidance**: "Just drop your photo here - I'll handle the rest!"
-- **Character**: Monsieur Brush pointing to upload area encouragingly
+- **Character**: PawPop pointing to upload area encouragingly
 - **Preview**: Instant thumbnail preview of uploaded image
 
 #### 3. **Transformation Magic** (10-90 seconds)
-- **Loading Experience**: Animated Monsieur Brush "painting" the transformation
+- **Loading Experience**: Animated PawPop "painting" the transformation
 - **Progress Indicators**: Artistic progress bar styled as a paintbrush stroke
 - **Micro-interactions**: Sparkles, brush strokes, canvas reveals
 - **Messaging**: "Mixing the perfect colors..." "Adding artistic flair..."
 
 #### 4. **The Big Reveal** (90+ seconds)
 - **Dramatic Unveiling**: Curtain pull or frame reveal animation
-- **Character**: Monsieur Brush presenting the masterpiece with a flourish
+- **Character**: PawPop presenting the masterpiece with a flourish
 - **Social Sharing**: Immediate options to share the magic
 - **Next Steps**: Clear path to order prints, create more, or explore options
 
@@ -165,7 +165,7 @@
 #### Buttons
 - **Primary CTA**: Large, rounded, with subtle shadow and hover animations
 - **Secondary**: Outlined style with smooth fill transitions
-- **Character Integration**: Monsieur Brush "pointing" to important buttons
+- **Character Integration**: PawPop "pointing" to important buttons
 
 #### Cards & Containers
 - **Gallery Frames**: Ornate gold borders for showcasing transformations
@@ -174,7 +174,7 @@
 
 #### Loading States
 - **Artistic Progress**: Paint brush filling a canvas
-- **Character Animation**: Monsieur Brush actively "working" on the piece
+- **Character Animation**: PawPop actively "working" on the piece
 - **Micro-feedback**: Gentle sparkles and magical elements
 
 #### Feedback & Notifications
@@ -195,7 +195,7 @@
 - **Transformation**: Her living room walls now display multiple Mona Lisa portraits featuring her and her pet
 - **Lighting**: Warm, gallery-style lighting highlighting the artwork
 - **Details**: Elegant frames, museum placards, red velvet rope barriers
-- **Character**: Monsieur Brush in the corner, beret tipped, taking a bow
+- **Character**: PawPop in the corner, beret tipped, taking a bow
 
 ### Visual Style
 - **Illustration Style**: Semi-realistic with whimsical touches
@@ -296,7 +296,7 @@
 - **Engagement**: Time spent on result page
 - **Quality Perception**: User ratings of transformation quality
 - **Technical Performance**: Load times and error rates
-- **Character Effectiveness**: User feedback on Monsieur Brush
+- **Character Effectiveness**: User feedback on PawPop
 
 ---
 

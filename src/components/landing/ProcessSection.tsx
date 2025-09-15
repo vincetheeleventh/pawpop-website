@@ -36,20 +36,11 @@ export const ProcessSection = () => {
                 {step.description}
               </p>
               
-              {/* Character Quote */}
-              <div className="
-                bg-warm-peach/20 rounded-lg p-3 mt-4
-                border border-warm-peach/30
-              ">
-                <p className="font-fredoka text-sm text-charcoal-frame italic">
-                  {step.characterQuote}
-                </p>
-              </div>
             </div>
           ))}
         </div>
         
-        {/* Monsieur Brush Guarantee */}
+        {/* Quality Guarantee */}
         <div className="mt-16 text-center">
           <div className="
             bg-gallery-white rounded-2xl shadow-lg p-8 max-w-2xl mx-auto
@@ -60,16 +51,16 @@ export const ProcessSection = () => {
                 <span className="text-xl">🎨</span>
               </div>
               <h3 className="font-playfair text-2xl font-bold text-charcoal-frame">
-                Monsieur Brush's Promise
+                Our Promise
               </h3>
             </div>
             <p className="font-inter text-gray-600 mb-6">
-              "I guarantee your transformation will be magnifique! If you are not completely delighted with your Renaissance masterpiece, I will make it right."
+              We guarantee your transformation will be beautiful! If you are not completely delighted with your Renaissance masterpiece, we will make it right.
             </p>
             <div className="flex justify-center space-x-8 text-sm font-inter text-gray-500">
               <div className="flex items-center">
                 <span className="text-joy-yellow mr-2">✨</span>
-                AI-Powered Perfection
+                Handcrafted Quality
               </div>
               <div className="flex items-center">
                 <span className="text-love-pink mr-2">💕</span>

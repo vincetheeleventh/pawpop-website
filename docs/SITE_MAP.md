@@ -24,7 +24,6 @@
 - Collapsible "Why PawPop?" section (accordion)
   - Social proof (10,000+ happy customers)
   - Benefits (60-second AI, museum quality, guarantee)
-  - Monsieur Brush testimonial
 
 **Components Used**:
 - `HeroSection` - Ultra-minimal hero + CTA

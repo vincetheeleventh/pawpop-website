@@ -32,6 +32,13 @@ export const HeroSection = () => {
             {hero.title}
           </h1>
 
+          {/* Subtitle */}
+          <p className="
+            text-lg md:text-xl text-gray-600 mb-8 leading-relaxed
+          ">
+            {hero.subtitle}
+          </p>
+
           {/* Single CTA Button - Mobile Optimized */}
           <button
             onClick={() => setIsModalOpen(true)}
@@ -39,7 +46,7 @@ export const HeroSection = () => {
               inline-block w-full max-w-xs
               bg-mona-gold hover:bg-yellow-600
               text-charcoal-frame font-fredoka font-bold
-              py-4 px-8 rounded-full text-xl
+              py-4 px-8 text-xl
               transition-all duration-200
               transform hover:scale-105 shadow-xl hover:shadow-2xl
               min-h-[56px] touch-manipulation
@@ -48,12 +55,6 @@ export const HeroSection = () => {
             {hero.ctaButton}
           </button>
 
-          {/* Monsieur Brush Quote */}
-          <div className="mt-6">
-            <p className="font-fredoka text-charcoal-frame/80 italic text-base">
-              {hero.characterIntro}
-            </p>
-          </div>
         </div>
       </div>
 

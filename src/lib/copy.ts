@@ -2,20 +2,75 @@
 
 /**
  * @file Centralized copy for the PawPop brand experience.
- * Includes Monsieur Brush character dialogue and whimsical content.
  */
 
 export const landingPageCopy = {
   header: {
     logoText: 'PawPop',
     navLinks: [], // No navigation links for squeeze page
-    ctaButton: 'Upload Photo Now',
+    ctaButton: 'Start',
   },
   hero: {
-    title: 'The Unforgettable Gift for Pet Moms',
-    subtitle: 'Custom portrait created from your pet\'s photo in a Renaissance masterpiece style',
-    ctaButton: 'Upload Photo Now',
-    characterIntro: '"Upload your photo and watch ze magic happen, mon ami!"',
+    title: 'Pet Mom, But Make it Mona Lisa',
+    subtitle: 'Upload photos of a pet + their mom and see how they\'d look as a masterpiece. Totally free.',
+    ctaButton: 'Make My Masterpiece',
+  },
+  examples: {
+    title: 'From Photo to Masterpiece',
+    subtitle: 'See the magic happen with real transformations',
+    pairs: [
+      {
+        before: '/images/test headshots/Screenshot_2.jpg',
+        after: '/images/hero_image.png',
+        altText: 'Sarah & Bella → Renaissance Masterpiece'
+      },
+      {
+        before: '/images/test headshots/image_50438145 (1).JPG',
+        after: '/images/pet-integration-output.jpg',
+        altText: 'Jennifer & Muffin → Classical Portrait'
+      },
+      {
+        before: '/images/test headshots/Screen Shot 2023-11-30 at 11.48.13 AM.png',
+        after: '/images/flux-test-output.png',
+        altText: 'Lisa & Charlie → Artistic Transformation'
+      }
+    ]
+  },
+  reactions: {
+    title: 'The Look on Their Face Says It All',
+    subtitle: 'Real reactions from pet moms who received their masterpieces',
+    testimonials: [
+      {
+        quote: "The look on her face was priceless! Best gift I've ever given. She immediately hung it in her living room.",
+        author: 'Sarah M.',
+        petName: 'Bella',
+        emoji: '🎁'
+      },
+      {
+        quote: "I couldn't stop laughing and crying at the same time. It's so beautiful and captures both me and Muffin perfectly!",
+        author: 'Jennifer K.',
+        petName: 'Muffin',
+        emoji: '❤️'
+      },
+      {
+        quote: "My wife was speechless. The quality is museum-level and it shows how much I pay attention to what makes her happy.",
+        author: 'David R.',
+        petName: 'Charlie',
+        emoji: '🐾'
+      },
+      {
+        quote: "Everyone at work keeps asking about the painting in my office. It's such a conversation starter!",
+        author: 'Maria L.',
+        petName: 'Luna',
+        emoji: '🎨'
+      },
+      {
+        quote: "I've never seen my mom so happy. She calls it her 'royal portrait' and shows it to everyone who visits.",
+        author: 'Alex T.',
+        petName: 'Max',
+        emoji: '👑'
+      }
+    ]
   },
   whyPawPop: {
     title: 'Why PawPop?',
@@ -36,7 +91,6 @@ export const landingPageCopy = {
         description: 'Love your masterpiece or get your money back'
       }
     ],
-    characterQuote: '"I guarantee you will love your transformation, mon ami!"'
   },
   process: {
     title: 'The Magical Transformation',
@@ -44,21 +98,18 @@ export const landingPageCopy = {
     steps: [
       {
         title: 'Upload Your Photo',
-        description: 'Simply drag and drop your favorite pet mom photo. Monsieur Brush will guide you through the process.',
+        description: 'Simply drag and drop your favorite pet mom photo.',
         icon: '📸',
-        characterQuote: '"Ah, magnifique! A beautiful subject for my canvas!"',
       },
       {
         title: 'Artistic Transformation',
         description: 'Our artists use modern illustration tools with human finishing touches to transform you into the iconic Mona Lisa style.',
         icon: '🎨',
-        characterQuote: '"Now I add ze artistic flair... mixing ze perfect colors..."',
       },
       {
         title: 'Your Masterpiece Revealed',
         description: 'Behold your transformation! Share your Renaissance portrait or order museum-quality prints.',
         icon: '🖼️',
-        characterQuote: '"Voilà! You are now immortalized as ze Mona Lisa!"',
       },
     ],
   },
@@ -91,10 +142,9 @@ export const landingPageCopy = {
   },
   emailCapture: {
     title: 'Join the Gallery of Pet Moms',
-    subtitle: 'Get inspiration and be the first to see new transformations. Plus, receive exclusive offers from Monsieur Brush!',
+    subtitle: 'Get inspiration and be the first to see new transformations. Plus, receive exclusive offers!',
     placeholder: 'your@email.com',
     buttonText: 'Join the Gallery',
-    characterQuote: '"Oui! Join my studio for ze latest artistic inspirations!"',
   },
   pricing: {
     title: 'Bring Your Masterpiece Home',
@@ -142,10 +192,10 @@ export const landingPageCopy = {
         { label: "Create Your Portrait", href: "/create" },
         { label: "Gallery", href: "/gallery" },
         { label: "How It Works", href: "/process" },
-        { label: "About Monsieur Brush", href: "/about" }
+        { label: "About Us", href: "/about" }
       ],
       support: [
-        { label: "Contact Us", href: "/contact" },
+        { label: "About Us", href: "/about" },
         { label: "Help Center", href: "/help" },
         { label: "Privacy Policy", href: "/privacy" },
         { label: "Terms of Service", href: "/terms" }
@@ -156,44 +206,10 @@ export const landingPageCopy = {
       { name: "Facebook", href: "https://www.facebook.com/pawpopart", icon: "👥" },
       { name: "Twitter", href: "https://twitter.com/pawpopart", icon: "🐦" }
     ],
-    copyright: "© 2024 PawPop. All rights reserved. Crafted with love by Monsieur Brush."
+    copyright: "© 2024 PawPop. All rights reserved."
   }
 };
 
-// Character dialogue for different states
-export const monsieurBrush = {
-  welcome: [
-    "Bonjour! I am Monsieur Brush, your personal Renaissance artist!",
-    "Ah, magnifique! Ready to become ze Mona Lisa?",
-    "Welcome to my studio! Let us create something extraordinary together!"
-  ],
-  uploading: [
-    "Ah, what a beautiful subject for my canvas!",
-    "Perfect! Now I can see ze artistic potential!",
-    "Magnifique photo! This will make a wonderful portrait!"
-  ],
-  processing: [
-    "Now I work my magic... mixing ze perfect colors...",
-    "Adding ze Renaissance touch... almost finished...",
-    "Creating your masterpiece with ze finest artistic flair...",
-    "Painting with ze skill of ze old masters..."
-  ],
-  success: [
-    "Voilà! Your transformation is complete!",
-    "Magnifique! You are now immortalized as ze Mona Lisa!",
-    "Bravo! A masterpiece worthy of ze Louvre!"
-  ],
-  error: [
-    "Ah, mon dieu! A small problem with ze canvas...",
-    "Not to worry! Even ze great masters had to try again!",
-    "Let us fix this together, oui?"
-  ],
-  encouragement: [
-    "Trust ze process, mon ami!",
-    "Art takes time, but ze result will be magnifique!",
-    "Patience! Great art cannot be rushed!"
-  ]
-};
 
 // Page-specific content
 export const pageContent = {
@@ -213,32 +229,29 @@ export const pageContent = {
     steps: [
       {
         title: "Upload Your Photo",
-        description: "Simply drag and drop your favorite pet mom photo. Monsieur Brush will guide you through the process.",
+        description: "Simply drag and drop your favorite pet mom photo.",
         icon: "📸",
-        characterQuote: "Ah, magnifique! A beautiful subject for my canvas!"
       },
       {
         title: "Artistic Transformation",
         description: "Our artists use modern illustration tools with human finishing touches to transform you into a classical masterpiece while preserving your unique beauty.",
         icon: "🎨",
-        characterQuote: "Now I work my magic... mixing ze perfect colors..."
       },
       {
         title: "Receive Your Masterpiece",
         description: "Download your stunning digital portrait or order premium prints to treasure forever.",
         icon: "🖼️",
-        characterQuote: "Voilà! A masterpiece worthy of ze Louvre!"
       }
     ]
   },
   about: {
-    title: "Meet Monsieur Brush",
-    subtitle: "The charming artist behind your transformations",
-    story: "Born in a digital atelier in France, Monsieur Brush combines the classical techniques of Renaissance masters with modern AI artistry. His passion? Celebrating the beautiful bond between pet moms and their beloved companions."
+    title: "About PawPop",
+    subtitle: "Creating beautiful Renaissance-style portraits",
+    story: "PawPop combines classical Renaissance art techniques with modern tools to create stunning portraits that celebrate the beautiful bond between pet moms and their beloved companions."
   },
   contact: {
     title: "Get in Touch",
-    subtitle: "Questions about your masterpiece? Monsieur Brush is here to help!",
+    subtitle: "Questions about your masterpiece? We're here to help!",
     supportHours: "Support available 9 AM - 6 PM EST, Monday-Friday",
     contact: {
       email: "pawpopart@gmail.com",
@@ -262,10 +275,10 @@ export const pageContent = {
         { label: "Create Your Portrait", href: "/create" },
         { label: "Gallery", href: "/gallery" },
         { label: "How It Works", href: "/process" },
-        { label: "About Monsieur Brush", href: "/about" }
+        { label: "About Us", href: "/about" }
       ],
       support: [
-        { label: "Contact Us", href: "/contact" },
+        { label: "About Us", href: "/about" },
         { label: "Help Center", href: "/help" },
         { label: "Privacy Policy", href: "/privacy" },
         { label: "Terms of Service", href: "/terms" }
@@ -276,7 +289,7 @@ export const pageContent = {
       { name: "Facebook", href: "https://www.facebook.com/pawpopart", icon: "👥" },
       { name: "Twitter", href: "https://twitter.com/pawpopart", icon: "🐦" }
     ],
-    copyright: "© 2024 PawPop. All rights reserved. Crafted with love by Monsieur Brush."
+    copyright: "© 2024 PawPop. All rights reserved."
   }
 };
 

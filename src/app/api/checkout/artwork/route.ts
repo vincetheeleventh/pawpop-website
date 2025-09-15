@@ -38,7 +38,8 @@ export async function POST(req: Request) {
         productDetails: {
           type: productType,
           size,
-          estimatedPrice: getProductPricing(productType as ProductType, size, 'US')
+          estimatedPrice: getProductPricing(productType as ProductType, size, 'US', frameUpgrade),
+          frameUpgrade
         }
       });
     }

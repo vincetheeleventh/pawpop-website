@@ -173,7 +173,7 @@ export const PurchaseModalDigitalFirst = ({ isOpen, onClose, artwork }: Purchase
                       <p className="text-sm text-gray-600">Museum-quality paper, ready to frame</p>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold text-mona-gold">From {formatPrice(2999)}</div>
+                      <div className="font-bold text-mona-gold">From {formatPrice(getProductPricing(ProductType.ART_PRINT, '12x18', 'US'))}</div>
                       <div className="text-xs text-gray-500">Ships in 3-5 days</div>
                     </div>
                   </div>
@@ -186,7 +186,7 @@ export const PurchaseModalDigitalFirst = ({ isOpen, onClose, artwork }: Purchase
                       ? 'border-mona-gold bg-mona-gold/5' 
                       : 'border-gray-200 hover:border-mona-gold/50'
                   }`}
-                  onClick={() => setSelectedPhysical({ type: ProductType.CANVAS_FRAMED, size: '12x16' })}
+                  onClick={() => setSelectedPhysical({ type: ProductType.CANVAS_FRAMED, size: '12x18' })}
                 >
                   <div className="flex justify-between items-center">
                     <div>
@@ -194,7 +194,7 @@ export const PurchaseModalDigitalFirst = ({ isOpen, onClose, artwork }: Purchase
                       <p className="text-sm text-gray-600">Gallery-wrapped with premium frame</p>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold text-mona-gold">From {formatPrice(7999)}</div>
+                      <div className="font-bold text-mona-gold">From {formatPrice(getProductPricing(ProductType.CANVAS_FRAMED, '12x18', 'US'))}</div>
                       <div className="text-xs text-gray-500">Ships in 5-7 days</div>
                     </div>
                   </div>

@@ -2,7 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const BASE_URL = 'http://localhost:3002';
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
 async function testEmailFlow() {
   console.log('🧪 Testing PawPop Email Completion Flow');
@@ -48,7 +48,8 @@ async function testEmailFlow() {
       body: JSON.stringify({
         customer_name: testData.customerName,
         customer_email: testData.customerEmail,
-        uploaded_file_url: 'test-uploaded'
+        pet_name: 'TestPet',
+        uploaded_file_url: 'https://example.com/test.jpg'
       })
     });
 

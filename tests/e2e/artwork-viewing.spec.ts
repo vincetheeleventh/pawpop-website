@@ -60,8 +60,6 @@ test.describe('Artwork Viewing Page', () => {
     await expect(page.locator('button:has-text("Get My Masterpiece")')).toBeVisible();
     await expect(page.locator('text=Choose from digital download, premium prints, or framed canvas')).toBeVisible();
 
-    // Verify Monsieur Brush quote
-    await expect(page.locator('text="Ah, magnifique! A true Renaissance masterpiece!" - Monsieur Brush')).toBeVisible();
   });
 
   test('should open purchase modal when clicking Get My Masterpiece', async ({ page }) => {

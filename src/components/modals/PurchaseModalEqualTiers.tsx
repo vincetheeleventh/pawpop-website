@@ -91,24 +91,24 @@ export const PurchaseModalEqualTiers = ({ isOpen, onClose, artwork }: PurchaseMo
     },
     {
       type: ProductType.ART_PRINT,
-      size: '16x20',
+      size: '18x24',
       icon: Image,
       title: 'Premium Art Print',
       subtitle: 'Museum Quality',
       description: 'Professional print on premium paper',
-      price: getProductPricing(ProductType.ART_PRINT, '16x20', 'US'),
+      price: getProductPricing(ProductType.ART_PRINT, '18x24', 'US'),
       features: ['Museum-quality paper', 'Ready to frame', 'Fade-resistant inks'],
       delivery: '3-5 days',
       badge: 'Best Value'
     },
     {
       type: ProductType.CANVAS_FRAMED,
-      size: '16x20',
+      size: '18x24',
       icon: Frame,
       title: 'Framed Canvas',
       subtitle: 'Gallery Ready',
       description: 'Stretched canvas with premium frame',
-      price: getProductPricing(ProductType.CANVAS_FRAMED, '16x20', 'US'),
+      price: getProductPricing(ProductType.CANVAS_FRAMED, '18x24', 'US'),
       features: ['Gallery-wrapped canvas', 'Premium wood frame', 'Hanging hardware included'],
       delivery: '5-7 days',
       badge: null

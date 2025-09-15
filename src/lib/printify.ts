@@ -105,8 +105,8 @@ export const PRINTIFY_PRODUCTS: Partial<Record<ProductType, Record<string, Produ
   },
   [ProductType.CANVAS_STRETCHED]: {
     GLOBAL: {
-      blueprint_id: 1159,
-      print_provider_id: 105, // Jondo
+      blueprint_id: 1159, // Matte Canvas, Stretched, 1.25"
+      print_provider_id: 1, // Generic Brand
       variants: [
         { id: 'canvas_12x18', size: '12x18', price: 5900 }, // $59.00 CAD
         { id: 'canvas_18x24', size: '18x24', price: 7900 }, // $79.00 CAD
@@ -117,8 +117,8 @@ export const PRINTIFY_PRODUCTS: Partial<Record<ProductType, Record<string, Produ
   },
   [ProductType.CANVAS_FRAMED]: {
     GLOBAL: {
-      blueprint_id: 944,
-      print_provider_id: 105, // Jondo
+      blueprint_id: 944, // Matte Canvas, Framed Multi-color
+      print_provider_id: 1, // Generic Brand
       variants: [
         { id: 'framed_12x18', size: '12x18', price: 9900 }, // $99.00 CAD
         { id: 'framed_18x24', size: '18x24', price: 11900 }, // $119.00 CAD

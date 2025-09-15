@@ -15,7 +15,6 @@ This document maps the critical conversion path from user arrival to purchase co
 - **Hero Image:** Pet mom + Mona Lisa transformation (visual proof of concept)
 - **Headline:** "The Unforgettable Gift for Pet Moms"
 - **Single CTA:** "Upload Photo Now" (mobile-optimized, 56px height)
-- **Character Quote:** Monsieur Brush introduction
 - **Collapsible Section:** "Why PawPop?" (hidden by default, reassurance for hesitant users)
 
 #### Success Metrics
@@ -68,6 +67,10 @@ User completes upload → Redirected to artwork page (pending state)
 2. **Pet Integration** (fal.ai multi-image processing)
 3. **Upscaling** (fal.ai clarity-upscaler, 3x resolution)
 4. **Mockup Generation** (Printify API integration)
+   - Uploads artwork to Printify servers
+   - Generates context 1 (front-facing) mockups for all product types
+   - Creates real product visualizations with consistent camera angles
+   - Stores mockup URLs in database for immediate display
 
 #### User Communication
 - **Email #1:** "Your masterpiece is being created! 🎨" (immediate)
@@ -107,18 +110,23 @@ Generation completes → Page automatically updates to completed state
 #### 2-Column Layout
 **Left Column: Artwork Display**
 - Full artwork image (no cropping)
-- Monsieur Brush quote
 - **Primary CTA:** "Make it Real" (physical-first messaging)
 - Supporting copy: "Choose your perfect format"
 
 **Right Column: Product Mockups**
-- Real Printify mockups (framed canvas, art prints)
-- Visual proof of physical products
-- Loading states with graceful fallbacks
+- **MockupDisplay Component:** Real Printify mockups with carousel navigation
+- **Context 1 (Front-Facing) Views:** Consistent camera angles across all product types
+  - Art Print: Clean front-facing view on premium paper
+  - Canvas Stretched: Front view of gallery-wrapped canvas
+  - Canvas Framed: Front view of professionally framed artwork
+- **Interactive Features:** Thumbnail navigation, clickable mockups
+- **Loading States:** Graceful fallbacks to placeholder mockups if Printify API fails
+- **Automatic Generation:** Mockups generated automatically after artwork completion
 
 #### Success Metrics
 - **Primary:** Purchase Modal Opens (% click "Make it Real")
-- **Secondary:** Time viewing artwork, mockup interaction
+- **Secondary:** Time viewing artwork, mockup interaction, carousel engagement
+- **Mockup Performance:** Click-through rate on individual mockups, thumbnail navigation usage
 - **Conversion Goal:** 40-60% click "Make it Real"
 
 #### Critical Path Action
@@ -132,11 +140,12 @@ User clicks "Make it Real" → Opens Purchase Modal
 
 #### Modal Structure
 1. **Physical Products (Prominent)**
-   - Framed Canvas ($129) - Premium positioning
-   - Premium Print ($79) - Popular badge
+   - Canvas Framed ($99-$149 CAD) - Premium positioning
+   - Canvas Stretched ($59-$99 CAD) - Popular badge, frame upgrade option (+$40 CAD)
+   - Art Print ($29-$48 CAD) - Museum-quality paper
    
 2. **Digital Option (Secondary)**
-   - Digital Portrait ($29) - Smaller, less prominent
+   - Digital Download ($15 CAD) - Instant delivery, smaller prominence
 
 3. **Purchase Flow**
    - Product selection
@@ -149,7 +158,65 @@ User clicks "Make it Real" → Opens Purchase Modal
 - **Conversion Goal:** 25-40% of modal opens result in purchase
 
 #### Critical Path Action
-User completes purchase → Order processing → Fulfillment
+User completes purchase → Automated order processing pipeline → Fulfillment
+
+---
+
+### Step 7: Post-Purchase Processing (Automated)
+**Duration:** 2-10 minutes  
+**Primary Job:** Process payment, upscale artwork, create physical orders, send confirmations
+
+#### Automated Pipeline Flow
+1. **Stripe Webhook Processing**
+   - Payment confirmation received
+   - Order status updated to "paid" in database
+   - Customer and order data extracted
+
+2. **Image Upscaling (Physical Products Only)**
+   - fal.ai clarity-upscaler with 3x resolution enhancement
+   - Oil painting texture optimization
+   - Fallback to original image if upscaling fails
+
+3. **Printify Order Creation**
+   - Product creation with upscaled artwork
+   - Shipping address validation
+   - Order submission to Printify for fulfillment
+
+4. **Customer Communication**
+   - Order confirmation email sent immediately
+   - Order details, tracking info, and timeline provided
+
+#### Success Metrics
+- **Primary:** Order Processing Success Rate (>95%)
+- **Secondary:** Upscaling success rate, Printify order creation rate
+- **Customer Experience:** Email delivery rate, processing time
+
+---
+
+### Step 8: Order Fulfillment & Tracking
+**Duration:** 3-7 business days  
+**Primary Job:** Physical product creation and shipping
+
+#### Fulfillment Process
+1. **Printify Production**
+   - High-quality printing on selected products
+   - Quality control and packaging
+   - Shipping label generation
+
+2. **Shipping & Tracking**
+   - Carrier pickup and transit
+   - Tracking updates via Printify webhooks
+   - Customer notification of shipping status
+
+3. **Delivery Confirmation**
+   - Package delivered to customer
+   - Optional delivery confirmation email
+   - Customer satisfaction follow-up
+
+#### Success Metrics
+- **Primary:** On-time delivery rate (>90%)
+- **Secondary:** Product quality satisfaction, shipping damage rate
+- **Customer Experience:** Tracking visibility, delivery satisfaction
 
 ---
 
@@ -162,229 +229,28 @@ User completes purchase → Order processing → Fulfillment
 | Generation Success | 95% | 13.3% |
 | Artwork → Purchase Modal | 50% | 6.65% |
 | Purchase Modal → Payment | 30% | 2% |
+| Post-Purchase Processing | 95% | 1.9% |
+| Order Fulfillment Success | 90% | 1.71% |
 
-**Target Overall Conversion:** 2-3% of landing page visitors become customers
-
----
-
-## 🔄 ALTERNATIVE FLOWS & EDGE CASES
-
-### Landing Page Alternatives
-
-#### 1. Hesitant Users
-**Trigger:** User scrolls but doesn't click CTA  
-**Flow:** 
-- Encounters "Why PawPop?" collapsible section
-- Reads social proof, guarantee, testimonials
-- **Recovery Action:** Second CTA opportunity within accordion
-- **Success Metric:** Delayed conversion rate
-
-#### 2. Mobile Users
-**Considerations:**
-- Touch-optimized CTA (56px height)
-- Full-width button design
-- Single-column layout
-- **Edge Case:** Small screen upload modal adaptation
-
-#### 3. Bounce Scenarios
-**Common Reasons:**
-- Price sensitivity (no pricing visible on landing)
-- Skepticism about artwork quality
-- Not a pet mom/gift giver
-**Mitigation:** Retargeting campaigns, social proof emphasis
-
-### Upload Modal Alternatives
-
-#### 1. Upload Failures
-**Triggers:** File size limits, format issues, network problems  
-**Flow:**
-- Error messaging with specific guidance
-- Retry mechanisms
-- Format conversion suggestions
-- **Recovery:** Customer support contact option
-
-#### 2. Form Abandonment
-**Common Drop-off Points:**
-- Email field (privacy concerns)
-- Pet mom photo requirement (don't have one)
-- File upload technical issues
-**Mitigation:** Progressive disclosure, optional fields, help text
-
-#### 3. Invalid Photos
-**Issues:** Poor quality, wrong subject, inappropriate content  
-**Flow:**
-- Real-time validation feedback
-- Photo guidelines and examples
-- Manual review process for edge cases
-
-### Generation Process Alternatives
-
-#### 1. Generation Failures
-**Causes:** API timeouts, content policy violations, technical errors  
-**Flow:**
-- Automatic retry mechanisms (3 attempts)
-- Fallback to manual processing
-- Customer notification and support contact
-- **Recovery:** Free regeneration or full refund
-
-#### 2. Extended Processing Time
-**Trigger:** >10 minutes generation time  
-**Flow:**
-- Proactive email notification
-- Status page updates
-- Customer service outreach
-- **Mitigation:** Queue management, capacity scaling
-
-### Artwork Page Alternatives
-
-#### 1. Expired Links
-**Trigger:** 30-day token expiration  
-**Flow:**
-- Custom error page with explanation
-- Contact support for link renewal
-- Option to regenerate with same photos
-- **Prevention:** Email reminders before expiration
-
-#### 2. Dissatisfied with Result
-**Triggers:** Poor quality, doesn't match expectations  
-**Flow:**
-- Feedback collection form
-- Free regeneration option
-- 100% satisfaction guarantee claim
-- **Resolution:** Refund or remake process
-
-#### 3. Technical Issues
-**Problems:** Images not loading, page errors, mobile compatibility  
-**Flow:**
-- Error boundary with friendly messaging
-- Alternative image formats/CDN
-- Progressive enhancement fallbacks
-
-### Purchase Modal Alternatives
-
-#### 1. Payment Failures
-**Causes:** Declined cards, insufficient funds, technical issues  
-**Flow:**
-- Clear error messaging
-- Alternative payment methods
-- Save cart for later completion
-- **Recovery:** Email follow-up with payment link
-
-#### 2. Price Objections
-**Triggers:** Sticker shock, comparison shopping  
-**Flow:**
-- Value reinforcement messaging
-- Limited-time discount offers
-- Payment plan options (future feature)
-- **Retention:** Exit-intent popup with offer
-
-#### 3. Product Confusion
-**Issues:** Size uncertainty, shipping questions, quality concerns  
-**Flow:**
-- Detailed product information modals
-- Size guides and examples
-- Live chat support integration
-- **Clarification:** FAQ section, video demonstrations
+**Target Overall Conversion:** 1.5-2% of landing page visitors become fulfilled customers
 
 ---
 
-## 🎯 SUCCESS METRICS BY PAGE
+## 🔄 COMPLETE USER JOURNEY FLOW
 
-### Landing Page KPIs
-- **Bounce Rate:** <60% (industry standard: 70-80%)
-- **CTA Click Rate:** 15-25%
-- **Time on Page:** >30 seconds average
-- **Mobile Conversion:** Match or exceed desktop
+### End-to-End Timeline
+- **Upload to Generation:** 2-5 minutes
+- **Generation to Purchase Decision:** Variable (immediate to days)
+- **Purchase to Order Processing:** 2-10 minutes (automated)
+- **Order Processing to Fulfillment:** 3-7 business days
+- **Total Customer Journey:** 3-10 business days from upload to delivery
 
-### Upload Modal KPIs
-- **Modal Open → Form Start:** >80%
-- **Form Completion Rate:** 60-80%
-- **Upload Success Rate:** >95%
-- **Time to Complete:** <3 minutes average
-
-### Artwork Page KPIs
-- **Generation Wait Rate:** >80% don't bounce
-- **Completed State CTR:** 40-60% click "Make it Real"
-- **Page Load Speed:** <2 seconds
-- **Mobile Experience:** Equivalent to desktop conversion
-
-### Purchase Modal KPIs
-- **Modal Open → Product Selection:** >70%
-- **Cart Abandonment:** <50%
-- **Payment Success Rate:** >95%
-- **Average Order Value:** $85-95
+### Critical Success Factors
+1. **Technical Reliability:** >95% uptime across all systems
+2. **Generation Quality:** Consistent artwork output meeting expectations
+3. **Payment Processing:** Seamless Stripe integration with error handling
+4. **Order Fulfillment:** Reliable Printify partnership and shipping
+5. **Customer Communication:** Timely, informative email notifications
 
 ---
 
-## 🚀 UX OPTIMIZATION OPPORTUNITIES
-
-### Immediate Wins
-1. **A/B Testing Framework**
-   - Headlines variations
-   - CTA button copy and colors
-   - Modal variant performance comparison
-
-2. **Social Proof Enhancement**
-   - Customer testimonials with photos
-   - Real-time purchase notifications
-   - Trust badges and guarantees
-
-3. **Mobile Experience**
-   - Touch gesture optimization
-   - Progressive web app features
-   - Offline capability for form data
-
-### Medium-Term Improvements
-1. **Personalization**
-   - Dynamic content based on traffic source
-   - Geo-targeted pricing and shipping
-   - Returning visitor recognition
-
-2. **Conversion Recovery**
-   - Exit-intent popups with offers
-   - Abandoned cart email sequences
-   - Retargeting campaign integration
-
-3. **Process Optimization**
-   - One-click reorder for existing customers
-   - Bulk upload for multiple pets
-   - Gift purchase flow optimization
-
-### Long-Term Enhancements
-1. **Advanced Features**
-   - Real-time generation progress
-   - Interactive mockup customization
-   - Subscription model for pet families
-
-2. **Platform Expansion**
-   - Mobile app development
-   - Social media integration
-   - Marketplace partnerships
-
----
-
-## 📝 COPYWRITING OPTIMIZATION FOCUS
-
-### Current Strengths
-- Clear value proposition: "Unforgettable Gift for Pet Moms"
-- Character-driven messaging (Monsieur Brush)
-- Physical-first positioning: "Make it Real"
-- Emotional connection: Pet mom bond
-
-### Optimization Areas
-1. **Urgency Creation**
-   - Limited-time offers
-   - Seasonal messaging
-   - Scarcity indicators
-
-2. **Objection Handling**
-   - Quality guarantees
-   - Process transparency
-   - Risk reversal offers
-
-3. **Emotional Amplification**
-   - Gift-giving scenarios
-   - Special occasion targeting
-   - Memory preservation messaging
-
-This critical path documentation provides the foundation for systematic UX testing and conversion optimization across the entire PawPop user journey.

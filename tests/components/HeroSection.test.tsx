@@ -70,13 +70,6 @@ describe('HeroSection', () => {
     expect(ctaButton.tagName).toBe('BUTTON');
   });
 
-  it('displays character intro text', () => {
-    render(<HeroSection />);
-    
-    // The character intro should be present
-    const characterText = screen.getByText(/Bonjour! I am Monsieur Brush/);
-    expect(characterText).toBeInTheDocument();
-  });
 
   it('has responsive image styling', () => {
     render(<HeroSection />);

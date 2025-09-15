@@ -1,6 +1,6 @@
 // src/app/api/upload/complete/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { createArtwork } from '@/lib/supabase-artworks-clean'
+import { createArtwork } from '@/lib/supabase-artworks'
 import { isValidEmail } from '@/lib/utils'
 import { sendMasterpieceCreatingEmail } from '@/lib/email'
 

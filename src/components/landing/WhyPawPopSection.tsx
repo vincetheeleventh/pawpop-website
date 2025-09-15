@@ -59,21 +59,6 @@ export const WhyPawPopSection = () => {
               </div>
             ))}
 
-            {/* Character Quote */}
-            <div className="
-              bg-warm-peach/20 rounded-lg p-4 mt-6
-              border border-warm-peach/30
-            ">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-lg">🎨</span>
-                <span className="font-fredoka text-sm font-semibold text-charcoal-frame">
-                  Monsieur Brush
-                </span>
-              </div>
-              <p className="font-fredoka text-sm text-charcoal-frame italic">
-                {whyPawPop.characterQuote}
-              </p>
-            </div>
           </div>
         </div>
       </div>

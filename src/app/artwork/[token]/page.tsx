@@ -195,14 +195,11 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
                 <div className="mb-6">
                   <div className="bg-gray-100 rounded-lg overflow-hidden mb-4">
                     <img 
-                      src={artwork.generated_image_url}
+                      src={artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res || artwork.generated_image_url}
                       alt="Your PawPop Masterpiece"
                       className="w-full h-auto object-contain"
                     />
                   </div>
-                  <p className="text-sm text-gray-500 italic text-center">
-                    "Ah, magnifique! A true Renaissance masterpiece!" - Monsieur Brush
-                  </p>
                 </div>
 
                 {/* CTA Button */}
