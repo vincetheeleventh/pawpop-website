@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     const result = await fal.subscribe("fal-ai/flux-pro/kontext/max/multi", {
       input: {
         prompt: "Incorporate the pet into the painting of the woman. She is holding it in her lap. Keep the painted style and likeness of the woman and pet",
-        guidance_scale: 3.5,
+        guidance_scale: 2.5,
         num_images: 1,
         output_format: "jpeg",
         safety_tolerance: "2",

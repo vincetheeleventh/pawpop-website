@@ -40,13 +40,13 @@ export async function POST(req: NextRequest) {
     const stream = await fal.stream('fal-ai/flux-kontext-lora', {
       input: {
         image_url: imageUrl,
-        prompt: "keep likeness, change pose and style to mona lisa, keep hairstyle",
+        prompt: "keep likeness and hairstyle the same, change pose and style to mona lisa",
         loras: [{
           path: "https://v3.fal.media/files/koala/HV-XcuBOG0z0apXA9dzP7_adapter_model.safetensors",
           scale: 1.0
         }],
-        resolution_mode: "9:16" as const,
-        guidance_scale: 7.5,
+        resolution_mode: "2:3" as const,
+        guidance_scale: 2.5,
         num_inference_steps: 28,
         seed: Math.floor(Math.random() * 1000000)
       }

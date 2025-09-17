@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { updateArtwork, getArtworkById } from '@/lib/supabase-artworks'
 import { isValidUUID } from '@/lib/utils'
 import { sendMasterpieceReadyEmail } from '@/lib/email'
+import { storeFalImageInSupabase } from '@/lib/supabase-storage'
 
 export async function PATCH(request: NextRequest) {
   try {
@@ -37,13 +38,59 @@ export async function PATCH(request: NextRequest) {
     const updateData: any = {}
     
     if (generated_image_url) {
-      updateData.generated_images = {
-        ...existingArtwork.generated_images,
-        artwork_preview: generated_image_url
-      }
-      updateData.delivery_images = {
-        ...existingArtwork.delivery_images,
-        digital_download: generated_image_url
+      // Store image in Supabase for 30-day retention and determine field based on step
+      let supabaseImageUrl: string
+      
+      try {
+        if (generation_step === 'monalisa_generation') {
+          // Store intermediate Mona Lisa image
+          supabaseImageUrl = await storeFalImageInSupabase(generated_image_url, artwork_id, 'monalisa_base')
+          updateData.generated_images = {
+            ...existingArtwork.generated_images,
+            monalisa_base: supabaseImageUrl
+          }
+        } else if (generation_step === 'completed') {
+          // Store final artwork
+          supabaseImageUrl = await storeFalImageInSupabase(generated_image_url, artwork_id, 'artwork_final')
+          updateData.generated_images = {
+            ...existingArtwork.generated_images,
+            artwork_preview: supabaseImageUrl,
+            artwork_full_res: supabaseImageUrl
+          }
+          updateData.delivery_images = {
+            ...existingArtwork.delivery_images,
+            digital_download: supabaseImageUrl
+          }
+        } else {
+          // Default behavior - store as preview
+          supabaseImageUrl = await storeFalImageInSupabase(generated_image_url, artwork_id, 'artwork_preview')
+          updateData.generated_images = {
+            ...existingArtwork.generated_images,
+            artwork_preview: supabaseImageUrl
+          }
+          updateData.delivery_images = {
+            ...existingArtwork.delivery_images,
+            digital_download: supabaseImageUrl
+          }
+        }
+      } catch (storageError) {
+        console.error('Failed to store image in Supabase, using fal.ai URL as fallback:', storageError)
+        // Fallback to fal.ai URL if Supabase storage fails
+        if (generation_step === 'monalisa_generation') {
+          updateData.generated_images = {
+            ...existingArtwork.generated_images,
+            monalisa_base: generated_image_url
+          }
+        } else {
+          updateData.generated_images = {
+            ...existingArtwork.generated_images,
+            artwork_preview: generated_image_url
+          }
+          updateData.delivery_images = {
+            ...existingArtwork.delivery_images,
+            digital_download: generated_image_url
+          }
+        }
       }
     }
     

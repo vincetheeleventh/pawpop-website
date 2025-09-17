@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fal } from '@fal-ai/client';
+import { storeFalImageInSupabase } from '@/lib/supabase-storage';
 
 // Configure fal client
 fal.config({
