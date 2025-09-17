@@ -22,6 +22,25 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'No image file provided' }, { status: 400 });
       }
 
+      // Log image details for debugging
+      console.log("📊 Image details:", {
+        name: imageFile.name,
+        size: imageFile.size,
+        type: imageFile.type,
+        sizeInMB: (imageFile.size / 1024 / 1024).toFixed(2) + ' MB'
+      });
+
+      // Check image size (fal.ai typically has limits around 10MB)
+      const maxSizeInMB = 10;
+      const maxSizeInBytes = maxSizeInMB * 1024 * 1024;
+      
+      if (imageFile.size > maxSizeInBytes) {
+        console.error(`❌ Image too large: ${(imageFile.size / 1024 / 1024).toFixed(2)}MB > ${maxSizeInMB}MB`);
+        return NextResponse.json({ 
+          error: `Image too large. Maximum size is ${maxSizeInMB}MB, but uploaded image is ${(imageFile.size / 1024 / 1024).toFixed(2)}MB` 
+        }, { status: 413 });
+      }
+
       console.log("☁️ Uploading user photo to fal storage...");
       imageUrl = await fal.storage.upload(imageFile);
       console.log("✅ Image uploaded:", imageUrl);
@@ -54,7 +73,11 @@ export async function POST(req: NextRequest) {
 
     console.log("📡 Processing MonaLisa transformation...");
     for await (const event of stream) {
-      console.log("📝 Stream event:", (event as any).type || 'processing');
+      // Only log event type, not the full event data to avoid giant hashes
+      const eventType = (event as any).type;
+      if (eventType && eventType !== 'logs') {
+        console.log("📝 Stream event:", eventType);
+      }
     }
 
     const result = await stream.done();
@@ -65,23 +88,27 @@ export async function POST(req: NextRequest) {
 
     console.log("✅ MonaLisa Maker transformation complete!");
     
-    // Fetch the generated image
-    const imageResponse = await fetch(result.images[0].url);
-    const imageBuffer = await imageResponse.arrayBuffer();
-
-    return new NextResponse(Buffer.from(imageBuffer), {
-      status: 200,
-      headers: {
-        'Content-Type': 'image/png',
-        'Cache-Control': 'no-store',
-        'X-Generated-Image-URL': result.images[0].url
-      }
+    // Return the image URL in JSON format for the frontend
+    return NextResponse.json({
+      imageUrl: result.images[0].url,
+      success: true
     });
 
   } catch (error) {
     console.error("❌ MonaLisa Maker error:", error);
+    
+    // Handle fal.ai validation errors with detailed logging
+    if (error && typeof error === 'object' && 'status' in error && error.status === 422) {
+      const errorBody = (error as any).body || error;
+      console.error("🔍 Validation error details:", JSON.stringify(errorBody, null, 2));
+      return NextResponse.json(
+        { error: 'Invalid image format or parameters. Please try with a different image.' },
+        { status: 422 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: 'MonaLisa Maker transformation failed', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Failed to generate MonaLisa portrait' },
       { status: 500 }
     );
   }

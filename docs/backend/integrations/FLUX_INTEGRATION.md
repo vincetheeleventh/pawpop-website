@@ -92,6 +92,12 @@ Content-Type: multipart/form-data
 
 // Form data:
 image: File (user photo)
+
+// Response:
+{
+  "imageUrl": "https://v3.fal.media/files/...",
+  "success": true
+}
 ```
 
 #### `/api/pet-integration` - Step 2: Add Pets
@@ -120,6 +126,12 @@ petImage: File (pet image)
 POST /api/monalisa-maker
 {
   "imageUrl": "https://example.com/user-photo.jpg"
+}
+
+// Response:
+{
+  "imageUrl": "https://v3.fal.media/files/...",
+  "success": true
 }
 
 // Step 2: Pet Integration
@@ -219,6 +231,22 @@ if (!process.env.FAL_KEY && !process.env.HF_TOKEN) {
 }
 ```
 
+#### fal.ai Validation Errors (422)
+```javascript
+// Handle validation errors with detailed logging
+if (error && typeof error === 'object' && 'status' in error && error.status === 422) {
+  const errorBody = (error as any).body || error;
+  console.error('🔍 Validation error details:', JSON.stringify(errorBody, null, 2));
+  
+  // Common cause: Invalid image_url format
+  // Solution: Ensure URLs are HTTPS or Data URIs, not blob URLs
+  return NextResponse.json(
+    { error: 'Invalid image format or parameters. Please try with a different image.' },
+    { status: 422 }
+  );
+}
+```
+
 #### Image Upload Failures
 ```javascript
 try {
@@ -249,7 +277,10 @@ try {
 
 ### Common Issues
 
-1. **422 Validation Error**: Check LoRA path format and required fields
+1. **422 Validation Error - "Input must be a valid HTTPS URL or a Data URI"**: 
+   - **Cause**: Passing blob URLs (e.g., `blob:http://localhost:3000/...`) to fal.ai API
+   - **Solution**: Send File objects via FormData instead of converting to blob URLs
+   - **Fixed**: Updated UploadModal.tsx to use FormData for file uploads
 2. **Authentication Failed**: Verify FAL_KEY environment variable
 3. **Image Upload Issues**: Ensure image format is supported (PNG, JPG)
 4. **Slow Processing**: Normal for high-quality transformations (30-60s)

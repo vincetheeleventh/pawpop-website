@@ -70,18 +70,11 @@ export async function POST(req: NextRequest) {
       throw new Error("No final portrait with pets generated");
     }
 
-    // Fetch the generated image
-    const imageResponse = await fetch(result.data.images[0].url);
-    const imageBuffer = await imageResponse.arrayBuffer();
-
-    return new NextResponse(Buffer.from(imageBuffer), {
-      status: 200,
-      headers: {
-        'Content-Type': 'image/jpeg',
-        'Cache-Control': 'no-store',
-        'X-Generated-Image-URL': result.data.images[0].url,
-        'X-Request-ID': result.requestId
-      }
+    // Return the image URL in JSON format for the frontend
+    return NextResponse.json({
+      imageUrl: result.data.images[0].url,
+      success: true,
+      requestId: result.requestId
     });
 
   } catch (error) {

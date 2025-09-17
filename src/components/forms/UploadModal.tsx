@@ -119,16 +119,15 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
 
       const { artwork, access_token } = await createResponse.json();
 
-      // Send confirmation email immediately
+      // Send confirmation email immediately using the artwork ID
       try {
-        await fetch('/api/upload/complete', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            customer_name: formData.name,
-            customer_email: formData.email,
-            uploaded_file_url: 'pending'
-          })
+        const artworkUrl = `${window.location.origin}/artwork/${access_token}`;
+        const { sendMasterpieceCreatingEmail } = await import('@/lib/email');
+        await sendMasterpieceCreatingEmail({
+          customerName: formData.name,
+          customerEmail: formData.email,
+          petName: '',
+          artworkUrl
         });
       } catch (emailError) {
         console.error('Failed to send confirmation email:', emailError);
@@ -153,58 +152,159 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
         timestamp: Date.now()
       }));
       
-      // Start background generation (don't wait for it)
-      const formDataToSend = new FormData();
-      formDataToSend.append('userImage', formData.petMomPhoto);
-      formDataToSend.append('petImage', formData.petPhoto);
-      
-      fetch('/api/monalisa-complete', {
-        method: 'POST',
-        body: formDataToSend,
-      }).then(async (response) => {
-        if (response.ok) {
-          const responseData = await response.json();
-          const generatedImageUrl = responseData.generatedImageUrl;
-          if (generatedImageUrl) {
-            // Update artwork with generated image in background
-            await fetch('/api/artwork/update', {
-              method: 'PATCH',
+      // Start background generation using direct API calls (bypassing problematic monalisa-complete)
+      const generateArtwork = async () => {
+        try {
+          // Step 1: Update generation step in artwork record
+          await fetch('/api/artwork/update', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              artwork_id: artwork.id,
+              generation_step: 'monalisa_generation'
+            })
+          });
+
+          // Step 2: Call MonaLisa Maker API directly
+          const monaLisaFormData = new FormData();
+          if (formData.petMomPhoto instanceof File) {
+            monaLisaFormData.append('image', formData.petMomPhoto);
+          } else {
+            // If it's already a URL, send as JSON
+            const monaLisaResponse = await fetch('/api/monalisa-maker', {
+              method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                artwork_id: artwork.id,
-                generated_image_url: generatedImageUrl,
-                generation_step: 'completed'
+                imageUrl: formData.petMomPhoto
               })
             });
-
-            // Track artwork generation completion conversion
-            if (typeof window !== 'undefined') {
-              const { trackArtworkGeneration } = await import('@/lib/google-ads');
-              trackArtworkGeneration(artwork.id, 15); // $15 CAD qualified lead value
+            
+            if (!monaLisaResponse.ok) {
+              throw new Error('MonaLisa generation failed');
             }
-
-            // Send completion email with the generated image
-            try {
-              await fetch('/api/email/masterpiece-ready', {
-                method: 'POST',
+            
+            const monaLisaResult = await monaLisaResponse.json();
+            const monaLisaImageUrl = monaLisaResult.imageUrl;
+            
+            if (monaLisaImageUrl) {
+              // Continue with the rest of the flow...
+              await fetch('/api/artwork/update', {
+                method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                  customerName: formData.name,
-                  customerEmail: formData.email,
-                  artworkUrl: `${window.location.origin}/artwork/${access_token}`,
-                  generatedImageUrl: generatedImageUrl
+                  artwork_id: artwork.id,
+                  generated_image_url: monaLisaImageUrl,
+                  generation_step: 'monalisa_generation'
                 })
               });
-              console.log('Completion email sent successfully');
-            } catch (emailError) {
-              console.error('Failed to send completion email:', emailError);
-              // Don't fail the process if email fails
             }
+            return;
           }
+          
+          const monaLisaResponse = await fetch('/api/monalisa-maker', {
+            method: 'POST',
+            body: monaLisaFormData
+          });
+
+          if (monaLisaResponse.ok) {
+            const monaLisaResult = await monaLisaResponse.json();
+            const monaLisaImageUrl = monaLisaResult.imageUrl;
+
+            if (monaLisaImageUrl) {
+              // Step 3: Update with MonaLisa intermediate result
+              await fetch('/api/artwork/update', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  artwork_id: artwork.id,
+                  generated_image_url: monaLisaImageUrl,
+                  generation_step: 'monalisa_generation'
+                })
+              });
+
+              // Step 4: Call Pet Integration API
+              const petIntegrationFormData = new FormData();
+              
+              // Add the MonaLisa portrait (fetch from URL and convert to File)
+              const portraitResponse = await fetch(monaLisaImageUrl);
+              const portraitBlob = await portraitResponse.blob();
+              const portraitFile = new File([portraitBlob], 'monalisa-portrait.jpg', { type: 'image/jpeg' });
+              petIntegrationFormData.append('portrait', portraitFile);
+              
+              // Add the pet image
+              if (formData.petPhoto instanceof File) {
+                petIntegrationFormData.append('pet', formData.petPhoto);
+              } else if (formData.petPhoto) {
+                // If it's a URL, fetch and convert to File
+                const petResponse = await fetch(formData.petPhoto);
+                const petBlob = await petResponse.blob();
+                const petFile = new File([petBlob], 'pet-photo.jpg', { type: 'image/jpeg' });
+                petIntegrationFormData.append('pet', petFile);
+              } else {
+                throw new Error('Pet photo is required for pet integration');
+              }
+              
+              const petIntegrationResponse = await fetch('/api/pet-integration', {
+                method: 'POST',
+                body: petIntegrationFormData
+              });
+
+              if (petIntegrationResponse.ok) {
+                const petIntegrationResult = await petIntegrationResponse.json();
+                const finalImageUrl = petIntegrationResult.imageUrl;
+
+                if (finalImageUrl) {
+                  // Step 5: Update with final completed artwork
+                  await fetch('/api/artwork/update', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      artwork_id: artwork.id,
+                      generated_image_url: finalImageUrl,
+                      generation_step: 'completed'
+                    })
+                  });
+
+                  // Track artwork generation completion conversion
+                  if (typeof window !== 'undefined') {
+                    const { trackArtworkGeneration } = await import('@/lib/google-ads');
+                    trackArtworkGeneration(artwork.id, 15); // $15 CAD qualified lead value
+                  }
+
+                  // Send completion email with the generated image
+                  try {
+                    await fetch('/api/email/masterpiece-ready', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        customerName: formData.name,
+                        customerEmail: formData.email,
+                        artworkUrl: `${window.location.origin}/artwork/${access_token}`,
+                        generatedImageUrl: finalImageUrl
+                      })
+                    });
+                    console.log('Completion email sent successfully');
+                  } catch (emailError) {
+                    console.error('Failed to send completion email:', emailError);
+                    // Don't fail the process if email fails
+                  }
+                }
+              } else {
+                console.error('Pet integration failed:', await petIntegrationResponse.text());
+              }
+            } else {
+              console.error('MonaLisa generation failed - no image URL returned');
+            }
+          } else {
+            console.error('MonaLisa generation failed:', await monaLisaResponse.text());
+          }
+        } catch (generationError) {
+          console.error('Artwork generation failed:', generationError);
         }
-      }).catch((error) => {
-        console.error('Background generation failed:', error);
-      });
+      };
+
+      // Start the generation process in the background
+      generateArtwork();
       
       // Redirect immediately after showing confirmation
       setTimeout(() => {

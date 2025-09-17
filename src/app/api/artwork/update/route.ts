@@ -38,60 +38,40 @@ export async function PATCH(request: NextRequest) {
     const updateData: any = {}
     
     if (generated_image_url) {
-      // Store image in Supabase for 30-day retention and determine field based on step
-      let supabaseImageUrl: string
+      console.log(`🔄 Processing generated_image_url for step: ${generation_step}`)
+      console.log(`📸 Image URL: ${generated_image_url}`)
       
-      try {
-        if (generation_step === 'monalisa_generation') {
-          // Store intermediate Mona Lisa image
-          supabaseImageUrl = await storeFalImageInSupabase(generated_image_url, artwork_id, 'monalisa_base')
-          updateData.generated_images = {
-            ...existingArtwork.generated_images,
-            monalisa_base: supabaseImageUrl
-          }
-        } else if (generation_step === 'completed') {
-          // Store final artwork
-          supabaseImageUrl = await storeFalImageInSupabase(generated_image_url, artwork_id, 'artwork_final')
-          updateData.generated_images = {
-            ...existingArtwork.generated_images,
-            artwork_preview: supabaseImageUrl,
-            artwork_full_res: supabaseImageUrl
-          }
-          updateData.delivery_images = {
-            ...existingArtwork.delivery_images,
-            digital_download: supabaseImageUrl
-          }
-        } else {
-          // Default behavior - store as preview
-          supabaseImageUrl = await storeFalImageInSupabase(generated_image_url, artwork_id, 'artwork_preview')
-          updateData.generated_images = {
-            ...existingArtwork.generated_images,
-            artwork_preview: supabaseImageUrl
-          }
-          updateData.delivery_images = {
-            ...existingArtwork.delivery_images,
-            digital_download: supabaseImageUrl
-          }
+      // For now, skip Supabase storage and use direct URLs to fix the core issue
+      if (generation_step === 'monalisa_generation') {
+        console.log('📝 Setting monalisa_base field')
+        updateData.generated_images = {
+          ...existingArtwork.generated_images,
+          monalisa_base: generated_image_url
         }
-      } catch (storageError) {
-        console.error('Failed to store image in Supabase, using fal.ai URL as fallback:', storageError)
-        // Fallback to fal.ai URL if Supabase storage fails
-        if (generation_step === 'monalisa_generation') {
-          updateData.generated_images = {
-            ...existingArtwork.generated_images,
-            monalisa_base: generated_image_url
-          }
-        } else {
-          updateData.generated_images = {
-            ...existingArtwork.generated_images,
-            artwork_preview: generated_image_url
-          }
-          updateData.delivery_images = {
-            ...existingArtwork.delivery_images,
-            digital_download: generated_image_url
-          }
+      } else if (generation_step === 'completed') {
+        console.log('📝 Setting completed artwork fields')
+        updateData.generated_images = {
+          ...existingArtwork.generated_images,
+          artwork_preview: generated_image_url,
+          artwork_full_res: generated_image_url
+        }
+        updateData.delivery_images = {
+          ...existingArtwork.delivery_images,
+          digital_download: generated_image_url
+        }
+      } else {
+        console.log('📝 Setting default preview fields')
+        updateData.generated_images = {
+          ...existingArtwork.generated_images,
+          artwork_preview: generated_image_url
+        }
+        updateData.delivery_images = {
+          ...existingArtwork.delivery_images,
+          digital_download: generated_image_url
         }
       }
+      
+      console.log('📋 Generated images after update:', JSON.stringify(updateData.generated_images, null, 2))
     }
     
     if (source_images) {

@@ -13,13 +13,24 @@ export async function POST(req: NextRequest) {
     
     let userImageUrl: string;
     let petImageUrl: string;
+    let artworkId: string | null = null;
     const contentType = req.headers.get('content-type');
+    
+    console.log("📋 Content-Type:", contentType);
 
     if (contentType?.includes('multipart/form-data')) {
       // Handle file uploads
+      console.log("📝 Parsing FormData...");
       const formData = await req.formData();
+      console.log("📋 FormData keys:", Array.from(formData.keys()));
+      
       const userImageFile = formData.get('userImage') as File;
       const petImageFile = formData.get('petImage') as File;
+      artworkId = formData.get('artworkId') as string;
+      
+      console.log("🖼️ User image file:", userImageFile?.name, userImageFile?.size);
+      console.log("🐾 Pet image file:", petImageFile?.name, petImageFile?.size);
+      console.log("🆔 Artwork ID:", artworkId);
       
       if (!userImageFile || !petImageFile) {
         return NextResponse.json({ error: 'Both user image and pet image are required' }, { status: 400 });
@@ -29,11 +40,34 @@ export async function POST(req: NextRequest) {
       userImageUrl = await fal.storage.upload(userImageFile);
       petImageUrl = await fal.storage.upload(petImageFile);
       console.log("✅ Images uploaded - User:", userImageUrl, "Pet:", petImageUrl);
+      
+      // Update artwork with source images if artworkId provided
+      if (artworkId) {
+        console.log("📝 Updating artwork with source images:", artworkId);
+        try {
+          await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/artwork/update`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              artwork_id: artworkId,
+              source_images: {
+                pet_mom_photo: userImageUrl,
+                pet_photo: petImageUrl,
+                uploadthing_keys: {}
+              },
+              generation_step: 'monalisa_generation'
+            })
+          });
+        } catch (updateError) {
+          console.error('Failed to update artwork with source images:', updateError);
+        }
+      }
     } else {
       // Handle JSON request with image URLs
       const body = await req.json();
       userImageUrl = body.userImageUrl;
       petImageUrl = body.petImageUrl;
+      artworkId = body.artworkId;
       
       if (!userImageUrl || !petImageUrl) {
         return NextResponse.json({ error: 'Both userImageUrl and petImageUrl are required' }, { status: 400 });

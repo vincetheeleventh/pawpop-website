@@ -27,6 +27,10 @@ Third-party service integrations
 - `EMAIL_INTEGRATION.md` - Email notifications (Resend)
 - `EMAIL_DOMAIN_PROTECTION.md` - Email security and testing
 
+### `/fixes/`
+Critical bug fixes and resolutions
+- `FAL_AI_VALIDATION_FIX.md` - Fixed 422 validation error with blob URLs
+
 ### `/features/`
 Specific feature implementations
 - `ARTWORK_DISPLAY_PAGE.md` - Artwork viewing and sharing
