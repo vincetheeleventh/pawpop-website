@@ -9,10 +9,9 @@ const f = createUploadthing();
 export const ourFileRouter = {
   // Pet photo uploader for artwork generation
   petPhotoUploader: f({ 
-    image: { 
-      maxFileSize: "8MB",
-      maxFileCount: 1
-    } 
+    "image/jpeg": { maxFileSize: "8MB", maxFileCount: 1 },
+    "image/png": { maxFileSize: "8MB", maxFileCount: 1 },
+    "image/webp": { maxFileSize: "8MB", maxFileCount: 1 }
   })
     .input(z.object({
       petName: z.string().optional(),
@@ -47,10 +46,9 @@ export const ourFileRouter = {
 
   // Pet mom photo uploader (for the 2-step process)
   petMomUploader: f({ 
-    image: { 
-      maxFileSize: "8MB",
-      maxFileCount: 1
-    } 
+    "image/jpeg": { maxFileSize: "8MB", maxFileCount: 1 },
+    "image/png": { maxFileSize: "8MB", maxFileCount: 1 },
+    "image/webp": { maxFileSize: "8MB", maxFileCount: 1 }
   })
     .input(z.object({
       artworkId: z.string().uuid()
