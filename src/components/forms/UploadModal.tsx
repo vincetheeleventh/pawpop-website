@@ -169,13 +169,15 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
           const monaLisaFormData = new FormData();
           if (formData.petMomPhoto instanceof File) {
             monaLisaFormData.append('image', formData.petMomPhoto);
+            monaLisaFormData.append('artworkId', artwork.id.toString());
           } else {
             // If it's already a URL, send as JSON
             const monaLisaResponse = await fetch('/api/monalisa-maker', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                imageUrl: formData.petMomPhoto
+                imageUrl: formData.petMomPhoto,
+                artworkId: artwork.id.toString()
               })
             });
             
@@ -217,8 +219,13 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   artwork_id: artwork.id,
-                  generated_image_url: monaLisaImageUrl,
-                  generation_step: 'monalisa_generation'
+                  generated_images: {
+                    monalisa_base: monaLisaImageUrl,
+                    artwork_preview: '',
+                    artwork_full_res: '',
+                    generation_steps: []
+                  },
+                  generation_step: 'pet_integration'
                 })
               });
 
@@ -230,6 +237,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
               const portraitBlob = await portraitResponse.blob();
               const portraitFile = new File([portraitBlob], 'monalisa-portrait.jpg', { type: 'image/jpeg' });
               petIntegrationFormData.append('portrait', portraitFile);
+              petIntegrationFormData.append('artworkId', artwork.id.toString());
               
               // Add the pet image
               if (formData.petPhoto instanceof File) {
@@ -260,7 +268,12 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                       artwork_id: artwork.id,
-                      generated_image_url: finalImageUrl,
+                      generated_images: {
+                        monalisa_base: monaLisaImageUrl,
+                        artwork_preview: finalImageUrl,
+                        artwork_full_res: finalImageUrl,
+                        generation_steps: ['monalisa_generation', 'pet_integration']
+                      },
                       generation_step: 'completed'
                     })
                   });

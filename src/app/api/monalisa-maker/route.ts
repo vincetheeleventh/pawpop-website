@@ -11,6 +11,7 @@ export async function POST(req: NextRequest) {
     console.log("🎨 MonaLisa Maker - Step 1: Portrait Transformation");
     
     let imageUrl: string;
+    let artworkId = `temp_${Date.now()}`;
     const contentType = req.headers.get('content-type');
 
     if (contentType?.includes('multipart/form-data')) {
@@ -20,6 +21,12 @@ export async function POST(req: NextRequest) {
       
       if (!imageFile) {
         return NextResponse.json({ error: 'No image file provided' }, { status: 400 });
+      }
+
+      // Extract artwork ID from form data if available
+      const artworkIdFromForm = formData.get('artworkId') as string;
+      if (artworkIdFromForm) {
+        artworkId = artworkIdFromForm;
       }
 
       // Log image details for debugging
@@ -48,6 +55,10 @@ export async function POST(req: NextRequest) {
       // Handle JSON request with image URL
       const body = await req.json();
       imageUrl = body.imageUrl;
+      
+      if (body.artworkId) {
+        artworkId = body.artworkId;
+      }
       
       if (!imageUrl) {
         return NextResponse.json({ error: 'No imageUrl provided' }, { status: 400 });
@@ -88,11 +99,38 @@ export async function POST(req: NextRequest) {
 
     console.log("✅ MonaLisa Maker transformation complete!");
     
-    // Return the image URL in JSON format for the frontend
-    return NextResponse.json({
-      imageUrl: result.images[0].url,
-      success: true
-    });
+    // Store the image in Supabase Storage for easier access
+    const falImageUrl = result.images[0].url;
+    
+    try {
+      // Import storage utilities dynamically to avoid build issues
+      const { storeFalImageInSupabase } = await import('@/lib/supabase-storage');
+      
+      const supabaseImageUrl = await storeFalImageInSupabase(
+        falImageUrl, 
+        artworkId, 
+        'monalisa_base'
+      );
+      
+      console.log(`📁 Image stored in Supabase: ${supabaseImageUrl}`);
+      
+      // Return both URLs - Supabase for storage, fal.ai as fallback
+      return NextResponse.json({
+        imageUrl: supabaseImageUrl,
+        falImageUrl: falImageUrl,
+        supabaseUrl: supabaseImageUrl,
+        success: true
+      });
+      
+    } catch (storageError) {
+      console.warn('⚠️ Supabase storage failed, using fal.ai URL:', storageError);
+      
+      // Fallback to fal.ai URL if Supabase storage fails
+      return NextResponse.json({
+        imageUrl: falImageUrl,
+        success: true
+      });
+    }
 
   } catch (error) {
     console.error("❌ MonaLisa Maker error:", error);

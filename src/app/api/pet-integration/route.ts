@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
     
     let portraitUrl: string;
     let petUrl: string;
+    let artworkId = `temp_${Date.now()}`;
     const contentType = req.headers.get('content-type');
 
     if (contentType?.includes('multipart/form-data')) {
@@ -24,6 +25,12 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Both portrait and pet images are required' }, { status: 400 });
       }
 
+      // Extract artwork ID from form data if available
+      const artworkIdFromForm = formData.get('artworkId') as string;
+      if (artworkIdFromForm) {
+        artworkId = artworkIdFromForm;
+      }
+
       console.log("☁️ Uploading images to fal storage...");
       portraitUrl = await fal.storage.upload(portraitFile);
       petUrl = await fal.storage.upload(petFile);
@@ -33,6 +40,10 @@ export async function POST(req: NextRequest) {
       const body = await req.json();
       portraitUrl = body.portraitUrl;
       petUrl = body.petUrl;
+      
+      if (body.artworkId) {
+        artworkId = body.artworkId;
+      }
       
       if (!portraitUrl || !petUrl) {
         return NextResponse.json({ error: 'Both portraitUrl and petUrl are required' }, { status: 400 });
@@ -70,12 +81,40 @@ export async function POST(req: NextRequest) {
       throw new Error("No final portrait with pets generated");
     }
 
-    // Return the image URL in JSON format for the frontend
-    return NextResponse.json({
-      imageUrl: result.data.images[0].url,
-      success: true,
-      requestId: result.requestId
-    });
+    // Store the final image in Supabase Storage
+    const falImageUrl = result.data.images[0].url;
+    
+    try {
+      // Import storage utilities dynamically to avoid build issues
+      const { storeFalImageInSupabase } = await import('@/lib/supabase-storage');
+      
+      const supabaseImageUrl = await storeFalImageInSupabase(
+        falImageUrl, 
+        artworkId, 
+        'artwork_final'
+      );
+      
+      console.log(`📁 Final artwork stored in Supabase: ${supabaseImageUrl}`);
+      
+      // Return both URLs - Supabase for storage, fal.ai as fallback
+      return NextResponse.json({
+        imageUrl: supabaseImageUrl,
+        falImageUrl: falImageUrl,
+        supabaseUrl: supabaseImageUrl,
+        success: true,
+        requestId: result.requestId
+      });
+      
+    } catch (storageError) {
+      console.warn('⚠️ Supabase storage failed for final artwork, using fal.ai URL:', storageError);
+      
+      // Fallback to fal.ai URL if Supabase storage fails
+      return NextResponse.json({
+        imageUrl: falImageUrl,
+        success: true,
+        requestId: result.requestId
+      });
+    }
 
   } catch (error) {
     console.error("❌ Pet integration error:", error);
