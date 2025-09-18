@@ -23,9 +23,13 @@ Database schema, migrations, and management
 Third-party service integrations
 - `STRIPE_INTEGRATION.md` - Payment processing
 - `PRINTIFY_INTEGRATION.md` - Print-on-demand fulfillment
-- `FLUX_INTEGRATION.md` - AI image generation (FAL.ai)
+- `FLUX_INTEGRATION.md` - AI image generation (FAL.ai) with Supabase Storage
 - `EMAIL_INTEGRATION.md` - Email notifications (Resend)
 - `EMAIL_DOMAIN_PROTECTION.md` - Email security and testing
+
+### `/storage/`
+Image storage and management
+- `MONALISA_STORAGE_ENHANCEMENT.md` - Supabase Storage integration for generated images
 
 ### `/fixes/`
 Critical bug fixes and resolutions
@@ -67,7 +71,7 @@ npm run migration:health
 
 - **Database**: Supabase PostgreSQL with RLS policies
 - **Authentication**: Anonymous users with email-based access
-- **File Storage**: UploadThing for image uploads
+- **File Storage**: UploadThing for image uploads + Supabase Storage for generated images
 - **AI Generation**: FAL.ai Flux Pro for artwork creation
 - **Payments**: Stripe for checkout and webhooks
 - **Fulfillment**: Printify for physical product orders

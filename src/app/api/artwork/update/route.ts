@@ -8,7 +8,7 @@ import { storeFalImageInSupabase } from '@/lib/supabase-storage'
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json()
-    const { artwork_id, generated_image_url, source_images, generation_step, pet_name } = body
+    const { artwork_id, generated_image_url, source_images, generation_step, pet_name, generated_images } = body
 
     // Validate required fields
     if (!artwork_id) {
@@ -37,6 +37,15 @@ export async function PATCH(request: NextRequest) {
     // Prepare update data for clean schema
     const updateData: any = {}
     
+    // Handle direct generated_images JSONB update
+    if (generated_images) {
+      console.log('📝 Direct generated_images update:', JSON.stringify(generated_images, null, 2))
+      updateData.generated_images = {
+        ...existingArtwork.generated_images,
+        ...generated_images
+      }
+    }
+    
     if (generated_image_url) {
       console.log(`🔄 Processing generated_image_url for step: ${generation_step}`)
       console.log(`📸 Image URL: ${generated_image_url}`)
@@ -46,12 +55,14 @@ export async function PATCH(request: NextRequest) {
         console.log('📝 Setting monalisa_base field')
         updateData.generated_images = {
           ...existingArtwork.generated_images,
+          ...updateData.generated_images, // Preserve any direct updates
           monalisa_base: generated_image_url
         }
       } else if (generation_step === 'completed') {
         console.log('📝 Setting completed artwork fields')
         updateData.generated_images = {
           ...existingArtwork.generated_images,
+          ...updateData.generated_images, // Preserve any direct updates
           artwork_preview: generated_image_url,
           artwork_full_res: generated_image_url
         }
@@ -63,6 +74,7 @@ export async function PATCH(request: NextRequest) {
         console.log('📝 Setting default preview fields')
         updateData.generated_images = {
           ...existingArtwork.generated_images,
+          ...updateData.generated_images, // Preserve any direct updates
           artwork_preview: generated_image_url
         }
         updateData.delivery_images = {

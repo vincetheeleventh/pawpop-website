@@ -12,6 +12,8 @@ status: "ready"
 
 MonaLisa Maker is a 2-step AI transformation pipeline that creates personalized Mona Lisa portraits with pets. Step 1 transforms user photos into Mona Lisa styled portraits, and Step 2 adds pets to the portrait using advanced AI composition.
 
+**Enhanced Storage**: Generated images are now stored in Supabase Storage as organized JPG URLs instead of base64 data URIs, providing better performance and accessibility.
+
 ## Architecture
 
 ### Pipeline Flow
@@ -24,12 +26,14 @@ MonaLisa Maker is a 2-step AI transformation pipeline that creates personalized 
 #### 1. MonaLisa Maker API (`/src/app/api/monalisa-maker/route.ts`)
 - Step 1: Transform user photos into Mona Lisa portraits using Flux Kontext LoRA
 - Supports file uploads and streaming processing
-- Handles fal.ai storage uploads automatically
+- Uploads generated images to Supabase Storage with organized filenames
+- Returns both Supabase URL and fal.ai fallback URL
 
 #### 2. Pet Integration API (`/src/app/api/pet-integration/route.ts`)
 - Step 2: Add pets to Mona Lisa portraits using Flux Pro Kontext Max
 - Combines portrait from Step 1 with pet images
 - Advanced AI composition for natural pet placement
+- Stores final artwork in Supabase Storage with artwork ID organization
 
 #### 3. Complete Pipeline API (`/src/app/api/monalisa-complete/route.ts`)
 - End-to-end pipeline combining both steps
@@ -45,20 +49,26 @@ MonaLisa Maker is a 2-step AI transformation pipeline that creates personalized 
 
 ### 1. Install Dependencies
 ```bash
-npm install @fal-ai/client
+npm install @fal-ai/client @supabase/supabase-js
 ```
 
 ### 2. Environment Variables
 Add to `.env.local`:
 ```env
+# fal.ai API Configuration
 FAL_KEY=your-fal-api-key
 # OR
 HF_TOKEN=your-huggingface-token
+
+# Supabase Storage Configuration
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 ```
 
 ### 3. Get API Keys
 - **fal.ai**: https://fal.ai (recommended)
 - **Hugging Face**: https://huggingface.co/settings/tokens
+- **Supabase**: Create project at https://supabase.com and get service role key
 
 ## Usage
 
@@ -92,10 +102,12 @@ Content-Type: multipart/form-data
 
 // Form data:
 image: File (user photo)
+artworkId: string (optional, for organized storage)
 
 // Response:
 {
-  "imageUrl": "https://v3.fal.media/files/...",
+  "imageUrl": "https://supabase.co/storage/artwork-123/monalisa_base_456.jpg",
+  "falImageUrl": "https://v3.fal.media/files/...", // fallback URL
   "success": true
 }
 ```
@@ -108,6 +120,15 @@ Content-Type: multipart/form-data
 // Form data:
 portrait: File (MonaLisa portrait from Step 1)
 pet: File (pet image)
+artworkId: string (optional, for organized storage)
+
+// Response:
+{
+  "imageUrl": "https://supabase.co/storage/artwork-123/artwork_final_789.jpg",
+  "falImageUrl": "https://v3.fal.media/files/...", // fallback URL
+  "success": true,
+  "requestId": "pet-request-123"
+}
 ```
 
 #### `/api/monalisa-complete` - Complete Pipeline
@@ -125,12 +146,14 @@ petImage: File (pet image)
 // Step 1: MonaLisa Maker
 POST /api/monalisa-maker
 {
-  "imageUrl": "https://example.com/user-photo.jpg"
+  "imageUrl": "https://example.com/user-photo.jpg",
+  "artworkId": "123" // optional, for organized storage
 }
 
 // Response:
 {
-  "imageUrl": "https://v3.fal.media/files/...",
+  "imageUrl": "https://supabase.co/storage/artwork-123/monalisa_base_456.jpg",
+  "falImageUrl": "https://v3.fal.media/files/...", // fallback URL
   "success": true
 }
 
@@ -138,14 +161,24 @@ POST /api/monalisa-maker
 POST /api/pet-integration
 {
   "portraitUrl": "https://example.com/monalisa-portrait.jpg",
-  "petUrl": "https://example.com/pet-photo.jpg"
+  "petUrl": "https://example.com/pet-photo.jpg",
+  "artworkId": "123" // optional, for organized storage
+}
+
+// Response:
+{
+  "imageUrl": "https://supabase.co/storage/artwork-123/artwork_final_789.jpg",
+  "falImageUrl": "https://v3.fal.media/files/...", // fallback URL
+  "success": true,
+  "requestId": "pet-request-123"
 }
 
 // Complete Pipeline
 POST /api/monalisa-complete
 {
   "userImageUrl": "https://example.com/user-photo.jpg",
-  "petImageUrl": "https://example.com/pet-photo.jpg"
+  "petImageUrl": "https://example.com/pet-photo.jpg",
+  "artworkId": "123" // optional, for organized storage
 }
 ```
 

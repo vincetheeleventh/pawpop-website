@@ -219,13 +219,8 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   artwork_id: artwork.id,
-                  generated_images: {
-                    monalisa_base: monaLisaImageUrl,
-                    artwork_preview: '',
-                    artwork_full_res: '',
-                    generation_steps: []
-                  },
-                  generation_step: 'pet_integration'
+                  generated_image_url: monaLisaImageUrl,
+                  generation_step: 'monalisa_generation'
                 })
               });
 
@@ -268,12 +263,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                       artwork_id: artwork.id,
-                      generated_images: {
-                        monalisa_base: monaLisaImageUrl,
-                        artwork_preview: finalImageUrl,
-                        artwork_full_res: finalImageUrl,
-                        generation_steps: ['monalisa_generation', 'pet_integration']
-                      },
+                      generated_image_url: finalImageUrl,
                       generation_step: 'completed'
                     })
                   });

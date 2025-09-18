@@ -92,7 +92,7 @@ async function resolveVariantIds() {
     ).map((v: any) => v.id) || []
     console.log('✅ Using canvas stretched variants:', catalogCache.canvasStretchedVariants)
   } catch (error) {
-    console.error('❌ Failed to resolve canvas stretched variants:', error)
+    console.log('⚠️ Could not resolve canvas stretched variants, using fallback')
     catalogCache.canvasStretchedVariants = []
   }
 
@@ -109,7 +109,7 @@ async function resolveVariantIds() {
     ).map((v: any) => v.id) || []
     console.log('✅ Using canvas framed variants:', catalogCache.canvasFramedVariants)
   } catch (error) {
-    console.error('❌ Failed to resolve canvas framed variants:', error)
+    console.log('⚠️ Could not resolve canvas framed variants, using fallback')
     catalogCache.canvasFramedVariants = []
   }
 
@@ -183,7 +183,7 @@ async function createProductWithMockups(
         }
       }
     } catch (error) {
-      console.error('❌ Failed to fetch variant details:', error)
+      console.log('⚠️ Could not fetch variant details dynamically, using fallback variant selection')
       // Use the first variant as fallback
       selectedVariants = [variantIds[0]]
     }
