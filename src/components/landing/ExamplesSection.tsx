@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { landingPageCopy } from '@/lib/copy';
 
 export const ExamplesSection = () => {
@@ -33,18 +34,26 @@ export const ExamplesSection = () => {
               {/* Container for before/after images */}
               <div className="relative aspect-square rounded-lg overflow-hidden shadow-lg">
                 {/* Before Image */}
-                <img
+                <Image
                   src={pair.before}
                   alt={`Before: ${pair.altText.split(' → ')[0]}`}
+                  width={400}
+                  height={400}
+                  quality={90}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
                     hoveredIndex === index ? 'opacity-0' : 'opacity-100'
                   }`}
                 />
                 
                 {/* After Image */}
-                <img
+                <Image
                   src={pair.after}
                   alt={`After: ${pair.altText.split(' → ')[1]}`}
+                  width={400}
+                  height={400}
+                  quality={90}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
                     hoveredIndex === index ? 'opacity-100' : 'opacity-0'
                   }`}

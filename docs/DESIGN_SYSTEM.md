@@ -181,6 +181,94 @@ colors: {
 - **Large**: `space-y-16` (64px) - Major sections
 - **Gallery**: `space-y-24` (96px) - Dramatic spacing
 
+## Image Optimization
+
+### Next.js Image Component Requirements
+
+**CRITICAL**: Always use Next.js `<Image />` component instead of HTML `<img>` tags for optimal performance.
+
+#### Import and Basic Usage
+```tsx
+import Image from 'next/image';
+
+<Image
+  src="/images/gallery/example.jpg"
+  alt="Descriptive alt text"
+  width={400}
+  height={300}
+  className="w-full h-auto object-cover rounded-lg"
+  priority={false}  // true for above-fold images
+  quality={90}      // 75-90 for good quality/size balance
+  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+/>
+```
+
+#### Image Optimization Guidelines
+
+**Above-the-Fold Images (Hero, First Gallery Item)**
+```tsx
+<Image
+  src="/images/hero_image.png"
+  alt="Pet mom transformed into Mona Lisa"
+  width={800}
+  height={600}
+  priority={true}        // Preload immediately
+  quality={95}           // Higher quality for hero
+  sizes="(max-width: 768px) 100vw, 800px"
+  className="w-full md:max-w-md rounded-2xl shadow-2xl"
+/>
+```
+
+**Gallery Images (Carousel/Grid)**
+```tsx
+<Image
+  src="/images/gallery/artwork.jpg"
+  alt="PawPop artwork example"
+  width={400}
+  height={400}
+  priority={index === 0}  // Only first image gets priority
+  quality={90}
+  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 33vw, 33vw"
+  className="w-full h-auto object-contain rounded-lg"
+/>
+```
+
+**Product Mockups/Previews**
+```tsx
+<Image
+  src={mockup.url}
+  alt={`${product.title} mockup`}
+  width={300}
+  height={200}
+  quality={85}
+  sizes="(max-width: 768px) 100vw, 300px"
+  className="w-full h-48 object-contain"
+/>
+```
+
+#### Performance Benefits
+- **Automatic Format Conversion**: WebP/AVIF for modern browsers
+- **Responsive Images**: Multiple sizes generated automatically
+- **Lazy Loading**: Built-in intersection observer
+- **Layout Shift Prevention**: Width/height prevent CLS
+- **Priority Loading**: Above-fold images load immediately
+- **Quality Optimization**: Balanced file size and visual quality
+
+#### Common Patterns
+```tsx
+// Hero images - high priority, high quality
+priority={true}, quality={95}
+
+// Gallery images - standard optimization
+priority={false}, quality={90}
+
+// Thumbnails/avatars - smaller size, good quality
+quality={85}, sizes="100px"
+
+// Background images - lower quality acceptable
+quality={75}
+```
+
 ## Components
 
 ### Buttons (Art-Inspired)
@@ -242,6 +330,8 @@ colors: {
 
 #### Portrait Showcase Card (Updated)
 ```tsx
+import Image from 'next/image';
+
 <div className="
   bg-card-surface rounded-lg shadow-2xl
   border-4 border-naples-yellow
@@ -249,10 +339,15 @@ colors: {
   transition-all duration-300
 ">
   <div className="relative">
-    <img 
-      src="portrait.jpg" 
+    <Image 
+      src="/images/gallery/portrait.jpg" 
       alt="Mona Lisa transformation"
+      width={400}
+      height={256}
       className="w-full h-64 object-cover"
+      priority={false}
+      quality={90}
+      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
     />
     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
   </div>
@@ -584,9 +679,10 @@ colors: {
 - **Reduced Motion**: Respect user preferences
 
 ### Performance Optimization
-- **Next.js Image**: Optimized loading for all gallery images
+- **Next.js Image**: Use `<Image />` component for ALL images - automatic WebP/AVIF conversion, responsive sizing, lazy loading
+- **Image Optimization**: Never use HTML `<img>` tags - always import and use Next.js Image component
 - **Lazy Loading**: Progressive enhancement for non-critical content
-- **Font Loading**: Preload critical fonts (Playfair Display)
+- **Font Loading**: Preload critical fonts (Arvo, Geist)
 - **Animation Performance**: Use transform and opacity for smooth 60fps
 
 ### Brand Consistency

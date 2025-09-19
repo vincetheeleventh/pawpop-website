@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { landingPageCopy } from '@/lib/copy';
 import { HeroVideoReveal } from './HeroVideoReveal';
 import { UploadModal } from '@/components/forms/UploadModal';
@@ -16,9 +17,14 @@ export const HeroSection = () => {
       <div className="w-full max-w-2xl mx-auto text-center">
         {/* Hero Image - Full Width on Mobile */}
         <div className="mb-8 w-full px-6 md:px-0">
-          <img
+          <Image
             src="/images/hero_image.png"
             alt="Pet mom transformed into Mona Lisa with her dog"
+            width={800}
+            height={600}
+            priority={true}
+            quality={95}
+            sizes="(max-width: 768px) 100vw, 448px"
             className="w-full md:max-w-md md:mx-auto rounded-2xl shadow-2xl"
           />
         </div>
