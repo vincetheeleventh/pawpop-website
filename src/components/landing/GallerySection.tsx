@@ -2,6 +2,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import Carousel from 'react-multi-carousel';
 import 'react-multi-carousel/lib/styles.css';
 
@@ -56,7 +57,7 @@ export const GallerySection = () => {
     <section className="w-full bg-site-bg py-8 md:py-12">
       {/* Section Title - Always visible, outside carousel container */}
       <div className="text-center mb-6 md:mb-8 px-6">
-        <h2 className="font-arvo text-xl md:text-2xl lg:text-3xl font-bold text-text-primary mb-2">
+        <h2 className="font-arvo text-3xl md:text-4xl font-bold text-text-primary mb-2">
           Gallery
         </h2>
         <p className="text-gray-600 text-base md:text-lg">
@@ -136,9 +137,11 @@ export const GallerySection = () => {
             {galleryImages.map((image, index) => (
               <div key={index} className="px-2 md:px-3">
                 <div className="relative w-full">
-                  <img
+                  <Image
                     src={image.src}
                     alt={image.alt}
+                    width={400}
+                    height={400}
                     className="
                       w-full h-auto
                       object-contain object-center
@@ -147,7 +150,9 @@ export const GallerySection = () => {
                       shadow-lg hover:shadow-xl
                       transition-shadow duration-200
                     "
-                    loading={index === 0 ? 'eager' : 'lazy'}
+                    priority={index === 0}
+                    quality={90}
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 33vw, 33vw"
                     draggable={false}
                   />
                   {/* Optional overlay for better visual appeal */}
