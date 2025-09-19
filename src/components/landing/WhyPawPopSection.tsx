@@ -10,23 +10,24 @@ export const WhyPawPopSection = () => {
   const { whyPawPop } = landingPageCopy;
 
   return (
-    <section className="px-6 py-8 bg-gallery-white">
+    <section className="px-6 py-8 bg-card-surface">
       <div className="max-w-2xl mx-auto">
         {/* Collapsible Trigger */}
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="
             w-full flex items-center justify-between
-            p-4 bg-white rounded-lg border border-gray-200
-            hover:border-french-blue transition-colors
-            focus:outline-none focus:ring-2 focus:ring-french-blue/20
+            p-4 bg-card-surface rounded-lg border border-gray-200
+            hover:border-pale-azure transition-colors
+            focus:outline-none focus:ring-2 focus:ring-pale-azure/20
+            shadow-sm hover:shadow-md
           "
         >
-          <span className="font-playfair text-lg font-semibold text-charcoal-frame">
+          <span className="font-playfair text-lg font-semibold text-text-primary">
             {whyPawPop.title}
           </span>
           <span className={`
-            text-french-blue transition-transform duration-200
+            text-pale-azure transition-transform duration-200
             ${isOpen ? 'rotate-180' : 'rotate-0'}
           `}>
             ▼
@@ -43,13 +44,13 @@ export const WhyPawPopSection = () => {
             {whyPawPop.items.map((item, index) => (
               <div key={index} className="flex items-start gap-4">
                 <div className="
-                  w-10 h-10 bg-french-blue/10 rounded-full 
+                  w-10 h-10 bg-naples-yellow/20 rounded-full 
                   flex items-center justify-center flex-shrink-0
                 ">
                   <span className="text-lg">{item.icon}</span>
                 </div>
                 <div>
-                  <h3 className="font-inter font-semibold text-charcoal-frame mb-1">
+                  <h3 className="font-inter font-semibold text-text-primary mb-1">
                     {item.title}
                   </h3>
                   <p className="font-inter text-gray-600 text-sm">

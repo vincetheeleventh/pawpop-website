@@ -18,84 +18,107 @@ Technical implementation guide for the PawPop squeeze page with singular focus: 
 - **Mobile-First**: Touch-friendly upload interface
 - **A/B Test Ready**: Modular components for testing
 
-## Squeeze Page Color System
+## Landing Page Color System (Updated)
 
-### Conversion-Optimized Palette
+### 1. Core Backgrounds & Containers
 
-#### CTA Hierarchy
-- **Primary CTA**: `#D4AF37` (Renaissance Gold) - Upload buttons only
-- **Background**: `#FEFEFE` (Gallery White) - Zero distractions
-- **Text**: `#2C2C2C` (Charcoal Frame) - Maximum readability
-- **Trust Elements**: `#4A90E2` (French Blue) - Social proof, ratings
+#### Site Background
+**#F5EED7** → Page Background
+- Sets the friendly, warm tone across the whole site
+- Always visible behind cards and sections
+- Creates a welcoming, cream-colored foundation
 
-#### State Colors (Minimal)
-- **Success**: `#22C55E` - Upload confirmation
-- **Loading**: `#8A2BE2` - Processing state
-- **Error**: `#EF4444` - Upload issues only
+#### Card Surface  
+**#FFFFFF** → Content Containers
+- Used for cards, sections, modals where text and images are placed
+- Ensures high contrast and clarity for reading
+- Shadows or subtle borders can be used to lift cards from the cream background
 
-#### Tailwind Configuration
+#### Charcoal
+**#2C2C2C** → Primary Text & Structural Elements
+- Body text, headings, nav links, and icons
+- Provides strong contrast against both cream and white
+
+### 2. Accent Palette (High-Energy Highlights)
+
+#### Pale Azure
+**#70D6FF** → Secondary Accent
+- Links, hover states, iconography, subtle highlights
+
+#### Atomic Tangerine
+**#FF9770** → Primary CTA Accent
+- Buttons, key calls-to-action, promotional highlights
+
+#### Cyclamen  
+**#FF70A6** → Secondary CTA / UI Accent
+- Alternate buttons, special highlights, decorative accents
+
+#### Naples Yellow
+**#FFD670** → Highlight / Supporting Accent
+- Section dividers, background shapes, icons
+
+#### Mindaro
+**#E9FF70** → Playful Accent
+- Decorative details, illustrations, or micro-interactions
+
+### 3. Usage Guidelines
+
+#### Hierarchy
+- **Base** = #F5EED7 (background)
+- **Containers** = #FFFFFF (cards, content blocks)
+- **Text** = #2C2C2C (primary readability)
+- **CTA** = #FF9770 (Atomic Tangerine), supported by #FF70A6 (Cyclamen)
+- **Decorative** = #FFD670, #E9FF70, #70D6FF
+
+#### Balance
+- ~60% Cream background
+- ~25% White content cards
+- ~10% Charcoal (text, lines)
+- ~5% Accents (distributed across bright colors)
+
+#### Accessibility
+- Always use charcoal on white/cream for body copy
+- Avoid placing text directly on accents
+- Use bright accents for buttons and emphasis only
+
+### Tailwind Configuration (Updated)
 ```css
-// tailwind.config.ts - Squeeze Page Colors
+// tailwind.config.ts - Updated Color System
 colors: {
-  'cta-gold': '#D4AF37',     // Primary action only
-  'bg-clean': '#FEFEFE',     // Distraction-free background
-  'text-main': '#2C2C2C',    // High contrast readability
-  'trust-blue': '#4A90E2',   // Credibility elements
-  'sage-green': '#87A96B',
-  'joy-yellow': '#FFD700',
-  'love-pink': '#FF69B4',
-  'magic-purple': '#8A2BE2'
+  // Core System
+  'site-bg': '#F5EED7',        // Page background
+  'card-surface': '#FFFFFF',    // Content containers
+  'text-primary': '#2C2C2C',    // Primary text
+  
+  // Accent Palette
+  'pale-azure': '#70D6FF',      // Secondary accent
+  'cyclamen': '#FF70A6',        // Primary CTA
+  'atomic-tangerine': '#FF9770', // Secondary CTA
+  'naples-yellow': '#FFD670',   // Highlights
+  'mindaro': '#E9FF70',         // Playful accent
+  
+  // Legacy Support (maintain compatibility)
+  'mona-gold': '#D4AF37',       // Keep for existing components
+  'gallery-white': '#FEFEFE',   // Keep for existing components
+  'charcoal-frame': '#2C2C2C',  // Alias to text-primary
 }
 ```
-
-#### Implementation in Tailwind
-```css
-/* Custom color extensions in tailwind.config.ts */
-colors: {
-  'mona-gold': '#D4AF37',
-  'gallery-white': '#FEFEFE', 
-  'charcoal-frame': '#2C2C2C',
-  'french-blue': '#4A90E2',
-  'warm-peach': '#FFB5A7',
-  'sage-green': '#87A96B',
-  'joy-yellow': '#FFD700',
-  'love-pink': '#FF69B4',
-  'magic-purple': '#8A2BE2'
-}
-```
-
-### Color Usage Guidelines
-
-#### Primary Applications
-- **Mona Lisa Gold**: CTAs, highlights, frames, premium elements
-- **Gallery White**: Main backgrounds, content areas
-- **Charcoal Frame**: Text, borders, sophisticated elements
-
-#### Character Integration
-- **French Blue**: Brand elements, playful CTAs
-- **Warm Peach**: Gentle feedback, welcoming messages
-- **Sage Green**: Calm states, natural elements
-
-#### Interactive States
-- **Joy Yellow**: Success animations, celebration moments
-- **Love Pink**: Pet-related elements, emotional connections
-- **Magic Purple**: Loading states, transformation effects
 
 ## Typography
 
 ### Font Hierarchy
 
-#### Primary Typeface: Playfair Display
-- **Usage**: Headlines, hero text, artistic moments, gallery labels
-- **Personality**: Elegant, artistic, sophisticated, Renaissance-inspired
-- **Weights**: Regular (400), Bold (700), Black (900)
-- **Implementation**: `font-playfair`
+#### Main Header Font: Arvo
+- **Usage**: Headlines, hero text, main titles, section headers
+- **Personality**: Elegant, readable serif with character, sophisticated yet approachable
+- **Weights**: Regular (400), Bold (700)
+- **Implementation**: `font-arvo`
 
-#### Secondary Typeface: Inter  
-- **Usage**: Body text, UI elements, descriptions, navigation
-- **Personality**: Clean, modern, highly readable, professional
-- **Weights**: Regular (400), Medium (500), Semibold (600)
-- **Implementation**: `font-inter` (default)
+#### Body Text Font: Geist  
+- **Usage**: Body text, UI elements, descriptions, navigation, all readable content
+- **Personality**: Modern, clean, highly readable, professional sans-serif
+- **Weights**: Regular (400), Medium (500), Semibold (600), Bold (700)
+- **Implementation**: `font-geist` (default)
 
 #### Accent Typeface: Fredoka One
 - **Usage**: Playful CTAs, character dialogue, fun elements, celebrations
@@ -105,16 +128,18 @@ colors: {
 
 ### Typography Scale
 ```css
-/* Artistic Headlines (Playfair Display) */
-.hero-title: text-6xl font-playfair font-black
-.section-title: text-4xl font-playfair font-bold
-.gallery-label: text-2xl font-playfair font-regular
+/* Main Headers (Arvo) */
+.hero-title: text-6xl font-arvo font-bold
+.section-title: text-4xl font-arvo font-bold
+.page-title: text-3xl font-arvo font-bold
+.card-title: text-2xl font-arvo font-regular
 
-/* UI Text (Inter) */
-.body-large: text-lg font-inter font-regular
-.body-default: text-base font-inter font-regular  
-.body-small: text-sm font-inter font-medium
-.caption: text-xs font-inter font-medium
+/* Body Text (Geist) */
+.body-large: text-lg font-geist font-regular
+.body-default: text-base font-geist font-regular  
+.body-small: text-sm font-geist font-medium
+.caption: text-xs font-geist font-medium
+.nav-link: text-base font-geist font-medium
 
 /* Playful Elements (Fredoka One) */
 .character-dialogue: text-xl font-fredoka
@@ -160,17 +185,30 @@ colors: {
 
 ### Buttons (Art-Inspired)
 
-#### Primary CTA (Mona Lisa Gold)
+#### Primary CTA (Updated - Atomic Tangerine)
 ```tsx
 <button className="
-  bg-mona-gold hover:bg-yellow-600 
-  text-charcoal-frame font-fredoka font-medium
+  bg-atomic-tangerine hover:bg-orange-600 
+  text-white font-fredoka font-medium
   px-8 py-4 rounded-full
   transform hover:scale-105 transition-all duration-200
   shadow-lg hover:shadow-xl
-  border-2 border-transparent hover:border-yellow-700
+  border-2 border-transparent hover:border-orange-700
 ">
-  Create Your Masterpiece
+  Upload Photo Now
+</button>
+```
+
+#### Secondary CTA (Cyclamen)
+```tsx
+<button className="
+  bg-cyclamen hover:bg-pink-600
+  text-white font-geist font-medium
+  px-6 py-3 rounded-lg
+  transition-all duration-200
+  border border-cyclamen hover:border-pink-600
+">
+  Learn More
 </button>
 ```
 
@@ -202,11 +240,11 @@ colors: {
 
 ### Gallery Cards (Museum-Style)
 
-#### Portrait Showcase Card
+#### Portrait Showcase Card (Updated)
 ```tsx
 <div className="
-  bg-gallery-white rounded-lg shadow-2xl
-  border-4 border-mona-gold
+  bg-card-surface rounded-lg shadow-2xl
+  border-4 border-naples-yellow
   overflow-hidden transform hover:scale-105
   transition-all duration-300
 ">
@@ -219,15 +257,15 @@ colors: {
     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
   </div>
   <div className="p-6">
-    <h3 className="font-playfair text-xl font-bold text-charcoal-frame mb-2">
+    <h3 className="font-arvo text-xl font-bold text-text-primary mb-2">
       Sarah & Bella
     </h3>
-    <p className="font-inter text-gray-600 mb-4">
+    <p className="font-geist text-gray-600 mb-4">
       "The most thoughtful gift I've ever received!"
     </p>
     <div className="flex justify-between items-center">
-      <span className="font-fredoka text-love-pink">💕 Pet Mom</span>
-      <button className="text-french-blue hover:text-blue-600 font-inter font-medium">
+      <span className="font-fredoka text-cyclamen">💕 Pet Mom</span>
+      <button className="text-pale-azure hover:text-blue-600 font-geist font-medium">
         View Full Story →
       </button>
     </div>
@@ -246,10 +284,10 @@ colors: {
   <div className="w-16 h-16 bg-french-blue rounded-full mx-auto mb-4 flex items-center justify-center">
     <span className="text-2xl">📸</span>
   </div>
-  <h3 className="font-playfair text-xl font-bold text-charcoal-frame mb-2">
+  <h3 className="font-arvo text-xl font-bold text-charcoal-frame mb-2">
     Upload Your Photo
   </h3>
-  <p className="font-inter text-gray-600">
+  <p className="font-geist text-gray-600">
     Simply drag and drop your favorite pet mom photo
   </p>
 </div>
@@ -273,7 +311,7 @@ colors: {
       <p className="font-fredoka text-charcoal-frame text-lg">
         "Ah, magnifique! Let me paint you as ze Mona Lisa!"
       </p>
-      <span className="font-inter text-sm text-gray-600 mt-1 block">
+      <span className="font-geist text-sm text-gray-600 mt-1 block">
         - PawPop
       </span>
     </div>
@@ -297,27 +335,27 @@ colors: {
 
 ## Forms (Gallery-Inspired)
 
-### Upload Zone (Primary Interaction)
+### Upload Zone (Primary Interaction - Updated)
 ```tsx
 <div className="
-  border-3 border-dashed border-mona-gold
+  border-3 border-dashed border-cyclamen
   rounded-2xl p-12 text-center
-  bg-gradient-to-br from-gallery-white to-warm-peach/10
-  hover:border-solid hover:bg-warm-peach/20
+  bg-gradient-to-br from-card-surface to-atomic-tangerine/10
+  hover:border-solid hover:bg-atomic-tangerine/20
   transition-all duration-300
   cursor-pointer group
 ">
   <div className="space-y-4">
-    <div className="w-20 h-20 bg-mona-gold/20 rounded-full mx-auto flex items-center justify-center group-hover:scale-110 transition-transform">
+    <div className="w-20 h-20 bg-cyclamen/20 rounded-full mx-auto flex items-center justify-center group-hover:scale-110 transition-transform">
       <span className="text-3xl">🖼️</span>
     </div>
-    <h3 className="font-playfair text-2xl font-bold text-charcoal-frame">
+    <h3 className="font-arvo text-2xl font-bold text-text-primary">
       Drop Your Photo Here
     </h3>
-    <p className="font-inter text-gray-600">
+    <p className="font-geist text-gray-600">
       Or click to browse your files
     </p>
-    <button className="font-fredoka text-french-blue hover:text-blue-600">
+    <button className="font-fredoka text-pale-azure hover:text-blue-600">
       Choose File 📁
     </button>
   </div>
@@ -327,7 +365,7 @@ colors: {
 ### Input Fields (Elegant)
 ```tsx
 <div className="space-y-2">
-  <label className="font-inter font-medium text-charcoal-frame">
+  <label className="font-geist font-medium text-charcoal-frame">
     Email Address
   </label>
   <input 
@@ -336,7 +374,7 @@ colors: {
     className="
       w-full px-4 py-3 rounded-lg
       border-2 border-gray-200 focus:border-mona-gold
-      font-inter placeholder-gray-400
+      font-geist placeholder-gray-400
       transition-colors duration-200
       focus:outline-none focus:ring-2 focus:ring-mona-gold/20
     "
@@ -358,10 +396,10 @@ colors: {
       <div className="w-16 h-16 bg-mona-gold/20 rounded-full mx-auto mb-3 flex items-center justify-center">
         <span className="text-2xl">🖼️</span>
       </div>
-      <h3 className="font-playfair font-bold text-lg text-charcoal-frame">
+      <h3 className="font-arvo font-bold text-lg text-charcoal-frame">
         Digital Portrait
       </h3>
-      <p className="font-inter text-gray-600 text-sm mt-1">
+      <p className="font-geist text-gray-600 text-sm mt-1">
         High-resolution download
       </p>
       <span className="font-fredoka text-mona-gold text-xl mt-2 block">
@@ -385,7 +423,7 @@ colors: {
   <h3 className="font-fredoka text-xl text-charcoal-frame mb-2">
     Magnifique! Your masterpiece is ready!
   </h3>
-  <p className="font-inter text-gray-600">
+  <p className="font-geist text-gray-600">
     PawPop has created something truly special
   </p>
 </div>
@@ -401,10 +439,10 @@ colors: {
     <span className="text-sm">💭</span>
   </div>
   <div>
-    <p className="font-inter text-charcoal-frame font-medium">
+    <p className="font-geist text-charcoal-frame font-medium">
       Oops! Please upload a clearer photo
     </p>
-    <p className="font-inter text-gray-600 text-sm">
+    <p className="font-geist text-gray-600 text-sm">
       PawPop needs at least 1200x1200 pixels to work his magic
     </p>
   </div>
@@ -425,16 +463,16 @@ colors: {
         <div className="w-8 h-8 bg-mona-gold rounded-full flex items-center justify-center">
           <span className="text-white font-bold">P</span>
         </div>
-        <span className="font-playfair text-2xl font-bold text-charcoal-frame">
+        <span className="font-arvo text-2xl font-bold text-charcoal-frame">
           PawPop
         </span>
       </Link>
       
       <nav className="hidden md:flex items-center space-x-8">
-        <Link href="/gallery" className="font-inter text-charcoal-frame hover:text-mona-gold transition-colors">
+        <Link href="/gallery" className="font-geist text-charcoal-frame hover:text-mona-gold transition-colors">
           Gallery
         </Link>
-        <Link href="/process" className="font-inter text-charcoal-frame hover:text-mona-gold transition-colors">
+        <Link href="/process" className="font-geist text-charcoal-frame hover:text-mona-gold transition-colors">
           How It Works
         </Link>
         <button className="
@@ -471,7 +509,7 @@ colors: {
     <h3 className="font-fredoka text-xl text-magic-purple mb-2">
       PawPop is painting...
     </h3>
-    <p className="font-inter text-gray-600">
+    <p className="font-geist text-gray-600">
       Adding artistic flair to your portrait
     </p>
   </div>
@@ -570,20 +608,33 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        'mona-gold': '#D4AF37',
-        'gallery-white': '#FEFEFE',
-        'charcoal-frame': '#2C2C2C',
-        'french-blue': '#4A90E2',
-        'warm-peach': '#FFB5A7',
-        'sage-green': '#87A96B',
-        'joy-yellow': '#FFD700',
-        'love-pink': '#FF69B4',
-        'magic-purple': '#8A2BE2'
+        // Updated Color System
+        'site-bg': '#F5EED7',        // Page background
+        'card-surface': '#FFFFFF',    // Content containers
+        'text-primary': '#2C2C2C',    // Primary text
+        
+        // Accent Palette
+        'pale-azure': '#70D6FF',      // Secondary accent
+        'atomic-tangerine': '#FF9770', // Primary CTA
+        'cyclamen': '#FF70A6',        // Secondary CTA
+        'naples-yellow': '#FFD670',   // Highlights
+        'mindaro': '#E9FF70',         // Playful accent
+        
+        // Legacy Support (maintain compatibility)
+        'mona-gold': '#D4AF37',       // Keep for existing components
+        'gallery-white': '#FEFEFE',   // Keep for existing components
+        'charcoal-frame': '#2C2C2C',  // Alias to text-primary
+        'french-blue': '#4A90E2',     // Keep for existing components
+        'warm-peach': '#FFB5A7',      // Keep for existing components
+        'sage-green': '#87A96B',      // Keep for existing components
+        'joy-yellow': '#FFD700',      // Keep for existing components
+        'love-pink': '#FF69B4',       // Keep for existing components
+        'magic-purple': '#8A2BE2'     // Keep for existing components
       },
       fontFamily: {
-        'playfair': ['Playfair Display', ...fontFamily.serif],
-        'fredoka': ['Fredoka One', ...fontFamily.sans],
-        'inter': ['Inter', ...fontFamily.sans]
+        'arvo': ['Arvo', ...fontFamily.serif],
+        'geist': ['Geist', ...fontFamily.sans],
+        'fredoka': ['Fredoka One', ...fontFamily.sans]
       },
       animation: {
         'slide-in': 'slideIn 0.3s ease-out',
@@ -600,16 +651,24 @@ export default config
 ### Font Loading (layout.tsx)
 
 ```typescript
-import { Inter, Playfair_Display, Fredoka_One } from 'next/font/google'
+import { Arvo, Fredoka_One } from 'next/font/google'
+import { GeistSans } from 'geist/font/sans'
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
-const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair' })
-const fredoka = Fredoka_One({ weight: '400', subsets: ['latin'], variable: '--font-fredoka' })
+const arvo = Arvo({ 
+  weight: ['400', '700'], 
+  subsets: ['latin'], 
+  variable: '--font-arvo' 
+})
+const fredoka = Fredoka_One({ 
+  weight: '400', 
+  subsets: ['latin'], 
+  variable: '--font-fredoka' 
+})
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable} ${fredoka.variable}`}>
-      <body className="font-inter bg-gallery-white text-charcoal-frame">
+    <html lang="en" className={`${GeistSans.variable} ${arvo.variable} ${fredoka.variable}`}>
+      <body className="font-geist bg-site-bg text-text-primary">
         {children}
       </body>
     </html>

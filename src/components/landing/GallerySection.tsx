@@ -1,224 +1,266 @@
+// src/components/landing/GallerySection.tsx
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-
-const galleryImages = [
-  { src: '/images/gallery/1.jpg', alt: 'PawPop artwork example 1' },
-  { src: '/images/gallery/2.jpg', alt: 'PawPop artwork example 2' },
-  { src: '/images/gallery/3.jpg', alt: 'PawPop artwork example 3' },
-  { src: '/images/gallery/4.jpg', alt: 'PawPop artwork example 4' },
-  { src: '/images/gallery/5.jpg', alt: 'PawPop artwork example 5' },
-];
+import React from 'react';
+import { Carousel } from 'react-responsive-carousel';
+import 'react-responsive-carousel/lib/styles/carousel.min.css';
 
 export const GallerySection = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const touchStartX = useRef<number>(0);
-  const touchEndX = useRef<number>(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const nextImage = () => {
-    console.log('nextImage called - currentIndex:', currentIndex, 'isTransitioning:', isTransitioning);
-    if (isTransitioning) {
-      console.log('Blocked by transition');
-      return;
+  // Gallery images from public/images/gallery
+  const galleryImages = [
+    {
+      src: '/images/gallery/1.jpg',
+      alt: 'PawPop artwork example 1'
+    },
+    {
+      src: '/images/gallery/2.jpg',
+      alt: 'PawPop artwork example 2'
+    },
+    {
+      src: '/images/gallery/3.jpg',
+      alt: 'PawPop artwork example 3'
+    },
+    {
+      src: '/images/gallery/4.jpg',
+      alt: 'PawPop artwork example 4'
+    },
+    {
+      src: '/images/gallery/5.jpg',
+      alt: 'PawPop artwork example 5'
     }
-    setIsTransitioning(true);
-    const newIndex = (currentIndex + 1) % galleryImages.length;
-    console.log('Setting new index:', newIndex);
-    setCurrentIndex(newIndex);
-  };
-
-  const prevImage = () => {
-    console.log('prevImage called - currentIndex:', currentIndex, 'isTransitioning:', isTransitioning);
-    if (isTransitioning) {
-      console.log('Blocked by transition');
-      return;
-    }
-    setIsTransitioning(true);
-    const newIndex = (currentIndex - 1 + galleryImages.length) % galleryImages.length;
-    console.log('Setting new index:', newIndex);
-    setCurrentIndex(newIndex);
-  };
-
-  const goToImage = (index: number) => {
-    console.log('goToImage called - index:', index, 'currentIndex:', currentIndex, 'isTransitioning:', isTransitioning);
-    if (isTransitioning || index === currentIndex) {
-      console.log('Blocked - same index or transitioning');
-      return;
-    }
-    setIsTransitioning(true);
-    console.log('Setting index to:', index);
-    setCurrentIndex(index);
-  };
-
-  // Handle touch events for swipe gestures
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    touchEndX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStartX.current || !touchEndX.current) return;
-    
-    const distance = touchStartX.current - touchEndX.current;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
-
-    if (isLeftSwipe) {
-      nextImage();
-    } else if (isRightSwipe) {
-      prevImage();
-    }
-
-    touchStartX.current = 0;
-    touchEndX.current = 0;
-  };
-
-  // Reset transition state after animation completes
-  useEffect(() => {
-    if (isTransitioning) {
-      console.log('Starting transition timer');
-      const timer = setTimeout(() => {
-        console.log('Transition timer completed, resetting isTransitioning');
-        setIsTransitioning(false);
-      }, 250);
-      return () => {
-        console.log('Cleaning up transition timer');
-        clearTimeout(timer);
-      };
-    }
-  }, [isTransitioning]);
-
-  // Debug state changes
-  useEffect(() => {
-    console.log('State changed - currentIndex:', currentIndex, 'isTransitioning:', isTransitioning);
-  }, [currentIndex, isTransitioning]);
+  ];
 
   return (
-    <section className="py-12 bg-site-bg">
-      <div className="max-w-4xl mx-auto px-6">
-        {/* Section Title */}
-        <div className="text-center mb-8">
-          <h2 className="font-playfair text-3xl md:text-4xl font-bold text-charcoal-frame mb-4">
+    <section className="w-full bg-site-bg py-0 md:py-12">
+      <div className="w-full">
+        {/* Section Title - Hidden on mobile for cleaner look */}
+        <div className="hidden md:block text-center mb-8 px-6">
+          <h2 className="font-arvo text-2xl md:text-3xl font-bold text-text-primary mb-2">
             Gallery
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            See how we transform beloved pets into timeless masterpieces
+          <p className="text-gray-600 text-lg">
+            See what we've created for other pet moms
           </p>
         </div>
 
-        {/* Debug Info */}
-        <div className="fixed top-4 left-4 bg-black text-white p-2 text-xs z-50 rounded">
-          Index: {currentIndex} | Transitioning: {isTransitioning ? 'YES' : 'NO'}<br/>
-          Transform: {currentIndex * 100}% | Images: {galleryImages.length}
-        </div>
-
-        {/* Gallery Container */}
-        <div className="relative">
-          {/* Main Image Display */}
-          <div 
-            ref={containerRef}
-            className="relative w-full overflow-hidden border-4 border-purple-500"
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            style={{ touchAction: 'pan-y pinch-zoom' }}
-          >
-            {/* Image Slider Container */}
-            <div 
-              className="flex transition-transform duration-[250ms] ease-gallery-snap will-change-transform"
-              style={{ 
-                transform: `translateX(-${currentIndex * 100}%)`,
-                width: '500%'
-              }}
-            >
-              {galleryImages.map((image, index) => (
-                <div 
-                  key={index}
-                  className="flex-shrink-0"
-                  style={{ 
-                    width: '20%',
-                    backgroundColor: index % 2 === 0 ? 'rgba(255,0,0,0.1)' : 'rgba(0,255,0,0.1)',
-                    border: '1px solid blue',
-                    minHeight: '200px'
-                  }}
+        {/* Mobile-First Carousel - Full width on mobile */}
+        <div className="w-full px-0 md:px-6">
+          <Carousel
+            showArrows={true}
+            showStatus={false}
+            showIndicators={true}
+            infiniteLoop={true}
+            useKeyboardArrows={true}
+            autoPlay={false}
+            swipeable={true}
+            emulateTouch={true}
+            dynamicHeight={true}
+            transitionTime={300}
+            interval={5000}
+            showThumbs={false}
+            className="gallery-carousel"
+            renderArrowPrev={(onClickHandler, hasPrev, label) =>
+              hasPrev && (
+                <button
+                  type="button"
+                  onClick={onClickHandler}
+                  title={label}
+                  className="
+                    absolute left-2 md:left-4 top-1/2 transform -translate-y-1/2 z-10
+                    bg-white/80 hover:bg-white/90 backdrop-blur-sm
+                    rounded-full w-10 h-10 md:w-12 md:h-12
+                    flex items-center justify-center
+                    shadow-lg hover:shadow-xl
+                    transition-all duration-200
+                    touch-manipulation
+                  "
+                  aria-label="Previous image"
                 >
-                  <div className="absolute top-2 left-2 bg-yellow-400 text-black px-1 text-xs z-10">
-                    IMG {index + 1}
-                  </div>
-                  <img
-                    src={image.src}
-                    alt={image.alt}
-                    className="w-full h-auto object-cover"
-                    loading={index === 0 ? 'eager' : 'lazy'}
-                    onLoad={() => console.log(`Image ${index + 1} loaded successfully`)}
-                    onError={() => console.error(`Image ${index + 1} failed to load`)}
-                  />
-                </div>
-              ))}
-            </div>
-
-            {/* Navigation Arrows */}
-            <button
-              onClick={(e) => {
-                console.log('Previous button clicked!', e);
-                prevImage();
-              }}
-              disabled={isTransitioning}
-              className="absolute left-4 top-1/2 -translate-y-1/2 
-                         bg-white/80 hover:bg-white/90 
-                         rounded-full p-2 shadow-lg
-                         transition-all duration-200 hover:scale-110
-                         disabled:opacity-50 disabled:cursor-not-allowed
-                         z-10"
-              aria-label="Previous image"
-            >
-              <ChevronLeft className="w-6 h-6 text-charcoal-frame" />
-            </button>
-
-            <button
-              onClick={(e) => {
-                console.log('Next button clicked!', e);
-                nextImage();
-              }}
-              disabled={isTransitioning}
-              className="absolute right-4 top-1/2 -translate-y-1/2 
-                         bg-white/80 hover:bg-white/90 
-                         rounded-full p-2 shadow-lg
-                         transition-all duration-200 hover:scale-110
-                         disabled:opacity-50 disabled:cursor-not-allowed
-                         z-10"
-              aria-label="Next image"
-            >
-              <ChevronRight className="w-6 h-6 text-charcoal-frame" />
-            </button>
-          </div>
-
-          {/* Dot Indicators */}
-          <div className="flex justify-center mt-6 space-x-2">
-            {galleryImages.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToImage(index)}
-                disabled={isTransitioning}
-                className={`w-3 h-3 rounded-full transition-all duration-200
-                  ${index === currentIndex 
-                    ? 'bg-mona-gold scale-110' 
-                    : 'bg-gray-300 hover:bg-gray-400'
-                  }
-                  disabled:cursor-not-allowed`}
-                aria-label={`Go to image ${index + 1}`}
-              />
+                  <svg 
+                    className="w-5 h-5 md:w-6 md:h-6 text-text-primary" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+              )
+            }
+            renderArrowNext={(onClickHandler, hasNext, label) =>
+              hasNext && (
+                <button
+                  type="button"
+                  onClick={onClickHandler}
+                  title={label}
+                  className="
+                    absolute right-2 md:right-4 top-1/2 transform -translate-y-1/2 z-10
+                    bg-white/80 hover:bg-white/90 backdrop-blur-sm
+                    rounded-full w-10 h-10 md:w-12 md:h-12
+                    flex items-center justify-center
+                    shadow-lg hover:shadow-xl
+                    transition-all duration-200
+                    touch-manipulation
+                  "
+                  aria-label="Next image"
+                >
+                  <svg 
+                    className="w-5 h-5 md:w-6 md:h-6 text-text-primary" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              )
+            }
+            renderIndicator={(onClickHandler, isSelected, index, label) => {
+              const defStyle = {
+                marginLeft: 4,
+                marginRight: 4,
+                cursor: 'pointer',
+                display: 'inline-block'
+              };
+              const style = isSelected
+                ? { ...defStyle }
+                : { ...defStyle };
+              
+              return (
+                <button
+                  key={index}
+                  style={style}
+                  onClick={onClickHandler}
+                  onKeyDown={onClickHandler}
+                  value={index}
+                  tabIndex={0}
+                  title={`${label} ${index + 1}`}
+                  role="button"
+                  className={`
+                    w-2 h-2 md:w-3 md:h-3 rounded-full transition-all duration-200
+                    ${isSelected 
+                      ? 'bg-atomic-tangerine scale-125' 
+                      : 'bg-white/60 hover:bg-white/80'
+                    }
+                  `}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              );
+            }}
+          >
+            {galleryImages.map((image, index) => (
+              <div key={index} className="relative w-full">
+                <img
+                  src={image.src}
+                  alt={image.alt}
+                  className="
+                    w-full h-auto
+                    object-contain object-center
+                    select-none block
+                  "
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                  draggable={false}
+                />
+                {/* Optional overlay for better text readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
+              </div>
             ))}
-          </div>
-
+          </Carousel>
         </div>
       </div>
+
+      {/* Custom CSS for additional styling */}
+      <style jsx global>{`
+        .gallery-carousel .carousel .slide {
+          background: transparent;
+        }
+        
+        .gallery-carousel .carousel .control-dots {
+          bottom: 15px;
+          margin: 0;
+          padding: 0 20px;
+        }
+        
+        .gallery-carousel .carousel .control-dots .dot {
+          box-shadow: none;
+          background: transparent;
+          border: none;
+          outline: none;
+          opacity: 1;
+        }
+        
+        .gallery-carousel .carousel.carousel-slider {
+          overflow: visible;
+        }
+        
+        .gallery-carousel .carousel .slider-wrapper {
+          overflow: hidden;
+          margin: auto;
+          width: 100%;
+          transition: height 0.15s ease-in;
+        }
+        
+        .gallery-carousel .carousel .slider {
+          margin: 0;
+          padding: 0;
+          position: relative;
+          list-style: none;
+          width: 100%;
+        }
+        
+        .gallery-carousel .carousel .slider .slide {
+          min-height: 100%;
+          margin: 0;
+          position: relative;
+          text-align: center;
+          background: transparent;
+        }
+        
+        .gallery-carousel .carousel .slider .slide img {
+          width: 100%;
+          vertical-align: top;
+          border: 0;
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+          .gallery-carousel .carousel .control-dots {
+            bottom: 10px;
+            padding: 0 15px;
+          }
+          
+          .gallery-carousel .carousel .slider-wrapper {
+            margin: 0;
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+          }
+        }
+        
+        /* Smooth transitions */
+        .gallery-carousel .carousel .slider-wrapper.axis-horizontal .slider {
+          -ms-box-orient: horizontal;
+          display: -webkit-box;
+          display: -moz-box;
+          display: -ms-flexbox;
+          display: -moz-flex;
+          display: -webkit-flex;
+          display: flex;
+          transition: all 300ms ease-in-out;
+        }
+        
+        .gallery-carousel .carousel .slider .slide {
+          -webkit-box-flex: 1;
+          -moz-box-flex: 1;
+          -webkit-flex: 1 1 auto;
+          -ms-flex: 1 1 auto;
+          flex: 1 1 auto;
+          display: block;
+        }
+      `}</style>
     </section>
   );
 };

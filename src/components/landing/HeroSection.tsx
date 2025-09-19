@@ -12,7 +12,7 @@ export const HeroSection = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
-    <section className="min-h-screen flex items-center justify-center px-0 md:px-6 py-8 bg-gallery-white">
+    <section className="min-h-screen flex items-center justify-center px-0 md:px-6 py-8 bg-card-surface">
       <div className="w-full max-w-2xl mx-auto text-center">
         {/* Hero Image - Full Width on Mobile */}
         <div className="mb-8 w-full px-6 md:px-0">
@@ -25,10 +25,7 @@ export const HeroSection = () => {
 
         {/* Headline */}
         <div className="px-6 md:px-0">
-          <h1 className="
-            font-playfair text-3xl md:text-4xl lg:text-5xl font-bold 
-            text-charcoal-frame mb-4 leading-tight
-          ">
+          <h1 className="font-arvo text-3xl md:text-4xl lg:text-5xl font-bold text-text-primary mb-4 leading-tight">
             {hero.title}
           </h1>
 
@@ -44,9 +41,9 @@ export const HeroSection = () => {
             onClick={() => setIsModalOpen(true)}
             className="
               inline-block w-full max-w-xs
-              bg-mona-gold hover:bg-yellow-600
-              text-charcoal-frame font-fredoka font-bold
-              py-4 px-8 text-xl
+              bg-atomic-tangerine hover:bg-orange-600
+              text-white font-fredoka font-bold
+              py-4 px-8 text-xl rounded-full
               transition-all duration-200
               transform hover:scale-105 shadow-xl hover:shadow-2xl
               min-h-[56px] touch-manipulation

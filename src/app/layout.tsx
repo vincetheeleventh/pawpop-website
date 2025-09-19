@@ -1,20 +1,16 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display, Fredoka } from 'next/font/google';
+import { Arvo, Fredoka } from 'next/font/google';
+import { GeistSans } from 'geist/font/sans';
 import "./globals.css";
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Providers } from './providers';
 
 // PawPop Brand Fonts
-const inter = Inter({ 
+const arvo = Arvo({ 
+  weight: ['400', '700'],
   subsets: ['latin'], 
-  variable: '--font-inter',
-  display: 'swap'
-});
-
-const playfair = Playfair_Display({ 
-  subsets: ['latin'], 
-  variable: '--font-playfair',
+  variable: '--font-arvo',
   display: 'swap'
 });
 
@@ -67,8 +63,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable} ${fredoka.variable}`}>
-      <body className="font-inter bg-gallery-white text-charcoal-frame antialiased">
+    <html lang="en" className={`${GeistSans.variable} ${arvo.variable} ${fredoka.variable}`}>
+      <body className="font-geist bg-site-bg text-text-primary antialiased">
         <Providers>
           <Header />
           <main>{children}</main>

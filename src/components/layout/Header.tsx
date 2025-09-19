@@ -12,17 +12,17 @@ export const Header = () => {
 
   return (
     <header className="
-      bg-gallery-white border-b border-gray-100
-      sticky top-0 z-50 backdrop-blur-sm
+      bg-card-surface border-b border-gray-100
+      sticky top-0 z-50 backdrop-blur-sm shadow-sm
     ">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-mona-gold rounded-full flex items-center justify-center">
-              <span className="text-white font-bold">P</span>
+            <div className="w-8 h-8 bg-naples-yellow rounded-full flex items-center justify-center">
+              <span className="text-text-primary font-bold">P</span>
             </div>
-            <span className="font-playfair text-2xl font-bold text-charcoal-frame">
+            <span className="font-arvo text-2xl font-bold text-text-primary">
               {header.logoText}
             </span>
           </Link>
@@ -31,12 +31,12 @@ export const Header = () => {
           <Link
             href="/create"
             className="
-              bg-mona-gold hover:bg-yellow-600
-              text-charcoal-frame font-fredoka font-medium
-              px-6 py-2
+              bg-atomic-tangerine hover:bg-orange-600
+              text-white font-fredoka font-medium
+              px-6 py-2 rounded-full
               transition-all duration-200
               hover:scale-105 hover:shadow-lg
-              focus:outline-none focus:ring-2 focus:ring-mona-gold/50
+              focus:outline-none focus:ring-2 focus:ring-atomic-tangerine/50
             "
           >
             {header.ctaButton}

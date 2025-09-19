@@ -9,11 +9,11 @@ export const ExamplesSection = () => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   return (
-    <section className="py-16 px-6 bg-white">
+    <section className="py-16 px-6 bg-card-surface">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
-          <h2 className="font-playfair text-3xl md:text-4xl font-bold text-charcoal-frame mb-4">
+          <h2 className="font-playfair text-3xl md:text-4xl font-bold text-text-primary mb-4">
             {examples.title}
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -61,7 +61,7 @@ export const ExamplesSection = () => {
                 <div className="absolute top-3 left-3">
                   <span className={`px-2 py-1 rounded text-xs font-medium transition-opacity duration-300 ${
                     hoveredIndex === index 
-                      ? 'bg-mona-gold text-charcoal-frame opacity-100' 
+                      ? 'bg-naples-yellow text-text-primary opacity-100' 
                       : 'bg-gray-800 text-white opacity-80'
                   }`}>
                     {hoveredIndex === index ? 'After' : 'Before'}
@@ -80,7 +80,7 @@ export const ExamplesSection = () => {
         {/* Call to Action */}
         <div className="text-center mt-12">
           <p className="text-gray-600 mb-4">Ready to see your transformation?</p>
-          <button className="bg-mona-gold hover:bg-yellow-600 text-charcoal-frame font-fredoka font-bold px-8 py-3 transition-all duration-200 hover:scale-105 shadow-lg">
+          <button className="bg-atomic-tangerine hover:bg-orange-600 text-white font-fredoka font-bold px-8 py-3 rounded-full transition-all duration-200 hover:scale-105 shadow-lg">
             Make My Masterpiece
           </button>
         </div>

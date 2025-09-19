@@ -40,11 +40,11 @@ export const ReactionsSection = () => {
   };
 
   return (
-    <section className="py-16 px-6 bg-gallery-white">
+    <section className="py-16 px-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
-          <h2 className="font-playfair text-3xl md:text-4xl font-bold text-charcoal-frame mb-4">
+          <h2 className="font-playfair text-3xl md:text-4xl font-bold text-text-primary mb-4">
             {reactions.title}
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -65,10 +65,10 @@ export const ReactionsSection = () => {
                   key={index}
                   className="w-full flex-shrink-0 px-4"
                 >
-                  <div className="bg-white rounded-2xl shadow-lg p-8 mx-auto max-w-2xl">
+                  <div className="bg-card-surface rounded-2xl shadow-lg p-8 mx-auto max-w-2xl">
                     {/* Quote */}
                     <div className="text-center mb-6">
-                      <div className="text-4xl text-mona-gold mb-4">"</div>
+                      <div className="text-4xl text-naples-yellow mb-4">"</div>
                       <p className="text-lg text-gray-700 leading-relaxed italic">
                         {testimonial.quote}
                       </p>
@@ -77,13 +77,13 @@ export const ReactionsSection = () => {
                     {/* Author Info */}
                     <div className="flex items-center justify-center space-x-4">
                       {/* Emoji Avatar */}
-                      <div className="w-12 h-12 bg-mona-gold rounded-full flex items-center justify-center text-2xl">
+                      <div className="w-12 h-12 bg-cyclamen rounded-full flex items-center justify-center text-2xl">
                         {testimonial.emoji}
                       </div>
                       
                       {/* Author Details */}
                       <div className="text-center">
-                        <p className="font-fredoka font-bold text-charcoal-frame">
+                        <p className="font-fredoka font-bold text-text-primary">
                           {testimonial.author}
                         </p>
                         <p className="text-sm text-gray-500">
@@ -100,20 +100,20 @@ export const ReactionsSection = () => {
           {/* Navigation Arrows */}
           <button
             onClick={prevSlide}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-card-surface rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
             aria-label="Previous testimonial"
           >
-            <svg className="w-6 h-6 text-charcoal-frame" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
 
           <button
             onClick={nextSlide}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-card-surface rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
             aria-label="Next testimonial"
           >
-            <svg className="w-6 h-6 text-charcoal-frame" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
@@ -127,7 +127,7 @@ export const ReactionsSection = () => {
               onClick={() => goToSlide(index)}
               className={`w-3 h-3 rounded-full transition-all duration-200 ${
                 index === currentIndex 
-                  ? 'bg-mona-gold scale-125' 
+                  ? 'bg-atomic-tangerine scale-125' 
                   : 'bg-gray-300 hover:bg-gray-400'
               }`}
               aria-label={`Go to testimonial ${index + 1}`}
