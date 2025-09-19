@@ -1,4 +1,5 @@
 import { HeroSection } from "@/components/landing/HeroSection";
+import { GallerySection } from "@/components/landing/GallerySection";
 import { ExamplesSection } from "@/components/landing/ExamplesSection";
 import { ReactionsSection } from "@/components/landing/ReactionsSection";
 import { WhyPawPopSection } from "@/components/landing/WhyPawPopSection";
@@ -9,6 +10,7 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       <HeroSection />
+      <GallerySection />
       <ExamplesSection />
       <ReactionsSection />
       <WhyPawPopSection />

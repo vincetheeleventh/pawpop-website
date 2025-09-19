@@ -10,7 +10,19 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // PawPop Brand Colors
+        // Updated PawPop Color System
+        'site-bg': '#F5EED7',        // Page background
+        'card-surface': '#FFFFFF',    // Content containers
+        'text-primary': '#2C2C2C',    // Primary text
+        
+        // Accent Palette
+        'pale-azure': '#70D6FF',      // Secondary accent
+        'atomic-tangerine': '#FF9770', // Primary CTA
+        'cyclamen': '#FF70A6',        // Secondary CTA
+        'naples-yellow': '#FFD670',   // Highlights
+        'mindaro': '#E9FF70',         // Playful accent
+        
+        // Legacy PawPop Brand Colors (maintain compatibility)
         'mona-gold': '#D4AF37',
         'gallery-white': '#FEFEFE',
         'charcoal-frame': '#2C2C2C',
@@ -47,12 +59,15 @@ const config: Config = {
         },
       },
       fontFamily: {
-        'playfair': ['Playfair Display', ...fontFamily.serif],
+        // New font system
+        'arvo': ['Arvo', ...fontFamily.serif],
+        'geist': ['Geist', ...fontFamily.sans],
         'fredoka': ['Fredoka One', ...fontFamily.sans],
+        // Legacy font mappings (maintain compatibility)
+        'playfair': ['Playfair Display', ...fontFamily.serif],
         'inter': ['Inter', ...fontFamily.sans],
-        // Legacy font mappings
-        sans: ['Inter', ...fontFamily.sans],
-        heading: ['Playfair Display', ...fontFamily.serif],
+        sans: ['Geist', ...fontFamily.sans],
+        heading: ['Arvo', ...fontFamily.serif],
         accent: ['Fredoka One', ...fontFamily.sans],
       },
       backgroundImage: {
@@ -65,6 +80,12 @@ const config: Config = {
         'gallery-hover': 'galleryHover 0.3s ease-out',
         'character-bounce': 'characterBounce 2s ease-in-out infinite',
         'brush-stroke': 'brushStroke 1.5s ease-in-out infinite',
+        'gallery-slide': 'gallerySlide 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        'gallery-fade-in': 'galleryFadeIn 0.5s ease-out',
+      },
+      transitionTimingFunction: {
+        'gallery-snap': 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+        'snappy': 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
       },
       keyframes: {
         slideIn: {
@@ -83,6 +104,14 @@ const config: Config = {
           '0%': { transform: 'rotate(-5deg)' },
           '50%': { transform: 'rotate(5deg)' },
           '100%': { transform: 'rotate(-5deg)' },
+        },
+        gallerySlide: {
+          '0%': { transform: 'translateX(10px)', opacity: '0.8' },
+          '100%': { transform: 'translateX(0)', opacity: '1' },
+        },
+        galleryFadeIn: {
+          '0%': { opacity: '0', transform: 'scale(0.95)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
         },
       },
     },
