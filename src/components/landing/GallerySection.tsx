@@ -2,8 +2,8 @@
 'use client';
 
 import React from 'react';
-import { Carousel } from 'react-responsive-carousel';
-import 'react-responsive-carousel/lib/styles/carousel.min.css';
+import Carousel from 'react-multi-carousel';
+import 'react-multi-carousel/lib/styles.css';
 
 export const GallerySection = () => {
   // Gallery images from public/images/gallery
@@ -30,206 +30,198 @@ export const GallerySection = () => {
     }
   ];
 
-  return (
-    <section className="w-full bg-site-bg py-0 md:py-12">
-      <div className="w-full">
-        {/* Section Title - Hidden on mobile for cleaner look */}
-        <div className="hidden md:block text-center mb-8 px-6">
-          <h2 className="font-arvo text-2xl md:text-3xl font-bold text-text-primary mb-2">
-            Gallery
-          </h2>
-          <p className="text-gray-600 text-lg">
-            See what we've created for other pet moms
-          </p>
-        </div>
+  // Responsive breakpoints for react-multi-carousel
+  const responsive = {
+    desktop: {
+      breakpoint: { max: 3000, min: 1024 },
+      items: 3,
+      slidesToSlide: 1,
+      partialVisibilityGutter: 40 // Shows partial next/prev images
+    },
+    tablet: {
+      breakpoint: { max: 1024, min: 768 },
+      items: 3,
+      slidesToSlide: 1,
+      partialVisibilityGutter: 30
+    },
+    mobile: {
+      breakpoint: { max: 768, min: 0 },
+      items: 1,
+      slidesToSlide: 1,
+      partialVisibilityGutter: 0 // Full width on mobile portrait
+    }
+  };
 
-        {/* Mobile-First Carousel - Full width on mobile */}
+  return (
+    <section className="w-full bg-site-bg py-8 md:py-12">
+      {/* Section Title - Always visible, outside carousel container */}
+      <div className="text-center mb-6 md:mb-8 px-6">
+        <h2 className="font-arvo text-xl md:text-2xl lg:text-3xl font-bold text-text-primary mb-2">
+          Gallery
+        </h2>
+        <p className="text-gray-600 text-base md:text-lg">
+          See what we've created for other pet moms
+        </p>
+      </div>
+
+      {/* Multi-Image Carousel Container */}
+      <div className="w-full">
         <div className="w-full px-0 md:px-6">
-          <Carousel
-            showArrows={true}
-            showStatus={false}
-            showIndicators={true}
-            infiniteLoop={true}
-            useKeyboardArrows={true}
+          <div className="gallery-carousel-container">
+            <Carousel
+            responsive={responsive}
+            infinite={true}
             autoPlay={false}
+            keyBoardControl={true}
+            customTransition="transform 300ms ease-in-out"
+            transitionDuration={300}
+            containerClass="gallery-multi-carousel"
+            removeArrowOnDeviceType={[]}
+            dotListClass="custom-dot-list-style"
+            itemClass="gallery-carousel-item"
+            showDots={true}
+            arrows={true}
             swipeable={true}
-            emulateTouch={true}
-            dynamicHeight={true}
-            transitionTime={300}
-            interval={5000}
-            showThumbs={false}
-            className="gallery-carousel"
-            renderArrowPrev={(onClickHandler, hasPrev, label) =>
-              hasPrev && (
-                <button
-                  type="button"
-                  onClick={onClickHandler}
-                  title={label}
-                  className="
-                    absolute left-2 md:left-4 top-1/2 transform -translate-y-1/2 z-10
-                    bg-white/80 hover:bg-white/90 backdrop-blur-sm
-                    rounded-full w-10 h-10 md:w-12 md:h-12
-                    flex items-center justify-center
-                    shadow-lg hover:shadow-xl
-                    transition-all duration-200
-                    touch-manipulation
-                  "
-                  aria-label="Previous image"
+            draggable={true}
+            partialVisible={true}
+            renderButtonGroupOutside={false}
+            renderDotsOutside={false}
+            customLeftArrow={
+              <button
+                className="
+                  absolute left-2 md:left-4 top-1/2 transform -translate-y-1/2 z-10
+                  bg-white/80 hover:bg-white/90 backdrop-blur-sm
+                  rounded-full w-10 h-10 md:w-12 md:h-12
+                  flex items-center justify-center
+                  shadow-lg hover:shadow-xl
+                  transition-all duration-200
+                  touch-manipulation
+                "
+                aria-label="Previous images"
+              >
+                <svg 
+                  className="w-5 h-5 md:w-6 md:h-6 text-text-primary" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
                 >
-                  <svg 
-                    className="w-5 h-5 md:w-6 md:h-6 text-text-primary" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-              )
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
             }
-            renderArrowNext={(onClickHandler, hasNext, label) =>
-              hasNext && (
-                <button
-                  type="button"
-                  onClick={onClickHandler}
-                  title={label}
-                  className="
-                    absolute right-2 md:right-4 top-1/2 transform -translate-y-1/2 z-10
-                    bg-white/80 hover:bg-white/90 backdrop-blur-sm
-                    rounded-full w-10 h-10 md:w-12 md:h-12
-                    flex items-center justify-center
-                    shadow-lg hover:shadow-xl
-                    transition-all duration-200
-                    touch-manipulation
-                  "
-                  aria-label="Next image"
+            customRightArrow={
+              <button
+                className="
+                  absolute right-2 md:right-4 top-1/2 transform -translate-y-1/2 z-10
+                  bg-white/80 hover:bg-white/90 backdrop-blur-sm
+                  rounded-full w-10 h-10 md:w-12 md:h-12
+                  flex items-center justify-center
+                  shadow-lg hover:shadow-xl
+                  transition-all duration-200
+                  touch-manipulation
+                "
+                aria-label="Next images"
+              >
+                <svg 
+                  className="w-5 h-5 md:w-6 md:h-6 text-text-primary" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
                 >
-                  <svg 
-                    className="w-5 h-5 md:w-6 md:h-6 text-text-primary" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              )
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             }
-            renderIndicator={(onClickHandler, isSelected, index, label) => {
-              const defStyle = {
-                marginLeft: 4,
-                marginRight: 4,
-                cursor: 'pointer',
-                display: 'inline-block'
-              };
-              const style = isSelected
-                ? { ...defStyle }
-                : { ...defStyle };
-              
-              return (
-                <button
-                  key={index}
-                  style={style}
-                  onClick={onClickHandler}
-                  onKeyDown={onClickHandler}
-                  value={index}
-                  tabIndex={0}
-                  title={`${label} ${index + 1}`}
-                  role="button"
-                  className={`
-                    w-2 h-2 md:w-3 md:h-3 rounded-full transition-all duration-200
-                    ${isSelected 
-                      ? 'bg-atomic-tangerine scale-125' 
-                      : 'bg-white/60 hover:bg-white/80'
-                    }
-                  `}
-                  aria-label={`Go to slide ${index + 1}`}
-                />
-              );
-            }}
           >
             {galleryImages.map((image, index) => (
-              <div key={index} className="relative w-full">
-                <img
-                  src={image.src}
-                  alt={image.alt}
-                  className="
-                    w-full h-auto
-                    object-contain object-center
-                    select-none block
-                  "
-                  loading={index === 0 ? 'eager' : 'lazy'}
-                  draggable={false}
-                />
-                {/* Optional overlay for better text readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
+              <div key={index} className="px-2 md:px-3">
+                <div className="relative w-full">
+                  <img
+                    src={image.src}
+                    alt={image.alt}
+                    className="
+                      w-full h-auto
+                      object-contain object-center
+                      select-none block
+                      rounded-lg md:rounded-xl
+                      shadow-lg hover:shadow-xl
+                      transition-shadow duration-200
+                    "
+                    loading={index === 0 ? 'eager' : 'lazy'}
+                    draggable={false}
+                  />
+                  {/* Optional overlay for better visual appeal */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent pointer-events-none rounded-lg md:rounded-xl" />
+                </div>
               </div>
             ))}
           </Carousel>
+          </div>
         </div>
       </div>
 
-      {/* Custom CSS for additional styling */}
+      {/* Custom CSS for react-multi-carousel styling */}
       <style jsx global>{`
-        .gallery-carousel .carousel .slide {
-          background: transparent;
+        .gallery-multi-carousel {
+          position: relative;
         }
         
-        .gallery-carousel .carousel .control-dots {
-          bottom: 15px;
-          margin: 0;
+        .gallery-carousel-item {
+          display: flex !important;
+          justify-content: center;
+          align-items: center;
+        }
+        
+        .custom-dot-list-style {
+          display: flex !important;
+          justify-content: center;
+          align-items: center;
+          margin-top: 20px !important;
           padding: 0 20px;
         }
         
-        .gallery-carousel .carousel .control-dots .dot {
-          box-shadow: none;
-          background: transparent;
-          border: none;
-          outline: none;
-          opacity: 1;
+        .custom-dot-list-style li {
+          margin: 0 4px !important;
         }
         
-        .gallery-carousel .carousel.carousel-slider {
-          overflow: visible;
+        .custom-dot-list-style li button {
+          width: 8px !important;
+          height: 8px !important;
+          border-radius: 50% !important;
+          border: none !important;
+          background: rgba(255, 255, 255, 0.6) !important;
+          transition: all 200ms ease-in-out !important;
+          cursor: pointer !important;
         }
         
-        .gallery-carousel .carousel .slider-wrapper {
-          overflow: hidden;
-          margin: auto;
-          width: 100%;
-          transition: height 0.15s ease-in;
+        .custom-dot-list-style li button:hover {
+          background: rgba(255, 255, 255, 0.8) !important;
         }
         
-        .gallery-carousel .carousel .slider {
-          margin: 0;
-          padding: 0;
-          position: relative;
-          list-style: none;
-          width: 100%;
-        }
-        
-        .gallery-carousel .carousel .slider .slide {
-          min-height: 100%;
-          margin: 0;
-          position: relative;
-          text-align: center;
-          background: transparent;
-        }
-        
-        .gallery-carousel .carousel .slider .slide img {
-          width: 100%;
-          vertical-align: top;
-          border: 0;
+        .custom-dot-list-style li.react-multi-carousel-dot--active button {
+          background: #FF9770 !important;
+          transform: scale(1.25) !important;
         }
         
         /* Mobile optimizations */
         @media (max-width: 768px) {
-          .gallery-carousel .carousel .control-dots {
-            bottom: 10px;
+          .custom-dot-list-style {
             padding: 0 15px;
+            margin-top: 15px !important;
           }
           
-          .gallery-carousel .carousel .slider-wrapper {
+          .gallery-carousel-item {
+            padding: 0 !important;
+          }
+          
+          .gallery-carousel-item > div {
+            padding: 0 !important;
+          }
+        }
+        
+        /* Full-width carousel container only (not the entire section) */
+        @media (max-width: 768px) {
+          .gallery-carousel-container {
             margin: 0;
             width: 100vw;
             position: relative;
@@ -240,25 +232,28 @@ export const GallerySection = () => {
           }
         }
         
-        /* Smooth transitions */
-        .gallery-carousel .carousel .slider-wrapper.axis-horizontal .slider {
-          -ms-box-orient: horizontal;
-          display: -webkit-box;
-          display: -moz-box;
-          display: -ms-flexbox;
-          display: -moz-flex;
-          display: -webkit-flex;
-          display: flex;
-          transition: all 300ms ease-in-out;
+        /* Desktop and tablet partial visibility styling */
+        @media (min-width: 768px) {
+          .react-multi-carousel-item--partial {
+            opacity: 0.7;
+            transform: scale(0.95);
+            transition: all 300ms ease-in-out;
+          }
+          
+          .react-multi-carousel-item--partial:hover {
+            opacity: 0.9;
+            transform: scale(0.98);
+          }
         }
         
-        .gallery-carousel .carousel .slider .slide {
-          -webkit-box-flex: 1;
-          -moz-box-flex: 1;
-          -webkit-flex: 1 1 auto;
-          -ms-flex: 1 1 auto;
-          flex: 1 1 auto;
-          display: block;
+        /* Smooth transitions */
+        .react-multi-carousel-list {
+          transition: transform 300ms ease-in-out !important;
+        }
+        
+        .react-multi-carousel-track {
+          display: flex !important;
+          align-items: center !important;
         }
       `}</style>
     </section>

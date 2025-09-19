@@ -2,73 +2,76 @@
 
 ## Overview
 
-The Gallery Section is a responsive image carousel component that displays PawPop artwork examples using the react-responsive-carousel library. It provides a mobile-first design with full-width images on mobile devices and touch-friendly navigation.
+The Gallery Section is an adaptive multi-image carousel component that displays PawPop artwork examples using the react-multi-carousel library. It provides a responsive design that shows 1 image on mobile portrait, and 3 images on landscape/desktop with partial next/prev visibility and smooth horizontal scrolling.
 
 ## Features
 
-### Mobile-First Design
-- **Full Width on Mobile**: Images take up 100% of the mobile screen width in portrait mode
-- **Touch-Friendly Navigation**: Swipe gestures and large touch targets for arrows and dots
-- **Responsive Heights**: Images maintain their aspect ratio with maximum height constraints
+### Adaptive Multi-Image Display
+- **Mobile Portrait**: 1 image at full width (100% screen width) with visible title
+- **Mobile Landscape & Tablet**: 3 images with partial next/prev visibility
+- **Desktop**: 3 images with enhanced partial visibility (40px gutter)
 - **No Cropping**: Uses `object-contain` to show full vertical length of images
+- **Touch-Friendly Navigation**: Swipe gestures and large touch targets
+- **Consistent Branding**: Gallery title and description visible on all devices
 
 ### Navigation
-- **Swipe Gestures**: Left/right swipe to navigate between images
-- **Arrow Buttons**: Touch-friendly arrow buttons on left and right edges
-- **Dot Indicators**: Bottom navigation dots for direct image selection
+- **Smooth Horizontal Scrolling**: Slides multiple images smoothly
+- **Partial Visibility**: Shows edges of next/prev images to indicate more content
+- **Arrow Buttons**: Touch-friendly arrow buttons with backdrop blur
+- **Dot Indicators**: Bottom navigation dots for direct navigation
 - **Keyboard Support**: Arrow keys for navigation
-- **Infinite Loop**: Seamless wrapping from last to first image
+- **Infinite Loop**: Seamless wrapping from last to first set
 
-### Animation
-- **Smooth Transitions**: 300ms slide animations
-- **Dynamic Height**: Carousel adjusts height based on each image's dimensions
+### Animation & Interactions
+- **300ms Transitions**: Smooth slide animations with hardware acceleration
+- **Partial Image Scaling**: Next/prev images scale and fade for depth effect
+- **Hover Effects**: Partial images become more prominent on hover
 - **Touch Momentum**: Responsive swipe tracking with momentum
 
 ## Technical Implementation
 
 ### Dependencies
-- `react-responsive-carousel`: Main carousel functionality
-- `react-responsive-carousel/lib/styles/carousel.min.css`: Base styles
+- `react-multi-carousel`: Multi-image carousel functionality
+- `react-multi-carousel/lib/styles.css`: Base styles
 
-### Component Structure
+### Responsive Breakpoints
 ```tsx
-<section className="w-full bg-site-bg py-0 md:py-12">
-  <div className="w-full">
-    {/* Desktop Title (hidden on mobile) */}
-    <div className="hidden md:block text-center mb-8 px-6">
-      <h2>Gallery</h2>
-      <p>See what we've created for other pet moms</p>
-    </div>
-
-    {/* Full-width Carousel */}
-    <div className="w-full px-0 md:px-6">
-      <Carousel {...props}>
-        {galleryImages.map((image, index) => (
-          <div key={index} className="relative w-full">
-            <img src={image.src} alt={image.alt} />
-          </div>
-        ))}
-      </Carousel>
-    </div>
-  </div>
-</section>
+const responsive = {
+  desktop: {
+    breakpoint: { max: 3000, min: 1024 },
+    items: 3,
+    slidesToSlide: 1,
+    partialVisibilityGutter: 40 // Shows partial next/prev images
+  },
+  tablet: {
+    breakpoint: { max: 1024, min: 768 },
+    items: 3,
+    slidesToSlide: 1,
+    partialVisibilityGutter: 30
+  },
+  mobile: {
+    breakpoint: { max: 768, min: 0 },
+    items: 1,
+    slidesToSlide: 1,
+    partialVisibilityGutter: 0 // Full width on mobile portrait
+  }
+};
 ```
 
 ### Carousel Configuration
 ```tsx
 <Carousel
-  showArrows={true}
-  showStatus={false}
-  showIndicators={true}
-  infiniteLoop={true}
-  useKeyboardArrows={true}
+  responsive={responsive}
+  infinite={true}
   autoPlay={false}
+  keyBoardControl={true}
+  customTransition="transform 300ms ease-in-out"
+  transitionDuration={300}
   swipeable={true}
-  emulateTouch={true}
-  dynamicHeight={true}
-  transitionTime={300}
-  interval={5000}
-  showThumbs={false}
+  draggable={true}
+  partialVisible={true}
+  showDots={true}
+  arrows={true}
 />
 ```
 

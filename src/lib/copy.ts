@@ -12,7 +12,7 @@ export const landingPageCopy = {
   },
   hero: {
     title: 'Pet Mom, But Make it Mona Lisa',
-    subtitle: 'Upload photos of a pet + their mom and see how they\'d look as a masterpiece. Totally free.',
+    subtitle: 'Create a masterpiece simply by uploading a photo of a pet mom and their pet.',
     ctaButton: 'Make My Masterpiece',
   },
   examples: {
