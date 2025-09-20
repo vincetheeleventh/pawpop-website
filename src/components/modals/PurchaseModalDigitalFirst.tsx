@@ -1,8 +1,11 @@
 // src/components/modals/PurchaseModalDigitalFirst.tsx
 'use client';
 
-import React, { useState } from 'react';
-import { X, Download, Truck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
+import { X, Download, Star } from 'lucide-react';
+import { Artwork } from '@/lib/supabase';
+import { createCheckoutSession } from '@/lib/stripe-client';
 import { ProductType, getProductPricing } from '@/lib/printify-products';
 import { loadStripe } from '@stripe/stripe-js';
 
@@ -93,9 +96,13 @@ export const PurchaseModalDigitalFirst = ({ isOpen, onClose, artwork }: Purchase
         <div className="p-6">
           {/* Artwork Preview */}
           <div className="flex items-center mb-8">
-            <img 
-              src={artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res}
+            <Image 
+              src={artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res || '/images/placeholder.jpg'}
               alt="Your masterpiece"
+              width={80}
+              height={80}
+              quality={85}
+              sizes="80px"
               className="w-20 h-20 rounded-lg object-cover mr-4"
             />
             <div>

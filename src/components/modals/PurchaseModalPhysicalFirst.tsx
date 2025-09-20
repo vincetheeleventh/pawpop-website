@@ -1,8 +1,11 @@
 // src/components/modals/PurchaseModalPhysicalFirst.tsx
 'use client';
 
-import React, { useState } from 'react';
-import { X, Image, Frame, Gift, Download } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
+import { X, Gift, Star, Shield, Truck } from 'lucide-react';
+import { Artwork } from '@/lib/supabase';
+import { createCheckoutSession } from '@/lib/stripe-client';
 import { ProductType, getProductPricing, getAvailableSizes } from '@/lib/printify-products';
 import { loadStripe } from '@stripe/stripe-js';
 
@@ -213,9 +216,13 @@ Check console for detailed error logs.`);
           {/* Artwork Preview with Gift Context */}
           <div className="text-center mb-8">
             <div className="relative inline-block">
-              <img 
-                src={artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res}
+              <Image 
+                src={artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res || '/images/placeholder.jpg'}
                 alt="Your masterpiece"
+                width={160}
+                height={160}
+                quality={85}
+                sizes="160px"
                 className="w-40 h-40 rounded-lg object-cover shadow-lg"
               />
               <div className="absolute -top-2 -right-2">
