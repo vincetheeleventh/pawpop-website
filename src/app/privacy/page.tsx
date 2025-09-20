@@ -121,7 +121,7 @@ export default function PrivacyPolicy() {
             If you have any questions about this Privacy Policy, please contact us:
           </p>
           <div className="bg-gray-50 p-4 rounded-lg">
-            <p><strong>Email:</strong> pawpopart@gmail.com</p>
+            <p><strong>Email:</strong> hello@pawpopart.com</p>
             <p><strong>Address:</strong> 2006-1323 Homer St, Vancouver BC Canada V6B 5T1</p>
             <p><strong>Phone:</strong> +1 604 499 7660</p>
           </div>

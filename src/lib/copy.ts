@@ -183,7 +183,7 @@ export const landingPageCopy = {
     },
     characterMessage: "Merci for visiting my atelier! Remember, every pet mom deserves to be immortalized as a Renaissance masterpiece with her beloved companion.",
     contact: {
-      email: "pawpopart@gmail.com",
+      email: "hello@pawpopart.com",
       phone: "+1 604 499 7660",
       address: "2006-1323 Homer St, Vancouver BC Canada V6B 5T1"
     },
@@ -254,7 +254,7 @@ export const pageContent = {
     subtitle: "Questions about your masterpiece? We're here to help!",
     supportHours: "Support available 9 AM - 6 PM EST, Monday-Friday",
     contact: {
-      email: "pawpopart@gmail.com",
+      email: "hello@pawpopart.com",
       phone: "+1 604 499 7660",
       address: "2006-1323 Homer St, Vancouver BC Canada V6B 5T1"
     }
@@ -266,7 +266,7 @@ export const pageContent = {
     },
     characterMessage: "Merci for visiting my atelier! Remember, every pet mom deserves to be immortalized as a Renaissance masterpiece with her beloved companion.",
     contact: {
-      email: "pawpopart@gmail.com",
+      email: "hello@pawpopart.com",
       phone: "+1 604 499 7660",
       address: "2006-1323 Homer St, Vancouver BC Canada V6B 5T1"
     },

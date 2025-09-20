@@ -38,7 +38,7 @@ export default function ReturnPolicy() {
             <strong>Return Process:</strong>
           </p>
           <ol className="list-decimal pl-6 mb-4">
-            <li>Contact our support team at pawpopart@gmail.com</li>
+            <li>Contact our support team at hello@pawpopart.com</li>
             <li>Provide your order number and photos of the issue</li>
             <li>We'll provide a prepaid return label if applicable</li>
             <li>Send the item back in original packaging</li>
@@ -137,8 +137,8 @@ export default function ReturnPolicy() {
             For returns, refunds, or questions about this policy:
           </p>
           <div className="bg-gray-50 p-4 rounded-lg">
-            <p><strong>Email:</strong> pawpopart@gmail.com</p>
-            <p><strong>Support:</strong> pawpopart@gmail.com</p>
+            <p><strong>Email:</strong> hello@pawpopart.com</p>
+            <p><strong>Support:</strong> hello@pawpopart.com</p>
             <p><strong>Phone:</strong> +1 604 499 7660</p>
             <p><strong>Hours:</strong> Monday-Friday, 9 AM - 6 PM PST</p>
           </div>

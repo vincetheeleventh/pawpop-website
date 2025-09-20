@@ -492,12 +492,23 @@ export async function POST(request: NextRequest) {
           })
         })
 
-        // Update mockup_urls with the new JSONB structure
+        // Get existing delivery_images to preserve other data
+        const { data: existingArtwork } = await supabaseAdmin
+          .from('artworks')
+          .select('delivery_images')
+          .eq('id', artworkId)
+          .single()
+        
+        const existingDeliveryImages = existingArtwork?.delivery_images || {}
+        
+        // Update delivery_images.mockups with the new JSONB structure while preserving other fields
         await supabaseAdmin
           .from('artworks')
           .update({
-            mockup_urls: mockupsByType,
-            mockup_generated_at: new Date().toISOString(),
+            delivery_images: {
+              ...existingDeliveryImages,
+              mockups: mockupsByType
+            },
             updated_at: new Date().toISOString()
           })
           .eq('id', artworkId)

@@ -5,7 +5,7 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 // Email testing configuration
 const isTestMode = process.env.NODE_ENV === 'development' || process.env.EMAIL_TEST_MODE === 'true'
-const testEmailRecipient = process.env.EMAIL_TEST_RECIPIENT || 'pawpopart@gmail.com'
+const testEmailRecipient = process.env.EMAIL_TEST_RECIPIENT || 'hello@pawpopart.com'
 
 export interface EmailData {
   to: string
@@ -158,7 +158,7 @@ export async function sendMasterpieceCreatingEmail(data: MasterpieceCreatingEmai
         <div class="footer">
           <p>PawPop - The Unforgettable Gift for Pet Moms</p>
           <p>2006-1323 Homer St, Vancouver BC Canada V6B 5T1</p>
-          <p>Questions? Reply to this email or contact us at pawpopart@gmail.com</p>
+          <p>Questions? Reply to this email or contact us at hello@pawpopart.com</p>
         </div>
       </div>
     </body>
@@ -244,7 +244,7 @@ export async function sendMasterpieceReadyEmail(data: MasterpieceReadyEmailData)
         <div class="footer">
           <p>PawPop - The Unforgettable Gift for Pet Moms</p>
           <p>2006-1323 Homer St, Vancouver BC Canada V6B 5T1</p>
-          <p>Questions? Reply to this email or contact us at pawpopart@gmail.com</p>
+          <p>Questions? Reply to this email or contact us at hello@pawpopart.com</p>
         </div>
       </div>
     </body>
@@ -336,7 +336,7 @@ export async function sendOrderConfirmationEmail(data: OrderConfirmationEmailDat
         <div class="footer">
           <p>PawPop - The Unforgettable Gift for Pet Moms</p>
           <p>2006-1323 Homer St, Vancouver BC Canada V6B 5T1</p>
-          <p>Questions? Reply to this email or contact us at pawpopart@gmail.com</p>
+          <p>Questions? Reply to this email or contact us at hello@pawpopart.com</p>
         </div>
       </div>
     </body>
@@ -418,7 +418,7 @@ export async function sendShippingNotificationEmail(data: ShippingNotificationEm
         <div class="footer">
           <p>PawPop - The Unforgettable Gift for Pet Moms</p>
           <p>2006-1323 Homer St, Vancouver BC Canada V6B 5T1</p>
-          <p>Questions? Reply to this email or contact us at pawpopart@gmail.com</p>
+          <p>Questions? Reply to this email or contact us at hello@pawpopart.com</p>
         </div>
       </div>
     </body>

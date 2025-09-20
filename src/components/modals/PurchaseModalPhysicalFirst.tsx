@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { X, Gift, Star, Shield, Truck } from 'lucide-react';
+import { X, Gift, Star, Shield, Truck, Frame, Download, FileImage } from 'lucide-react';
 import { Artwork } from '@/lib/supabase';
 import { createCheckoutSession } from '@/lib/stripe-client';
 import { ProductType, getProductPricing, getAvailableSizes } from '@/lib/printify-products';
@@ -155,7 +155,7 @@ Check console for detailed error logs.`);
         title: 'Premium Art Print',
         subtitle: 'Museum-Quality Paper',
         description: 'Professional archival paper with vibrant colors',
-        icon: Image,
+        icon: FileImage,
         price: getProductPricing(ProductType.ART_PRINT, selectedSize, countryCode),
         size: selectedSize,
         delivery: '3-5 business days',

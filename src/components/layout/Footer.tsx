@@ -8,50 +8,27 @@ export const Footer = () => {
   
   return (
     <footer className="bg-text-primary text-card-surface">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Company Info */}
-          <div className="space-y-4">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Company Info - Minimal */}
+          <div className="space-y-3">
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-naples-yellow rounded-full flex items-center justify-center">
                 <span className="text-text-primary font-bold">P</span>
               </div>
-              <span className="font-playfair text-xl font-bold text-card-surface">
+              <span className="font-arvo text-xl font-bold text-card-surface">
                 PawPop
               </span>
             </div>
-            <p className="text-gray-600 text-sm">
-              Transform your pet into Renaissance masterpieces with our AI-powered custom portrait service.
-            </p>
             <div className="text-sm text-gray-600">
-              <p><strong>Business Hours:</strong></p>
-              <p>Monday-Friday: 9 AM - 6 PM PST</p>
-              <p>Saturday: 10 AM - 4 PM PST</p>
-              <p>Sunday: Closed</p>
+              <p><strong>Email:</strong> {footer.contact.email}</p>
+              <p><strong>Phone:</strong> {footer.contact.phone}</p>
             </div>
           </div>
 
-          {/* Contact Info */}
+          {/* Contact */}
           <div>
-            <h3 className="font-fredoka font-semibold text-card-surface mb-4">Contact</h3>
-            <ul className="space-y-2 text-sm text-gray-600">
-              <li>
-                <strong>Email:</strong> pawpopart@gmail.com
-              </li>
-              <li>
-                <strong>Phone:</strong> +1 604 499 7660
-              </li>
-              <li>
-                <strong>Address:</strong><br />
-                2006-1323 Homer St<br />
-                Vancouver BC Canada V6B 5T1
-              </li>
-            </ul>
-          </div>
-
-          {/* Support */}
-          <div>
-            <h3 className="font-fredoka font-semibold text-card-surface mb-4">Support</h3>
+            <h3 className="font-fredoka font-semibold text-card-surface mb-3">Contact</h3>
             <ul className="space-y-2">
               <li>
                 <Link href="/contact" className="text-gray-600 hover:text-pale-azure transition-colors text-sm">
@@ -59,12 +36,7 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link href="/returns" className="text-gray-600 hover:text-pale-azure transition-colors text-sm">
-                  Returns & Refunds
-                </Link>
-              </li>
-              <li>
-                <a href="mailto:pawpopart@gmail.com" className="text-gray-600 hover:text-pale-azure transition-colors text-sm">
+                <a href={`mailto:${footer.contact.email}`} className="text-gray-600 hover:text-pale-azure transition-colors text-sm">
                   Order Support
                 </a>
               </li>
@@ -73,7 +45,7 @@ export const Footer = () => {
 
           {/* Legal - Required for Google Merchant Center */}
           <div>
-            <h3 className="font-fredoka font-semibold text-card-surface mb-4">Legal</h3>
+            <h3 className="font-fredoka font-semibold text-card-surface mb-3">Legal</h3>
             <ul className="space-y-2">
               <li>
                 <Link href="/privacy" className="text-gray-600 hover:text-pale-azure transition-colors text-sm">
@@ -92,6 +64,11 @@ export const Footer = () => {
               </li>
             </ul>
           </div>
+        </div>
+        
+        {/* Copyright */}
+        <div className="border-t border-gray-700 mt-8 pt-6 text-center">
+          <p className="text-gray-600 text-sm">{footer.copyright}</p>
         </div>
       </div>
     </footer>

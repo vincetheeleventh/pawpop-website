@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { X, Download, Star } from 'lucide-react';
+import { X, Download, Star, Truck } from 'lucide-react';
 import { Artwork } from '@/lib/supabase';
 import { createCheckoutSession } from '@/lib/stripe-client';
 import { ProductType, getProductPricing } from '@/lib/printify-products';

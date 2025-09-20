@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { X, Upload, ArrowRight, ArrowLeft, Check, Camera, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -38,6 +38,30 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
 
   const petMomInputRef = useRef<HTMLInputElement>(null);
   const petInputRef = useRef<HTMLInputElement>(null);
+
+  // Store object URLs for cleanup
+  const [objectUrls, setObjectUrls] = useState<{ petMom?: string; pet?: string }>({});
+
+  // Create and cleanup object URLs
+  useEffect(() => {
+    const newUrls: { petMom?: string; pet?: string } = {};
+    
+    if (formData.petMomPhoto) {
+      newUrls.petMom = URL.createObjectURL(formData.petMomPhoto);
+    }
+    if (formData.petPhoto) {
+      newUrls.pet = URL.createObjectURL(formData.petPhoto);
+    }
+    
+    setObjectUrls(newUrls);
+    
+    // Cleanup function
+    return () => {
+      Object.values(newUrls).forEach(url => {
+        if (url) URL.revokeObjectURL(url);
+      });
+    };
+  }, [formData.petMomPhoto, formData.petPhoto]);
 
   if (!isOpen) return null;
 
@@ -354,9 +378,9 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
             {[1, 2, 3].map((step) => (
               <div key={step} className="flex items-center">
                 <div className={`
-                  w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
+                  w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium font-geist
                   ${currentStep >= step 
-                    ? 'bg-mona-gold text-charcoal-frame' 
+                    ? 'bg-naples-yellow text-text-primary' 
                     : 'bg-gray-200 text-gray-400'
                   }
                 `}>
@@ -365,7 +389,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                 {step < 3 && (
                   <div className={`
                     w-16 h-1 mx-2
-                    ${currentStep > step ? 'bg-mona-gold' : 'bg-gray-200'}
+                    ${currentStep > step ? 'bg-naples-yellow' : 'bg-gray-200'}
                   `} />
                 )}
               </div>
@@ -378,14 +402,76 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
           {/* Step 1: Pet Mom Photo */}
           {currentStep === 1 && (
             <div className="text-center">
-              <div className="mb-4">
-                <Camera className="w-12 h-12 text-mona-gold mx-auto mb-3" />
-                <h2 className="text-xl font-playfair font-bold text-charcoal-frame mb-2">
+              {/* Header Section */}
+              <div className="mb-6">
+                <div className="w-16 h-16 bg-naples-yellow/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Camera className="w-8 h-8 text-naples-yellow" />
+                </div>
+                <h2 className="text-xl font-arvo font-bold text-text-primary mb-2">
                   Upload Your Photo
                 </h2>
-                <p className="text-gray-600 text-sm">
-                  Upload a clear photo of yourself (the pet mom) for the Mona Lisa transformation
+                <p className="text-sm font-geist text-gray-600 mb-6">
+                  Clear front-facing photo for the best Mona Lisa transformation
                 </p>
+              </div>
+
+              {/* Visual Guide Section */}
+              <div className="mb-6">
+                <div className="flex justify-center gap-3 mb-4">
+                  <div className="flex-1 max-w-24">
+                    <div className="relative">
+                      <img 
+                        src="/images/user upload instructions/yes.png" 
+                        alt="Good photo example" 
+                        className="w-full h-auto rounded-xl border-2 border-naples-yellow shadow-sm"
+                      />
+                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-naples-yellow rounded-full flex items-center justify-center">
+                        <Check className="w-3 h-3 text-text-primary" />
+                      </div>
+                    </div>
+                    <p className="text-xs font-geist text-naples-yellow mt-2 font-medium">Perfect</p>
+                  </div>
+                  <div className="flex-1 max-w-24">
+                    <div className="relative">
+                      <img 
+                        src="/images/user upload instructions/no1.png" 
+                        alt="Poor photo example 1" 
+                        className="w-full h-auto rounded-xl border-2 border-gray-300 opacity-60"
+                      />
+                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center">
+                        <X className="w-3 h-3 text-white" />
+                      </div>
+                    </div>
+                    <p className="text-xs font-geist text-gray-500 mt-2">Side view</p>
+                  </div>
+                  <div className="flex-1 max-w-24">
+                    <div className="relative">
+                      <img 
+                        src="/images/user upload instructions/no2.png" 
+                        alt="Poor photo example 2" 
+                        className="w-full h-auto rounded-xl border-2 border-gray-300 opacity-60"
+                      />
+                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center">
+                        <X className="w-3 h-3 text-white" />
+                      </div>
+                    </div>
+                    <p className="text-xs font-geist text-gray-500 mt-2">Too far</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tip Section */}
+              <div className="mb-6">
+                <div className="bg-mindaro/10 p-4 rounded-xl border border-mindaro/20">
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 bg-mindaro/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-mindaro text-sm">💡</span>
+                    </div>
+                    <p className="text-sm font-geist font-medium text-text-primary text-left">
+                      Accessories like glasses, hats, and jewelry will be included in your Renaissance masterpiece!
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div 
@@ -397,31 +483,35 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                 className={`
                   border-2 border-dashed rounded-lg p-8 cursor-pointer transition-colors
                   ${formData.petMomPhoto 
-                    ? 'border-mona-gold bg-mona-gold/10' 
+                    ? 'border-naples-yellow bg-naples-yellow/10' 
                     : dragActive.petMom 
-                      ? 'border-mona-gold bg-mona-gold/20 border-solid'
-                      : 'border-gray-300 hover:border-mona-gold hover:bg-mona-gold/5'
+                      ? 'border-naples-yellow bg-naples-yellow/20 border-solid'
+                      : 'border-gray-300 hover:border-naples-yellow hover:bg-naples-yellow/5'
                   }
                 `}
               >
                 {formData.petMomPhoto ? (
-                  <div>
-                    <Check className="w-8 h-8 text-mona-gold mx-auto mb-2" />
-                    <p className="text-sm font-medium text-charcoal-frame">
-                      {formData.petMomPhoto.name}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                  <div className="flex flex-col items-center">
+                    <div className="w-24 h-24 mb-3 rounded-lg overflow-hidden border-2 border-naples-yellow">
+                      <img 
+                        src={objectUrls.petMom} 
+                        alt="Uploaded pet mom photo"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <Check className="w-6 h-6 text-naples-yellow mb-2" />
+                    <p className="text-xs font-geist text-gray-500">
                       Click to change photo
                     </p>
                   </div>
                 ) : (
                   <div>
                     <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm font-geist text-gray-600">
                       Click to upload or drag and drop
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      JPG, PNG up to 10MB
+                    <p className="text-xs font-geist text-gray-500 mt-1">
+                      JPG, PNG, WebP up to 8MB
                     </p>
                   </div>
                 )}
@@ -443,16 +533,36 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
           {/* Step 2: Pet Photo */}
           {currentStep === 2 && (
             <div className="text-center">
-              <div className="mb-4">
-                <div className="w-12 h-12 bg-warm-peach/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-2xl">🐕</span>
+              {/* Header Section */}
+              <div className="mb-6">
+                <div className="w-16 h-16 bg-atomic-tangerine/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-3xl">🐕</span>
                 </div>
-                <h2 className="text-xl font-playfair font-bold text-charcoal-frame mb-2">
+                <h2 className="text-xl font-arvo font-bold text-text-primary mb-2">
                   Upload Your Pet's Photo
                 </h2>
-                <p className="text-gray-600 text-sm">
-                  Upload a clear photo of your beloved pet to include in the masterpiece
+                <p className="text-sm font-geist text-gray-600 mb-6">
+                  Clear photo of your beloved pet for the best artwork result
                 </p>
+              </div>
+
+              {/* Tip Section */}
+              <div className="mb-6">
+                <div className="bg-atomic-tangerine/10 p-4 rounded-xl border border-atomic-tangerine/20">
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 bg-atomic-tangerine/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-atomic-tangerine text-sm">🎨</span>
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-geist font-medium text-text-primary mb-1">
+                        Their expression, pose and accessories will be included in your painting.
+                      </p>
+                      <p className="text-xs font-geist text-gray-600">
+                        Most clear photos work great, but taking a photo just for this painting can be fun!
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div 
@@ -464,31 +574,35 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                 className={`
                   border-2 border-dashed rounded-lg p-8 cursor-pointer transition-colors
                   ${formData.petPhoto 
-                    ? 'border-warm-peach bg-warm-peach/10' 
+                    ? 'border-naples-yellow bg-naples-yellow/10' 
                     : dragActive.pet 
-                      ? 'border-warm-peach bg-warm-peach/20 border-solid'
-                      : 'border-gray-300 hover:border-warm-peach hover:bg-warm-peach/5'
+                      ? 'border-naples-yellow bg-naples-yellow/20 border-solid'
+                      : 'border-gray-300 hover:border-naples-yellow hover:bg-naples-yellow/5'
                   }
                 `}
               >
                 {formData.petPhoto ? (
-                  <div>
-                    <Check className="w-8 h-8 text-warm-peach mx-auto mb-2" />
-                    <p className="text-sm font-medium text-charcoal-frame">
-                      {formData.petPhoto.name}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                  <div className="flex flex-col items-center">
+                    <div className="w-24 h-24 mb-3 rounded-lg overflow-hidden border-2 border-naples-yellow">
+                      <img 
+                        src={objectUrls.pet} 
+                        alt="Uploaded pet photo"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <Check className="w-6 h-6 text-naples-yellow mb-2" />
+                    <p className="text-xs font-geist text-gray-500">
                       Click to change photo
                     </p>
                   </div>
                 ) : (
                   <div>
                     <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm font-geist text-gray-600">
                       Click to upload or drag and drop
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      JPG, PNG up to 10MB
+                    <p className="text-xs font-geist text-gray-500 mt-1">
+                      JPG, PNG, WebP up to 8MB
                     </p>
                   </div>
                 )}
@@ -509,50 +623,56 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
 
           {/* Step 3: Contact Info */}
           {currentStep === 3 && !processing && (
-            <div>
-              <div className="text-center mb-6">
-                <div className="w-12 h-12 bg-french-blue/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-2xl">✨</span>
+            <div className="text-center">
+              {/* Header Section */}
+              <div className="mb-6">
+                <div className="w-16 h-16 bg-naples-yellow/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-3xl">✨</span>
                 </div>
-                <h2 className="text-xl font-playfair font-bold text-charcoal-frame mb-2">
+                <h2 className="text-xl font-arvo font-bold text-text-primary mb-2">
                   Almost Ready!
                 </h2>
-                <p className="text-gray-600 text-sm">
+                <p className="text-sm font-geist text-gray-600 mb-6">
                   We'll email you when your Renaissance masterpiece is ready
                 </p>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-charcoal-frame mb-2">
+                  <label className="block text-sm font-medium text-text-primary mb-2 font-geist">
                     Your Name
                   </label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-mona-gold focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-naples-yellow focus:border-transparent font-geist"
                     placeholder="Enter your name"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-charcoal-frame mb-2">
+                  <label className="block text-sm font-medium text-text-primary mb-2 font-geist">
                     Email Address
                   </label>
                   <input
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-mona-gold focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-naples-yellow focus:border-transparent font-geist"
                     placeholder="Enter your email"
                   />
                 </div>
 
-                <div className="bg-gallery-white p-4 rounded-lg">
-                  <p className="text-xs text-gray-600">
-                    <strong>What happens next:</strong> Our AI artist will create your custom Mona Lisa portrait and email it to you within 24 hours. You'll then choose your preferred format (digital, canvas, framed, etc.).
-                  </p>
+                <div className="bg-card-surface p-4 rounded-xl border border-gray-200">
+                  <div className="text-center">
+                    <p className="text-sm font-geist font-medium text-text-primary mb-1">
+                      What happens next:
+                    </p>
+                    <p className="text-xs font-geist text-gray-600">
+                      You'll receive an email with your custom Renaissance masterpiece within 24 hours. Then choose canvas, art print, or digital file.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -565,23 +685,23 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                 {processing.step === 'error' ? (
                   <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
                 ) : (
-                  <div className="w-12 h-12 bg-mona-gold/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <div className="w-6 h-6 border-2 border-mona-gold/30 border-t-mona-gold rounded-full animate-spin" />
+                  <div className="w-12 h-12 bg-naples-yellow/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="w-6 h-6 border-2 border-naples-yellow/30 border-t-naples-yellow rounded-full animate-spin" />
                   </div>
                 )}
                 
-                <h2 className="text-xl font-playfair font-bold text-charcoal-frame mb-2">
+                <h2 className="text-xl font-arvo font-bold text-text-primary mb-2">
                   {processing.step === 'error' ? 'Oops!' : 'Creating Your Masterpiece'}
                 </h2>
                 
-                <p className="text-gray-600 text-sm mb-4">
+                <p className="text-gray-600 text-sm mb-4 font-geist">
                   {processing.message}
                 </p>
                 
                 {processing.step !== 'error' && (
                   <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
                     <div 
-                      className="bg-mona-gold h-2 rounded-full transition-all duration-500 ease-out"
+                      className="bg-naples-yellow h-2 rounded-full transition-all duration-500 ease-out"
                       style={{ width: `${processing.progress}%` }}
                     />
                   </div>
@@ -612,10 +732,10 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
               onClick={handleBack}
               disabled={currentStep === 1}
               className={`
-                flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors
+                flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors font-geist
                 ${currentStep === 1 
                   ? 'text-gray-400 cursor-not-allowed' 
-                  : 'text-charcoal-frame hover:bg-gray-100'
+                  : 'text-text-primary hover:bg-gray-100'
                 }
               `}
             >
@@ -628,9 +748,9 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                 onClick={handleNext}
                 disabled={!canProceed()}
                 className={`
-                  flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors
+                  flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors font-geist
                   ${canProceed()
-                    ? 'bg-mona-gold text-charcoal-frame hover:bg-yellow-600'
+                    ? 'bg-naples-yellow text-text-primary hover:bg-naples-yellow/80'
                     : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                   }
                 `}
@@ -643,16 +763,16 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                 onClick={handleSubmit}
                 disabled={!canProceed() || isSubmitting}
                 className={`
-                  flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors
+                  flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors font-geist
                   ${canProceed() && !isSubmitting
-                    ? 'bg-mona-gold text-charcoal-frame hover:bg-yellow-600'
+                    ? 'bg-naples-yellow text-text-primary hover:bg-naples-yellow/80'
                     : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                   }
                 `}
               >
                 {isSubmitting ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-charcoal-frame/30 border-t-charcoal-frame rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-text-primary/30 border-t-text-primary rounded-full animate-spin" />
                     Creating...
                   </>
                 ) : (

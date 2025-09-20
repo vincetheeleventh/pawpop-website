@@ -47,23 +47,32 @@ export async function POST(req: Request) {
         await processOrder({ session, metadata });
         console.log('Order processed successfully:', session.id);
 
-        // Track purchase conversion for Google Ads
+        // Track purchase conversion for Google Ads (server-side)
         try {
-          // Note: This runs server-side, so we'll need to implement server-side tracking
-          // For now, we'll log the conversion data for manual verification
+          const { trackServerSideConversion } = await import('@/lib/google-ads-server');
+          
           const conversionData = {
             orderId: session.id,
             value: (session.amount_total || 0) / 100, // Convert cents to dollars
             currency: (session.currency || 'cad').toUpperCase(),
             productType: metadata.productType || 'PawPop Print',
-            customerEmail: session.customer_details?.email
+            customerEmail: session.customer_details?.email || undefined,
+            customParameters: {
+              customer_name: metadata.customerName,
+              pet_name: metadata.petName,
+              frame_upgrade: metadata.frameUpgrade,
+              size: metadata.size
+            }
           };
-          console.log('Google Ads Purchase Conversion Data:', conversionData);
           
-          // TODO: Implement server-side Google Ads conversion tracking
-          // This would require Google Ads API or Measurement Protocol
+          const trackingResult = await trackServerSideConversion(conversionData);
+          if (trackingResult.success) {
+            console.log('✅ Google Ads server-side conversion tracked successfully');
+          } else {
+            console.warn('⚠️ Google Ads server-side conversion tracking failed:', trackingResult.error);
+          }
         } catch (trackingError) {
-          console.error('Failed to track purchase conversion:', trackingError);
+          console.error('❌ Failed to track purchase conversion:', trackingError);
         }
 
         // Send order confirmation email

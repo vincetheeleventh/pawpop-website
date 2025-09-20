@@ -85,7 +85,7 @@ export function generateOrganizationStructuredData(baseUrl: string) {
       '@type': 'ContactPoint',
       telephone: '+1 604 499 7660',
       contactType: 'customer service',
-      email: 'pawpopart@gmail.com'
+      email: 'hello@pawpopart.com'
     },
     sameAs: [
       'https://www.instagram.com/pawpopart',

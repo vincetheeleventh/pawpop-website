@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { X, Download, Frame, Star } from 'lucide-react';
+import { X, Download, Frame, Star, Check, FileImage } from 'lucide-react';
 import { Artwork } from '@/lib/supabase';
 import { createCheckoutSession } from '@/lib/stripe-client';
 import { ProductType, getProductPricing } from '@/lib/printify-products';
@@ -95,7 +95,7 @@ export const PurchaseModalEqualTiers = ({ isOpen, onClose, artwork }: PurchaseMo
     {
       type: ProductType.ART_PRINT,
       size: '18x24',
-      icon: Image,
+      icon: FileImage,
       title: 'Premium Art Print',
       subtitle: 'Museum Quality',
       description: 'Professional print on premium paper',
