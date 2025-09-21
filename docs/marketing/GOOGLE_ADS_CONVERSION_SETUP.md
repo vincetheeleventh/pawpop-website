@@ -6,9 +6,9 @@ This guide explains how to set up Google Ads conversion tracking for PawPop to m
 
 The PawPop website now includes comprehensive Google Ads conversion tracking for key business events:
 
-1. **Photo Upload Completion** ($5 CAD lead value)
-2. **Artwork Generation Completion** ($15 CAD qualified lead value)  
-3. **Artwork Page Views** ($2 CAD engagement value)
+1. **Photo Upload Completion** ($2 CAD lead value)
+2. **Artwork Generation Completion** ($8 CAD qualified lead value)  
+3. **Artwork Page Views** ($1 CAD engagement value)
 4. **Purchase Completion** (actual order value)
 5. **Add to Cart & Begin Checkout** (enhanced ecommerce)
 
@@ -99,11 +99,11 @@ Replace the X's with your actual conversion IDs and labels.
 
 The following events are automatically tracked:
 
-| Event | Trigger | Value | Location |
+| Conversion Event | Trigger | Value | Implementation |
 |-------|---------|-------|----------|
-| Photo Upload | Upload form completion | $5 CAD | `UploadModal.tsx` |
-| Artwork Generation | FAL.ai generation complete | $15 CAD | `UploadModal.tsx` |
-| Artwork View | Artwork page load | $2 CAD | `artwork/[token]/page.tsx` |
+| Photo Upload | Upload form completion | $2 CAD | `UploadModal.tsx` |
+| Artwork Generation | FAL.ai generation complete | $8 CAD | `UploadModal.tsx` |
+| Artwork View | Artwork page load | $1 CAD | `artwork/[token]/page.tsx` |
 | Add to Cart | Product selection in modal | Product price | `PurchaseModal*.tsx` |
 | Begin Checkout | Checkout button click | Product price | `PurchaseModal*.tsx` |
 | Purchase | Stripe webhook success | Order total | `webhook/route.ts` |

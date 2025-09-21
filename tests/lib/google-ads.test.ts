@@ -85,11 +85,11 @@ describe('Google Ads Conversion Tracking', () => {
 
   describe('trackPhotoUpload', () => {
     it('should track photo upload conversion with correct data', () => {
-      trackPhotoUpload(5);
+      trackPhotoUpload(2);
       
       expect(mockGtag).toHaveBeenCalledWith('event', 'conversion', {
         send_to: GOOGLE_ADS_CONVERSIONS.PHOTO_UPLOAD,
-        value: 5,
+        value: 2,
         currency: 'CAD',
         custom_parameters: {
           event_category: 'engagement',
@@ -99,12 +99,12 @@ describe('Google Ads Conversion Tracking', () => {
     });
 
     it('should track GA4 event for photo upload', () => {
-      trackPhotoUpload(5);
+      trackPhotoUpload(2);
       
       expect(mockGtag).toHaveBeenCalledWith('event', 'photo_upload_completed', {
         event_category: 'engagement',
         event_label: 'lead_generation',
-        value: 5,
+        value: 2,
         currency: 'CAD'
       });
     });
@@ -113,7 +113,7 @@ describe('Google Ads Conversion Tracking', () => {
       trackPhotoUpload();
       
       expect(mockGtag).toHaveBeenCalledWith('event', 'conversion', 
-        expect.objectContaining({ value: 5 })
+        expect.objectContaining({ value: 2 })
       );
     });
 
@@ -134,11 +134,11 @@ describe('Google Ads Conversion Tracking', () => {
     it('should track artwork generation conversion with artwork ID', () => {
       const artworkId = 'artwork_123';
       
-      trackArtworkGeneration(artworkId, 15);
+      trackArtworkGeneration(artworkId, 8);
       
       expect(mockGtag).toHaveBeenCalledWith('event', 'conversion', {
         send_to: GOOGLE_ADS_CONVERSIONS.ARTWORK_GENERATION,
-        value: 15,
+        value: 8,
         currency: 'CAD',
         custom_parameters: {
           event_category: 'engagement',
@@ -151,12 +151,12 @@ describe('Google Ads Conversion Tracking', () => {
     it('should track GA4 event with artwork ID', () => {
       const artworkId = 'artwork_123';
       
-      trackArtworkGeneration(artworkId, 15);
+      trackArtworkGeneration(artworkId, 8);
       
       expect(mockGtag).toHaveBeenCalledWith('event', 'artwork_generation_completed', {
         event_category: 'engagement',
         event_label: 'qualified_lead',
-        value: 15,
+        value: 8,
         currency: 'CAD',
         artwork_id: artworkId
       });
@@ -218,11 +218,11 @@ describe('Google Ads Conversion Tracking', () => {
     it('should track artwork view conversion', () => {
       const artworkId = 'artwork_123';
       
-      trackArtworkView(artworkId, 2);
+      trackArtworkView(artworkId, 1);
       
       expect(mockGtag).toHaveBeenCalledWith('event', 'conversion', {
         send_to: GOOGLE_ADS_CONVERSIONS.ARTWORK_VIEW,
-        value: 2,
+        value: 1,
         currency: 'CAD',
         custom_parameters: {
           event_category: 'engagement',

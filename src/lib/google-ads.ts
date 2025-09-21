@@ -43,7 +43,7 @@ export const initGoogleAds = (conversionId: string) => {
 };
 
 // Track photo upload completion
-export const trackPhotoUpload = (value: number = 5) => {
+export const trackPhotoUpload = (value: number = 2) => {
   if (typeof window === 'undefined' || !window.gtag) return;
 
   const conversionData: ConversionEvent = {
@@ -57,20 +57,18 @@ export const trackPhotoUpload = (value: number = 5) => {
   };
 
   window.gtag('event', 'conversion', conversionData);
-  
-  // Also send as a custom event for GA4
+
+  // Also track as GA4 event for enhanced analytics
   window.gtag('event', 'photo_upload_completed', {
     event_category: 'engagement',
     event_label: 'lead_generation',
     value: value,
     currency: 'CAD'
   });
-
-  console.log('Google Ads: Photo upload conversion tracked', conversionData);
 };
 
 // Track artwork generation completion
-export const trackArtworkGeneration = (artworkId: string, value: number = 15) => {
+export const trackArtworkGeneration = (artworkId: string, value: number = 1) => {
   if (typeof window === 'undefined' || !window.gtag) return;
 
   const conversionData: ConversionEvent = {
@@ -85,8 +83,8 @@ export const trackArtworkGeneration = (artworkId: string, value: number = 15) =>
   };
 
   window.gtag('event', 'conversion', conversionData);
-  
-  // Also send as a custom event for GA4
+
+  // Also track as GA4 event
   window.gtag('event', 'artwork_generation_completed', {
     event_category: 'engagement',
     event_label: 'qualified_lead',
@@ -139,7 +137,7 @@ export const trackPurchase = (
 };
 
 // Track artwork page view
-export const trackArtworkView = (artworkId: string, value: number = 2) => {
+export const trackArtworkView = (artworkId: string, value: number = 1) => {
   if (typeof window === 'undefined' || !window.gtag) return;
 
   const conversionData: ConversionEvent = {
