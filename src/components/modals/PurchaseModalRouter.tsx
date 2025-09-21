@@ -18,6 +18,9 @@ interface PurchaseModalRouterProps {
       artwork_preview?: string;
       artwork_full_res?: string;
     };
+    delivery_images?: {
+      mockups?: Record<string, any[]>;
+    };
     customer_name: string;
     customer_email: string;
     pet_name?: string;

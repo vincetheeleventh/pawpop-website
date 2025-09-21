@@ -13,6 +13,15 @@ const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
   ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
   : null;
 
+interface Mockup {
+  type: string;
+  title: string;
+  description: string;
+  mockupUrl: string;
+  productId: string;
+  size: string;
+}
+
 interface PurchaseModalPhysicalFirstProps {
   isOpen: boolean;
   onClose: () => void;
@@ -22,6 +31,9 @@ interface PurchaseModalPhysicalFirstProps {
       artwork_preview?: string;
       artwork_full_res?: string;
     };
+    delivery_images?: {
+      mockups?: Record<string, Mockup[]>;
+    };
     customer_name: string;
     customer_email: string;
     pet_name?: string;
@@ -30,11 +42,58 @@ interface PurchaseModalPhysicalFirstProps {
 
 export const PurchaseModalPhysicalFirst = ({ isOpen, onClose, artwork }: PurchaseModalPhysicalFirstProps) => {
   const [selectedProduct, setSelectedProduct] = useState<{ type: ProductType; size: string; frameUpgrade?: boolean } | null>(null);
-  const [selectedSize, setSelectedSize] = useState<string>('18x24'); // Default to middle size
+  const [selectedSize, setSelectedSize] = useState<string>('16x24'); // Default to middle size
   const [frameUpgrade, setFrameUpgrade] = useState<boolean>(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   if (!isOpen) return null;
+
+  // Get the appropriate Context 1 mockup for the selected size and product type
+  const getMockupForSize = (productType: string, size: string): string => {
+    const mockups = artwork.delivery_images?.mockups;
+    if (!mockups) {
+      // Fallback to artwork image if no mockups available
+      return artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res || '/images/placeholder.jpg';
+    }
+
+    // Map product types to mockup keys
+    const productTypeMap: Record<string, string> = {
+      [ProductType.ART_PRINT]: 'art_print',
+      [ProductType.CANVAS_STRETCHED]: 'canvas_stretched', 
+      [ProductType.CANVAS_FRAMED]: 'canvas_framed'
+    };
+
+    const mockupKey = productTypeMap[productType];
+    const productMockups = mockups[mockupKey];
+    
+    if (productMockups && productMockups.length > 0) {
+      // Find mockup for the specific size, fallback to first available
+      const sizeMockup = productMockups.find(m => m.size === size);
+      const mockup = sizeMockup || productMockups[0];
+      return mockup.mockupUrl;
+    }
+
+    // Final fallback to artwork image
+    return artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res || '/images/placeholder.jpg';
+  };
+
+  // Get the current display image - prioritize canvas products for visual appeal
+  const getCurrentDisplayImage = (): string => {
+    // Try canvas framed first (most premium), then canvas stretched, then art print
+    const preferredOrder = [ProductType.CANVAS_FRAMED, ProductType.CANVAS_STRETCHED, ProductType.ART_PRINT];
+    
+    for (const productType of preferredOrder) {
+      const mockupUrl = getMockupForSize(productType, selectedSize);
+      if (mockupUrl !== artwork.generated_images?.artwork_preview && 
+          mockupUrl !== artwork.generated_images?.artwork_full_res && 
+          mockupUrl !== '/images/placeholder.jpg') {
+        return mockupUrl;
+      }
+    }
+    
+    // Fallback to artwork image
+    return artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res || '/images/placeholder.jpg';
+  };
 
   const handlePurchase = async (productType: ProductType, size: string, frameUpgrade: boolean = false) => {
     setIsCheckingOut(true);
@@ -52,7 +111,7 @@ export const PurchaseModalPhysicalFirst = ({ isOpen, onClose, artwork }: Purchas
     
     if (isTestMode) {
       setTimeout(async () => {
-        const productName = productType === 'art_print' ? 'Premium Art Print' : 'Framed Canvas';
+        const productName = productType === 'art_print' ? 'Fine Art Print' : 'Framed Canvas';
         const price = formatPrice(getProductPricing(productType, size, 'US', frameUpgrade));
         
         // Simulate API calls in test mode
@@ -85,7 +144,7 @@ export const PurchaseModalPhysicalFirst = ({ isOpen, onClose, artwork }: Purchas
 ✅ Session ID received: ${data.sessionId}
 
 Product: ${productName}
-Size: ${size}" (${size === '12x18' ? 'Small' : size === '18x24' ? 'Medium' : 'Large'})
+Size: ${size}" (${size === '12x18' ? 'Small' : size === '16x24' ? 'Medium' : 'Large'})
 Price: ${price}
 Customer: ${artwork.customer_name}${artwork.pet_name ? ` & ${artwork.pet_name}` : ''}
 
@@ -152,9 +211,9 @@ Check console for detailed error logs.`);
     return [
       {
         type: ProductType.ART_PRINT,
-        title: 'Premium Art Print',
-        subtitle: 'Museum-Quality Paper',
-        description: 'Professional archival paper with vibrant colors',
+        title: 'Fine Art Print',
+        subtitle: 'Museum-Quality Fine Art Paper',
+        description: 'Premium fine art paper (285 g/m²) with archival inks',
         icon: FileImage,
         price: getProductPricing(ProductType.ART_PRINT, selectedSize, countryCode),
         size: selectedSize,
@@ -213,33 +272,38 @@ Check console for detailed error logs.`);
         </div>
 
         <div className="p-6">
-          {/* Artwork Preview with Gift Context */}
+          {/* Artwork Preview with Gift Context - Shows Context 1 mockup for selected size */}
           <div className="text-center mb-8">
             <div className="relative inline-block">
               <Image 
-                src={artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res || '/images/placeholder.jpg'}
-                alt="Your masterpiece"
-                width={160}
-                height={160}
+                src={getCurrentDisplayImage()}
+                alt={`Your masterpiece - ${selectedSize}" preview`}
+                width={200}
+                height={200}
                 quality={85}
-                sizes="160px"
-                className="w-40 h-40 rounded-lg object-cover shadow-lg"
+                sizes="200px"
+                className="w-50 h-50 rounded-lg object-cover shadow-lg transition-all duration-300"
               />
               <div className="absolute -top-2 -right-2">
                 <Gift className="w-8 h-8 text-mona-gold" />
+              </div>
+              {/* Size indicator */}
+              <div className="absolute -bottom-2 -left-2 bg-charcoal-frame text-white px-2 py-1 rounded text-xs font-semibold">
+                {selectedSize}"
               </div>
             </div>
             <h3 className="text-xl font-playfair font-bold text-charcoal-frame mt-4">
               {artwork.customer_name}{artwork.pet_name ? ` & ${artwork.pet_name}` : ''} Masterpiece
             </h3>
             <p className="text-gray-600">A gift that will be treasured forever</p>
+            <p className="text-sm text-gray-500 mt-1">Preview shows how it looks in a room environment</p>
           </div>
 
           {/* Size Selection */}
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-charcoal-frame mb-3">Choose Your Size</h3>
             <div className="flex flex-wrap gap-3">
-              {['12x18', '18x24', '20x30'].map((size) => (
+              {['12x18', '16x24', '20x30'].map((size) => (
                 <button
                   key={size}
                   onClick={() => setSelectedSize(size)}
@@ -250,7 +314,7 @@ Check console for detailed error logs.`);
                   }`}
                 >
                   <span className="font-medium">{size}"</span>
-                  <span className="text-sm block">{size === '12x18' ? 'Small' : size === '18x24' ? 'Medium' : 'Large'}</span>
+                  <span className="text-sm block">{size === '12x18' ? 'Small' : size === '16x24' ? 'Medium' : 'Large'}</span>
                 </button>
               ))}
             </div>

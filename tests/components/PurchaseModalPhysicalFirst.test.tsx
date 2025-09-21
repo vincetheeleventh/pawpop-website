@@ -21,17 +21,17 @@ vi.mock('@/lib/printify-products', () => ({
     if (type === 'DIGITAL') return 999;
     if (type === 'ART_PRINT') {
       if (size === '12x18') return 2499;
-      if (size === '18x24') return 2999;
+      if (size === '16x24') return 2999;
       if (size === '20x30') return 3499;
     }
     if (type === 'FRAMED_CANVAS') {
       if (size === '12x18') return 6999;
-      if (size === '18x24') return 7999;
+      if (size === '16x24') return 7999;
       if (size === '20x30') return 8999;
     }
     return 0;
   }),
-  getAvailableSizes: vi.fn(() => ['12x18', '18x24', '20x30'])
+  getAvailableSizes: vi.fn(() => ['12x18', '16x24', '20x30'])
 }));
 
 global.fetch = vi.fn();
@@ -268,11 +268,11 @@ describe('PurchaseModalPhysicalFirst', () => {
       );
 
       expect(screen.getByText('12x18"')).toBeInTheDocument();
-      expect(screen.getByText('18x24"')).toBeInTheDocument();
+      expect(screen.getByText('16x24"')).toBeInTheDocument();
       expect(screen.getByText('20x30"')).toBeInTheDocument();
     });
 
-    it('has 18x24 as default selected size', () => {
+    it('has 16x24 as default selected size', () => {
       render(
         <PurchaseModalPhysicalFirst
           isOpen={true}
@@ -281,8 +281,8 @@ describe('PurchaseModalPhysicalFirst', () => {
         />
       );
 
-      const size18x24Button = screen.getByText('18x24"').closest('button');
-      expect(size18x24Button).toHaveClass('border-mona-gold', 'bg-mona-gold');
+      const size16x24Button = screen.getByText('16x24"').closest('button');
+      expect(size16x24Button).toHaveClass('border-mona-gold', 'bg-mona-gold');
     });
 
     it('allows selecting different sizes', async () => {
@@ -302,9 +302,9 @@ describe('PurchaseModalPhysicalFirst', () => {
         expect(size20x30Button).toHaveClass('ring-2', 'ring-purple-500');
       });
 
-      // Verify 18x24 is no longer selected
-      const size18x24Button = screen.getByText('18x24"').closest('button');
-      expect(size18x24Button).not.toHaveClass('ring-2', 'ring-purple-500');
+      // Verify 16x24 is no longer selected
+      const size16x24Button = screen.getByText('16x24"').closest('button');
+      expect(size16x24Button).not.toHaveClass('ring-2', 'ring-purple-500');
     });
 
     it('updates pricing when size changes', async () => {
@@ -319,7 +319,7 @@ describe('PurchaseModalPhysicalFirst', () => {
       // Select Art Print product first
       fireEvent.click(screen.getByText('Premium Art Print').closest('div')!);
 
-      // Default 18x24 should show $29.99
+      // Default 16x24 should show $29.99
       await waitFor(() => {
         expect(screen.getByText('$29.99')).toBeInTheDocument();
       });
@@ -383,7 +383,7 @@ describe('PurchaseModalPhysicalFirst', () => {
       // Select Framed Canvas product
       fireEvent.click(screen.getByText('Framed Canvas').closest('div')!);
 
-      // Default 18x24 should show $79.99
+      // Default 16x24 should show $79.99
       await waitFor(() => {
         expect(screen.getByText('$79.99')).toBeInTheDocument();
       });

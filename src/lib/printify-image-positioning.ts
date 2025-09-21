@@ -41,8 +41,8 @@ export const CANVAS_SPECS: Record<string, Record<string, ProductCanvasSpecs>> = 
       marginLeft: 200,
       marginRight: 200
     },
-    '18x24': {
-      printAreaWidth: 5400,   // 18" at 300 DPI
+    '16x24': {
+      printAreaWidth: 4800,   // 16" at 300 DPI
       printAreaHeight: 7200,  // 24" at 300 DPI
       marginTop: 250,
       marginBottom: 250,

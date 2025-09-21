@@ -11,10 +11,8 @@ function SuccessContent() {
   const sessionId = searchParams.get('session_id');
   
   useEffect(() => {
-    // Here you would typically verify the payment with your backend
-    // and update your database accordingly
+    // Verify payment and send confirmation email
     if (sessionId) {
-      // Example: Send sessionId to your API to verify the payment
       console.log('Payment successful for session:', sessionId);
       
       // Get user email from localStorage if available
@@ -23,11 +21,38 @@ function SuccessContent() {
         if (email) setUserEmail(email);
       }
       
+      // Simulate webhook behavior - send order confirmation email
+      const sendOrderConfirmation = async () => {
+        try {
+          console.log('🔄 Triggering order confirmation email...');
+          const response = await fetch('/api/webhook/simulate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              session_id: sessionId,
+              type: 'checkout.session.completed'
+            })
+          });
+          
+          if (response.ok) {
+            console.log('✅ Order confirmation email triggered successfully');
+          } else {
+            console.warn('⚠️ Failed to trigger order confirmation email');
+          }
+        } catch (error) {
+          console.error('❌ Error triggering order confirmation:', error);
+        }
+      };
+      
+      // Send confirmation email after successful payment
+      sendOrderConfirmation();
+      
       // Track conversion if gtag is available
       if (typeof window !== 'undefined' && (window as any).gtag) {
         (window as any).gtag('event', 'purchase', {
           transaction_id: sessionId,
-          // Add other relevant purchase data
         });
       }
     }

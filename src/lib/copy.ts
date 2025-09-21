@@ -161,7 +161,7 @@ export const landingPageCopy = {
       { 
         name: 'Premium Print', 
         price: '$79', 
-        features: ['Museum-quality paper', 'Professional printing', 'Ready to frame'], 
+        features: ['Museum-quality fine art paper (285 g/m²)', 'Professional printing', 'Ready to frame'], 
         cta: 'Order Print',
         popular: true,
         icon: '🖼️'

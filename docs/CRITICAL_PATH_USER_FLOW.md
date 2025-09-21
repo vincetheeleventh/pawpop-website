@@ -115,10 +115,10 @@ Generation completes → Page automatically updates to completed state
 
 **Right Column: Product Mockups**
 - **MockupDisplay Component:** Real Printify mockups with carousel navigation
-- **Context 1 (Front-Facing) Views:** Consistent camera angles across all product types
-  - Art Print: Clean front-facing view on premium paper
-  - Canvas Stretched: Front view of gallery-wrapped canvas
-  - Canvas Framed: Front view of professionally framed artwork
+- **Context Views:** Display product in a home environment, mockups provided by Printify
+  - Art Print: context-1
+  - Canvas Stretched: context-3
+  - Canvas Framed: context-1
 - **Interactive Features:** Thumbnail navigation, clickable mockups
 - **Loading States:** Graceful fallbacks to placeholder mockups if Printify API fails
 - **Automatic Generation:** Mockups generated automatically after artwork completion
@@ -134,31 +134,54 @@ User clicks "Make it Real" → Opens Purchase Modal
 
 ---
 
-### Step 6: Purchase Modal (Physical-First Variant)
-**Component:** `PurchaseModalPhysicalFirst.tsx`  
-**Primary Job:** Convert artwork viewers to paying customers
+### Step 6: Purchase Modal Selection
+**Components:** `PurchaseModalPhysicalFirst.tsx` + `ProductPurchaseModal.tsx`  
+**Primary Job:** Convert artwork viewers to paying customers through optimized purchase flow
 
-#### Modal Structure
-1. **Physical Products (Prominent)**
-   - Canvas Framed ($99-$149 CAD) - Premium positioning
-   - Canvas Stretched ($59-$99 CAD) - Popular badge, frame upgrade option (+$40 CAD)
-   - Art Print ($29-$48 CAD) - Museum-quality paper
-   
-2. **Digital Option (Secondary)**
-   - Digital Download ($15 CAD) - Instant delivery, smaller prominence
+#### Two-Stage Purchase Flow
 
-3. **Purchase Flow**
-   - Product selection
-   - Stripe checkout integration
-   - Order processing pipeline
+**Stage 6A: Product Category Selection**
+- **Component:** `PurchaseModalPhysicalFirst.tsx`
+- **Physical Products (Prominent):**
+  - Canvas Framed ($149-$249 CAD) - Premium positioning
+  - Canvas Stretched ($89-$169 CAD) - Popular badge, frame upgrade option
+  - Art Print ($49-$89 CAD) - Museum-quality paper
+- **Digital Option (Secondary):** Digital Download ($15 CAD) - Smaller prominence
+
+**Stage 6B: Product-Specific Purchase Modal**
+- **Component:** `ProductPurchaseModal.tsx`
+- **Enhanced Purchase Experience:**
+  - Size selection with pricing tiers (12x18", 16x24", 20x30")
+  - Quantity selector (1-10 units) with dynamic pricing
+  - Real product mockups or fallback artwork display
+  - Upsell opportunities (frame upgrades for stretched canvas)
+
+#### Stripe Checkout Integration
+1. **Seamless Payment Flow**
+   - Direct integration with `/api/checkout/artwork` endpoint
+   - Automatic shipping address collection for physical products
+   - Support for 30+ international shipping countries
+   - Quantity-based pricing calculations
+
+2. **Shipping Information**
+   - "Ships within 3-7 business days" messaging
+   - "Free shipping on all orders" guarantee
+   - Shipping address collected during Stripe checkout
+   - International shipping support
+
+3. **User Experience Features**
+   - Loading states during checkout process
+   - Error handling with user-friendly messages
+   - Dynamic pricing display reflecting quantity
+   - Professional purchase button with real-time totals
 
 #### Success Metrics
 - **Primary:** Purchase Completion Rate (% who complete payment)
-- **Secondary:** Product selection distribution, cart abandonment
+- **Secondary:** Product selection distribution, quantity selection patterns, upsell conversion
 - **Conversion Goal:** 25-40% of modal opens result in purchase
 
 #### Critical Path Action
-User completes purchase → Automated order processing pipeline → Fulfillment
+User selects product → Configures size/quantity → Stripe checkout → Automated order processing pipeline → Fulfillment
 
 ---
 
@@ -228,9 +251,11 @@ User completes purchase → Automated order processing pipeline → Fulfillment
 | Upload Modal → Submission | 70% | 14% |
 | Generation Success | 95% | 13.3% |
 | Artwork → Purchase Modal | 50% | 6.65% |
-| Purchase Modal → Payment | 30% | 2% |
-| Post-Purchase Processing | 95% | 1.9% |
-| Order Fulfillment Success | 90% | 1.71% |
+| Category Selection → Product Modal | 80% | 5.32% |
+| Product Modal → Stripe Checkout | 40% | 2.13% |
+| Stripe Checkout → Payment | 85% | 1.81% |
+| Post-Purchase Processing | 95% | 1.72% |
+| Order Fulfillment Success | 90% | 1.55% |
 
 **Target Overall Conversion:** 1.5-2% of landing page visitors become fulfilled customers
 
@@ -241,9 +266,18 @@ User completes purchase → Automated order processing pipeline → Fulfillment
 ### End-to-End Timeline
 - **Upload to Generation:** 2-5 minutes
 - **Generation to Purchase Decision:** Variable (immediate to days)
+- **Purchase Configuration:** 1-3 minutes (size/quantity selection)
+- **Stripe Checkout:** 2-5 minutes (payment + shipping info)
 - **Purchase to Order Processing:** 2-10 minutes (automated)
 - **Order Processing to Fulfillment:** 3-7 business days
 - **Total Customer Journey:** 3-10 business days from upload to delivery
+
+### Enhanced Purchase Experience
+- **Two-Stage Modal Flow:** Category selection → Product configuration
+- **Quantity Support:** 1-10 units with dynamic pricing
+- **International Shipping:** 30+ countries supported via Stripe
+- **Real-time Pricing:** Updates based on size and quantity selection
+- **Professional UX:** Loading states, error handling, shipping expectations
 
 ### Critical Success Factors
 1. **Technical Reliability:** >95% uptime across all systems

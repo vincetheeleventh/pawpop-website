@@ -53,18 +53,18 @@ const frontFacingMockup = mockups.find(m =>
 #### Supported Product Types
 1. **Art Print**
    - Blueprint ID: 1191 (North America) / 494 (Europe)
-   - Sizes: 12x18", 18x24", 20x30"
+   - Sizes: 12x18", 16x24", 20x30"
    - Pricing: $29-$48 CAD
 
 2. **Canvas Stretched**
    - Blueprint ID: 1159 (Matte Canvas, Stretched, 1.25")
-   - Sizes: 12x18", 18x24", 20x30"
+   - Sizes: 12x18", 16x24", 20x30"
    - Pricing: $59-$99 CAD
    - Frame Upgrade: +$40 CAD
 
 3. **Canvas Framed**
    - Blueprint ID: 944 (Matte Canvas, Framed Multi-color)
-   - Sizes: 12x18", 18x24", 20x30"
+   - Sizes: 12x18", 16x24", 20x30"
    - Pricing: $99-$149 CAD
 
 ### Database Schema

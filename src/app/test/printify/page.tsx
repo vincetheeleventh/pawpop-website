@@ -109,7 +109,7 @@ export default function PrintifyTestPage() {
                 onChange={(e) => setProductType(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-mona-gold"
               >
-                <option value="art_print">Premium Art Print</option>
+                <option value="art_print">Fine Art Print</option>
                 <option value="framed_canvas">Framed Canvas</option>
               </select>
             </div>

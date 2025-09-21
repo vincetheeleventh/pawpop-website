@@ -138,17 +138,17 @@ test.describe('Complete Purchase Flow', () => {
     
     // Verify size selection buttons are present
     await expect(page.getByText('12x18"')).toBeVisible();
-    await expect(page.getByText('18x24"')).toBeVisible();
+    await expect(page.getByText('16x24"')).toBeVisible();
     await expect(page.getByText('20x30"')).toBeVisible();
     
-    // Verify 18x24 is selected by default
-    const defaultSizeButton = page.locator('button:has-text("18x24\"")');
+    // Verify 16x24 is selected by default
+    const defaultSizeButton = page.locator('button:has-text("16x24\"")');
     await expect(defaultSizeButton).toHaveClass(/ring-2/);
     
     // Select Art Print product
     await page.click('text=Premium Art Print');
     
-    // Verify default pricing for 18x24
+    // Verify default pricing for 16x24
     await expect(page.getByText('$29.99')).toBeVisible();
     
     // Change to 20x30 size
@@ -182,8 +182,8 @@ test.describe('Complete Purchase Flow', () => {
     await page.click('button:has-text("12x18\"")');
     await expect(page.getByText('$24.99')).toBeVisible();
     
-    // Test 18x24 pricing
-    await page.click('button:has-text("18x24\"")');
+    // Test 16x24 pricing
+    await page.click('button:has-text("16x24\"")');
     await expect(page.getByText('$29.99')).toBeVisible();
     
     // Test 20x30 pricing
@@ -197,7 +197,7 @@ test.describe('Complete Purchase Flow', () => {
     await page.click('button:has-text("12x18\"")');
     await expect(page.getByText('$69.99')).toBeVisible();
     
-    await page.click('button:has-text("18x24\"")');
+    await page.click('button:has-text("16x24\"")');
     await expect(page.getByText('$79.99')).toBeVisible();
     
     await page.click('button:has-text("20x30\"")');
@@ -207,10 +207,10 @@ test.describe('Complete Purchase Flow', () => {
   test('should track analytics events', async ({ page }) => {
     // Mock gtag function
     await page.addInitScript(() => {
-      window.gtag = () => {};
-      window.gtagCalls = [];
-      window.gtag = (...args) => {
-        window.gtagCalls.push(args);
+      (window as any).gtag = () => {};
+      (window as any).gtagCalls = [];
+      (window as any).gtag = (...args: any[]) => {
+        (window as any).gtagCalls.push(args);
       };
     });
 
@@ -218,8 +218,8 @@ test.describe('Complete Purchase Flow', () => {
     await page.click('[data-testid="purchase-button"]');
     
     // Check that modal_opened event was tracked
-    const gtagCalls = await page.evaluate(() => window.gtagCalls);
-    expect(gtagCalls.some(call => 
+    const gtagCalls = await page.evaluate(() => (window as any).gtagCalls);
+    expect(gtagCalls.some((call: any) => 
       call[0] === 'event' && 
       call[1] === 'modal_opened' && 
       call[2]?.modal_variant === 'equal-tiers'
@@ -229,8 +229,8 @@ test.describe('Complete Purchase Flow', () => {
     await page.click('text=Premium Art Print');
     await page.click('text=Get My Masterpiece');
     
-    const updatedGtagCalls = await page.evaluate(() => window.gtagCalls);
-    expect(updatedGtagCalls.some(call => 
+    const updatedGtagCalls = await page.evaluate(() => (window as any).gtagCalls);
+    expect(updatedGtagCalls.some((call: any) => 
       call[0] === 'event' && 
       call[1] === 'purchase_initiated' && 
       call[2]?.modal_variant === 'equal-tiers'

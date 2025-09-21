@@ -91,7 +91,7 @@ const products: Product[] = [
     sizes: [
       { name: '11" × 14"', price: 119 },
       { name: '16" × 20"', price: 159 },
-      { name: '18" × 24"', price: 199 }
+      { name: '16" × 24"', price: 199 }
     ]
   }
 ];

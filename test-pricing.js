@@ -10,7 +10,7 @@ console.log('Expected: $15.00 CAD ✓\n');
 
 // Test Art Print - North America
 console.log('🖼️  ART PRINT (North America):');
-const artPrintSizes = ['12x18', '18x24', '20x30'];
+const artPrintSizes = ['12x18', '16x24', '20x30'];
 const expectedArtPrices = [29.00, 36.00, 48.00];
 artPrintSizes.forEach((size, i) => {
   const price = getProductPricing(ProductType.ART_PRINT, size, 'US') / 100;
@@ -26,7 +26,7 @@ artPrintSizes.forEach((size, i) => {
 
 // Test Canvas Stretched
 console.log('\n🎨 CANVAS STRETCHED (Global):');
-const canvasSizes = ['12x18', '18x24', '20x30'];
+const canvasSizes = ['12x18', '16x24', '20x30'];
 const expectedCanvasPrices = [59.00, 79.00, 99.00];
 canvasSizes.forEach((size, i) => {
   const price = getProductPricing(ProductType.CANVAS_STRETCHED, size, 'US') / 100;

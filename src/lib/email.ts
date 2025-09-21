@@ -229,7 +229,7 @@ export async function sendMasterpieceReadyEmail(data: MasterpieceReadyEmailData)
           
           <p><strong>Print Options Available:</strong></p>
           <ul>
-            <li>🖼️ <strong>Premium Art Prints</strong> - Museum-quality paper, multiple sizes</li>
+            <li>🖼️ <strong>Fine Art Prints</strong> - Museum-quality fine art paper (285 g/m²), multiple sizes</li>
             <li>🎨 <strong>Framed Canvas</strong> - Ready to hang, gallery-wrapped</li>
             <li>📱 <strong>Digital Download</strong> - High-resolution file for personal use</li>
           </ul>

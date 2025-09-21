@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     const { 
       imageUrl, 
       productType = 'art_print', 
-      size = '18x24',
+      size = '16x24',
       customerName = 'Test Customer'
     } = body;
 

@@ -17,13 +17,13 @@ const TEST_ARTWORK_ID = 'test-artwork-' + Date.now();
 // New product configurations to test
 const PRODUCTS_TO_TEST = [
   { type: 'ART_PRINT', size: '12x18', expectedPrice: 2900 },
-  { type: 'ART_PRINT', size: '18x24', expectedPrice: 3900 },
+  { type: 'ART_PRINT', size: '16x24', expectedPrice: 3900 },
   { type: 'ART_PRINT', size: '20x30', expectedPrice: 4800 },
   { type: 'CANVAS_STRETCHED', size: '12x18', expectedPrice: 5900 },
-  { type: 'CANVAS_STRETCHED', size: '18x24', expectedPrice: 7900 },
+  { type: 'CANVAS_STRETCHED', size: '16x24', expectedPrice: 7900 },
   { type: 'CANVAS_STRETCHED', size: '20x30', expectedPrice: 9900 },
   { type: 'CANVAS_FRAMED', size: '12x18', expectedPrice: 9900 },
-  { type: 'CANVAS_FRAMED', size: '18x24', expectedPrice: 11900 },
+  { type: 'CANVAS_FRAMED', size: '16x24', expectedPrice: 11900 },
   { type: 'CANVAS_FRAMED', size: '20x30', expectedPrice: 14900 }
 ];
 
@@ -118,7 +118,7 @@ async function testOrderCreation() {
   // Test one product from each type
   const testProducts = [
     { type: 'ART_PRINT', size: '20x30' },
-    { type: 'CANVAS_STRETCHED', size: '18x24' },
+    { type: 'CANVAS_STRETCHED', size: '16x24' },
     { type: 'CANVAS_FRAMED', size: '12x18' }
   ];
 

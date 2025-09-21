@@ -4,21 +4,23 @@ const BASE_URL = 'https://api.printify.com/v1'
 const TOKEN = process.env.PRINTIFY_API_TOKEN!
 const SHOP_ID = process.env.PRINTIFY_SHOP_ID!
 
-// Product configuration from PRODUCTS.md - Updated with new blueprint IDs
+// Product configuration - Updated with Blueprint 1220 Fine Art Rolled Posters
 const PRODUCT_CONFIG = {
   ART_PRINT: {
-    US_CA: {
-      blueprint_id: 1191, // Photo Art Paper Posters
-      print_provider_id: 1, // Generic Brand
+    US: {
+      blueprint_id: 1220, // Rolled Posters (Fine Art)
+      print_provider_id: 105, // Jondo
       variants: [
-        { id: 'poster_12x18', size: '12x18', price: 2900 }, // $29 CAD
-        { id: 'poster_18x24', size: '18x24', price: 3900 }, // $39 CAD
-        { id: 'poster_20x30', size: '20x30', price: 4800 } // $48 CAD
+        { id: 'fine_art_12x18', size: '12x18', price: 2900, variant_id: 92396 }, // $29 CAD - 12″ x 18″ (Vertical) / Fine Art
+        { id: 'fine_art_18x24', size: '18x24', price: 3900, variant_id: 92400 }, // $39 CAD - 18″ x 24″ (Vertical) / Fine Art
+        { id: 'fine_art_20x30', size: '20x30', price: 4800, variant_id: 92402 } // $48 CAD - 20″ x 30″ (Vertical) / Fine Art
       ]
     },
-    EUROPE: {
-      blueprint_id: 494, // Giclee Art Print
-      print_provider_id: 1, // Generic Brand
+    // Future EU option - Blueprint 494 (Giclée Art Print) with Print Pigeons (ID: 36)
+    // Currently not implemented - ships to EU only, no UK/US/CA coverage
+    EUROPE_FUTURE: {
+      blueprint_id: 494, // Giclée Art Print
+      print_provider_id: 36, // Print Pigeons
       variants: [
         { id: 'giclee_12x18', size: '12x18', price: 2900 }, // $29 CAD
         { id: 'giclee_18x24', size: '18x24', price: 3900 }, // $39 CAD
@@ -75,9 +77,9 @@ async function fetchFromPrintify(endpoint: string, options: RequestInit = {}) {
 async function resolveVariantIds() {
   console.log('🔍 Resolving Printify variant IDs using known blueprint IDs...')
 
-  // Hardcode the known working art print variant IDs to bypass resolution issues
-  catalogCache.artPrintVariants = [91677, 91693, 91695] // 12x18, 18x24, 20x30
-  console.log('✅ Using hardcoded art print variant IDs:', catalogCache.artPrintVariants)
+  // Use the new Blueprint 1220 Fine Art variant IDs for US market
+  catalogCache.artPrintVariants = [92396, 92400, 92402] // 12″×18″, 18″×24″, 20″×30″ Fine Art
+  console.log('✅ Using Blueprint 1220 Fine Art variant IDs:', catalogCache.artPrintVariants)
 
   // Get variants for canvas stretched (Blueprint 1159, Jondo provider 105)
   try {
@@ -208,9 +210,8 @@ async function createProductWithMockups(
       return 9900 // $99 CAD for 20x30
     }
     
-    // For art prints (Blueprint 1191 or 494)
-    if (blueprintId === PRODUCT_CONFIG.ART_PRINT.US_CA.blueprint_id || 
-        blueprintId === PRODUCT_CONFIG.ART_PRINT.EUROPE.blueprint_id) {
+    // For art prints (Blueprint 1220 Fine Art)
+    if (blueprintId === PRODUCT_CONFIG.ART_PRINT.US.blueprint_id) {
       const variantIndex = selectedVariants.indexOf(variantId)
       if (variantIndex === 0) return 2900  // $29 CAD for 12x18
       if (variantIndex === 1) return 3900  // $39 CAD for 18x24
@@ -260,24 +261,60 @@ async function createProductWithMockups(
   
   console.log('🖼️ Available mockup images:', fullProduct.images?.length || 0)
   
-  // Filter mockups to get context 1 (front-facing views) consistently
-  const contextMockups = fullProduct.images?.filter((img: any) => {
-    // Look for context 1 mockups (front-facing, clean product shots)
-    const isContext1Mockup = img.position === 'front' || 
-                            img.position === 'context1' ||
-                            img.is_default // Default images are usually front-facing
-    
-    // Ensure it's for our selected variants
-    const hasCorrectVariant = selectedVariants.some(variantId => 
+  // Log all available mockup positions and URLs for debugging
+  if (fullProduct.images?.length > 0) {
+    console.log('📍 Available mockup positions:', fullProduct.images.map((img: any) => ({
+      position: img.position,
+      is_default: img.is_default,
+      variant_ids: img.variant_ids,
+      camera_label: img.src?.match(/camera_label=([^&]*)/)?.[1] || 'none'
+    })))
+  }
+  
+  // Get Context 3 mockups (lifestyle/environmental shots in living room)
+  // Since Printify returns multiple mockups per variant, we need to select the right one
+  // Context 3 is typically the third mockup (index 2) - the lifestyle shot
+  const contextMockups = []
+  
+  for (const variantId of selectedVariants) {
+    const variantMockups = fullProduct.images?.filter((img: any) => 
       img.variant_ids?.includes(variantId)
-    )
+    ) || []
     
-    return isContext1Mockup && hasCorrectVariant
-  }) || []
+    // Sort by order or use index to get consistent results
+    variantMockups.sort((a: any, b: any) => {
+      if (a.is_default && !b.is_default) return -1
+      if (!a.is_default && b.is_default) return 1
+      return (a.order || 0) - (b.order || 0)
+    })
+    
+    // Try to find Context 3 mockup by checking camera_label or URL patterns
+    // Context 3 mockups often have specific camera angles or URL patterns
+    let contextMockup = variantMockups.find((mockup: any) => {
+      const url = mockup.src || ''
+      return url.includes('camera_label=context-3') || 
+             url.includes('camera_label=context3') ||
+             url.includes('camera_label=lifestyle') ||
+             url.includes('camera_label=room')
+    })
+    
+    // If no specific Context 3 found, try the third mockup (index 2) which is often lifestyle
+    if (!contextMockup) {
+      contextMockup = variantMockups[2] || variantMockups[1] || variantMockups[0]
+    }
+    if (contextMockup) {
+      contextMockups.push(contextMockup)
+    }
+  }
   
-  console.log(`🎯 Found ${contextMockups.length} context mockups`)
+  console.log(`🎯 Selected Context 3 mockups: ${contextMockups.length}`)
+  console.log('🏠 Context mockup details:', contextMockups.map(m => ({ 
+    src: m.src?.substring(0, 100) + '...', 
+    is_default: m.is_default,
+    order: m.order 
+  })))
   
-  // If no context mockups, fall back to any available mockups
+  // Use the selected context mockups
   const mockupUrls = contextMockups.length > 0 
     ? contextMockups.map((img: any) => img.src)
     : fullProduct.images?.map((img: any) => img.src) || []
@@ -309,8 +346,8 @@ export async function POST(request: NextRequest) {
         mockups: [
           {
             type: 'art_print',
-            title: 'Premium Art Print',
-            description: 'Museum-quality paper',
+            title: 'Fine Art Print',
+            description: 'Museum-quality fine art paper (285 g/m²)',
             mockupUrl: imageUrl, // Use the actual artwork image
             productId: 'fallback-print'
           },
@@ -347,7 +384,7 @@ export async function POST(request: NextRequest) {
     
     const mockups = []
 
-    // Generate Art Print mockups for all sizes using Blueprint 1191 + Print Geek (27)
+    // Generate Art Print mockups for all sizes using Blueprint 1220 + Jondo (105) - Fine Art Paper
     console.log('🖼️ Art Print Variants Available:', catalog.artPrintVariants?.length || 0)
     console.log('🖼️ Art Print Variant IDs:', catalog.artPrintVariants)
     if (catalog.artPrintVariants?.length) {
@@ -355,15 +392,15 @@ export async function POST(request: NextRequest) {
       for (const size of sizes) {
         try {
           console.log(`🎨 Creating art print mockup for size: ${size}`)
-          console.log(`🎨 Using blueprint: ${PRODUCT_CONFIG.ART_PRINT.US_CA.blueprint_id}, provider: ${PRODUCT_CONFIG.ART_PRINT.US_CA.print_provider_id}`)
+          console.log(`🎨 Using blueprint: ${PRODUCT_CONFIG.ART_PRINT.US.blueprint_id}, provider: ${PRODUCT_CONFIG.ART_PRINT.US.print_provider_id}`)
           
           const artPrint = await createProductWithMockups(
             uploadId,
-            PRODUCT_CONFIG.ART_PRINT.US_CA.blueprint_id,
-            PRODUCT_CONFIG.ART_PRINT.US_CA.print_provider_id,
+            PRODUCT_CONFIG.ART_PRINT.US.blueprint_id,
+            PRODUCT_CONFIG.ART_PRINT.US.print_provider_id,
             catalog.artPrintVariants,
-            `PawPop Art Print ${size} - ${artworkId}`,
-            'Custom Mona Lisa style art print',
+            `PawPop Fine Art Print ${size} - ${artworkId}`,
+            'Custom Mona Lisa style fine art print on premium paper',
             size
           )
           
@@ -376,8 +413,8 @@ export async function POST(request: NextRequest) {
             console.log(`✅ Art print ${size} mockup created successfully`)
             mockups.push({
               type: 'art_print',
-              title: `Premium Art Print (${size}")`,
-              description: 'Museum-quality paper',
+              title: `Fine Art Print (${size}")`,
+              description: 'Museum-quality fine art paper (285 g/m²)',
               mockupUrl: artPrint.mockupUrls[0],
               productId: artPrint.productId,
               mockupDetails: artPrint.mockupDetails?.[0]

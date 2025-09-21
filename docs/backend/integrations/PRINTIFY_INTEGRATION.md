@@ -25,16 +25,16 @@ User Upload → Image Generation → Payment → Order Processing → Printify F
    - **US/Canada**: Photo Art Paper Posters (Blueprint ID: 1191)
      - 12x18: $29.99
      - 16x20: $39.99
-     - 18x24: $49.99
+     - 16x24: $49.99
    - **Europe**: Giclee Art Print (Blueprint ID: 494)
      - 12x18: $34.99
      - 16x20: $44.99
-     - 18x24: $54.99
+     - 16x24: $54.99
 
 3. **Framed Canvas** (`ProductType.FRAMED_CANVAS`)
    - **Global**: Photo Art Paper Posters (Blueprint ID: 1191) - Print Geek
      - 12x18: $79.99 (Variant ID: 91677)
-     - 18x24: $99.99 (Variant ID: 91693)
+     - 16x24: $99.99 (Variant ID: 91693)
      - 20x30: $129.99 (Variant ID: 91695)
 
 ## Database Schema (Supabase)
@@ -428,7 +428,7 @@ variants: productConfig.variants.map(variant => ({
 
 ### Issue: Wrong Product Sizes in Dashboard
 **Solution**: Use correct blueprint and variant IDs for desired sizes.
-- For vertical canvas prints (12x18, 18x24, 20x30), use Blueprint 1191
+- For vertical canvas prints (12x18, 16x24, 20x30), use Blueprint 1191
 - Verify variant IDs match actual Printify catalog
 - Test with `/api/test/printify-blueprint?id=1191` to confirm available sizes
 
@@ -489,7 +489,7 @@ export const PRINTIFY_PRODUCTS = {
       print_provider_id: 27, // Print Geek
       variants: [
         { id: 91677, size: '12x18', price: 7999 }, // 12″ x 18″ (Vertical) / Satin
-        { id: 91693, size: '18x24', price: 9999 }, // 18″ x 24″ (Vertical) / Satin
+        { id: 91693, size: '16x24', price: 9999 }, // 16″ x 24″ (Vertical) / Satin
         { id: 91695, size: '20x30', price: 12999 } // 20″ x 30″ (Vertical) / Satin
       ]
     }
@@ -507,7 +507,7 @@ curl -X POST "http://localhost:3001/api/test/printify-mockup" \
   -d '{
     "imageUrl": "http://localhost:3001/images/final-output-test.png",
     "productType": "framed_canvas",
-    "size": "18x24",
+    "size": "16x24",
     "customerName": "Test Customer",
     "petName": "Test Pet"
   }'
@@ -522,6 +522,33 @@ curl "http://localhost:3001/api/test/printify-blueprint?id=1191"
 curl "http://localhost:3001/api/test/printify-info"
 ```
 
+## Canvas Print Configuration
+
+### Print Details for Canvas Products
+
+Canvas products (both stretched and framed) now include enhanced print configuration:
+
+```typescript
+// Canvas-specific print details automatically applied
+const productData = {
+  // ... other product configuration
+  print_details: {
+    print_on_side: "mirror"  // Mirrors the front image on canvas sides
+  }
+};
+```
+
+**Benefits:**
+- **Enhanced Visual Appeal**: Canvas sides display mirrored artwork instead of white edges
+- **Professional Finish**: Creates a gallery-wrapped appearance
+- **Automatic Application**: Applied to all canvas products (stretched and framed)
+
+**Implementation Details:**
+- Configured in `createPrintifyProduct()` function in `/src/lib/printify.ts`
+- Only applies to canvas product types (`CANVAS_STRETCHED`, `CANVAS_FRAMED`)
+- Uses Printify's `print_details.print_on_side: "mirror"` API parameter
+- Alternative options: `"regular"` (white sides), `"mirror"` (mirrored artwork)
+
 ## Future Enhancements
 
 1. **Inventory Management**: Track Printify product availability
@@ -530,4 +557,3 @@ curl "http://localhost:3001/api/test/printify-info"
 4. **Order Tracking**: Real-time tracking integration
 5. **Customer Portal**: Self-service order management
 6. **Analytics Dashboard**: Order and revenue analytics
-7. **Canvas Side Printing**: Research and implement "print on sides" and "mirror sides" options for canvas products

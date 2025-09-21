@@ -30,6 +30,8 @@ export interface OrderMetadata {
   customerName: string;
   petName?: string;
   frameUpgrade?: boolean;
+  shippingMethodId?: number;
+  quantity?: number;
 }
 
 export interface ProcessOrderParams {
@@ -62,11 +64,103 @@ function extractShippingAddress(session: Stripe.Checkout.Session): PrintifyShipp
   };
 }
 
-// Get the appropriate shipping method (simplified - returns standard shipping)
-async function getShippingMethod(countryCode: string): Promise<number> {
-  // In a real implementation, you'd call getShippingMethods from printify.ts
-  // and select the appropriate method based on customer preference or default
-  // For now, return a standard shipping method ID (1 is typically standard)
+// Shipping method interface
+export interface ShippingOption {
+  id: number;
+  name: string;
+  cost: number;
+  estimatedDays: string;
+  isDefault?: boolean;
+}
+
+// Get available shipping methods for a product and country
+export async function getAvailableShippingMethods(
+  productType: ProductType,
+  countryCode: string
+): Promise<ShippingOption[]> {
+  try {
+    const productConfig = getProductConfig(productType, countryCode);
+    if (!productConfig) {
+      throw new Error(`No product configuration found for ${productType} in ${countryCode}`);
+    }
+
+    const shopId = process.env.PRINTIFY_SHOP_ID;
+    if (!shopId) {
+      throw new Error('PRINTIFY_SHOP_ID environment variable is not set');
+    }
+
+    // Import getShippingMethods from printify.ts
+    const { getShippingMethods } = await import('./printify');
+    
+    const shippingMethods = await getShippingMethods(
+      shopId,
+      productConfig.blueprint_id,
+      productConfig.print_provider_id,
+      countryCode
+    );
+
+    // Transform Printify response to our ShippingOption format
+    const options: ShippingOption[] = shippingMethods.map((method: any, index: number) => ({
+      id: method.id,
+      name: method.name || `Shipping Option ${index + 1}`,
+      cost: method.cost || 0,
+      estimatedDays: getEstimatedDeliveryTime(method.name, countryCode),
+      isDefault: index === 0 // First option as default
+    }));
+
+    return options;
+  } catch (error) {
+    console.error('Failed to fetch shipping methods, using fallback:', error);
+    
+    // Fallback shipping options if Printify API fails
+    return getFallbackShippingOptions(countryCode);
+  }
+}
+
+// Get estimated delivery time based on shipping method and country
+function getEstimatedDeliveryTime(methodName: string, countryCode: string): string {
+  const isInternational = !['US', 'CA'].includes(countryCode);
+  const methodLower = methodName.toLowerCase();
+
+  if (methodLower.includes('express') || methodLower.includes('priority')) {
+    return isInternational ? '3-5 business days' : '2-3 business days';
+  } else if (methodLower.includes('standard') || methodLower.includes('regular')) {
+    return isInternational ? '7-14 business days' : '5-7 business days';
+  } else {
+    // Default estimate
+    return isInternational ? '7-14 business days' : '5-7 business days';
+  }
+}
+
+// Fallback shipping options when Printify API is unavailable
+function getFallbackShippingOptions(countryCode: string): ShippingOption[] {
+  const isInternational = !['US', 'CA'].includes(countryCode);
+  
+  return [
+    {
+      id: 1,
+      name: 'Standard Shipping',
+      cost: 0, // Free shipping
+      estimatedDays: isInternational ? '7-14 business days' : '5-7 business days',
+      isDefault: true
+    },
+    {
+      id: 2,
+      name: 'Express Shipping',
+      cost: isInternational ? 1500 : 1000, // $15 international, $10 domestic (in cents)
+      estimatedDays: isInternational ? '3-5 business days' : '2-3 business days',
+      isDefault: false
+    }
+  ];
+}
+
+// Get the appropriate shipping method (now supports method selection)
+async function getShippingMethod(countryCode: string, selectedMethodId?: number): Promise<number> {
+  if (selectedMethodId) {
+    return selectedMethodId;
+  }
+  
+  // Default to standard shipping (method ID 1)
   return 1;
 }
 
@@ -191,8 +285,8 @@ export async function processOrder({ session, metadata }: ProcessOrderParams): P
     petName
   );
 
-  // Get shipping method
-  const shippingMethod = await getShippingMethod(shippingAddress.country);
+  // Get shipping method (use selected method or default)
+  const shippingMethod = await getShippingMethod(shippingAddress.country, metadata.shippingMethodId);
 
   // Create Printify order
   const orderData: PrintifyOrderRequest = {
@@ -202,7 +296,7 @@ export async function processOrder({ session, metadata }: ProcessOrderParams): P
       {
         product_id: productId,
         variant_id: variantId,
-        quantity: 1,
+        quantity: metadata.quantity || 1,
         print_areas: {
           front: finalImageUrl
         }
@@ -253,7 +347,9 @@ export function parseOrderMetadata(session: Stripe.Checkout.Session): OrderMetad
     size: metadata.size,
     customerName: metadata.customerName,
     petName: metadata.petName || undefined,
-    frameUpgrade: metadata.frameUpgrade === 'true'
+    frameUpgrade: metadata.frameUpgrade === 'true',
+    shippingMethodId: metadata.shippingMethodId ? parseInt(metadata.shippingMethodId) : undefined,
+    quantity: metadata.quantity ? parseInt(metadata.quantity) : undefined
   };
 }
 

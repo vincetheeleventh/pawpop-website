@@ -176,8 +176,8 @@ export const PurchaseModalDigitalFirst = ({ isOpen, onClose, artwork }: Purchase
                 >
                   <div className="flex justify-between items-center">
                     <div>
-                      <h4 className="font-semibold">Premium Art Print</h4>
-                      <p className="text-sm text-gray-600">Museum-quality paper, ready to frame</p>
+                      <h4 className="font-semibold">Fine Art Print</h4>
+                      <p className="text-sm text-gray-600">Museum-quality fine art paper (285 g/m²), ready to frame</p>
                     </div>
                     <div className="text-right">
                       <div className="font-bold text-mona-gold">From {formatPrice(getProductPricing(ProductType.ART_PRINT, '12x18', 'US'))}</div>

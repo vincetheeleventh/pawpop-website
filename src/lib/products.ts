@@ -71,7 +71,7 @@ export const pawPopProducts: PawPopProduct[] = [
   {
     id: 'pawpop-art-print-12x18',
     name: 'Custom Pet Pop Art Print - 12"x18"',
-    description: 'Your pet\'s pop art portrait printed on premium photo paper! This 12"x18" art print features your custom pet portrait with vibrant, fade-resistant inks.',
+    description: 'Your pet\'s pop art portrait printed on museum-quality fine art paper (285 g/m²)! This 12"x18" art print features your custom pet portrait with archival inks.',
     price: 2999, // $29.99
     currency: 'USD',
     category: 'Art & Collectibles > Art Prints',
@@ -93,30 +93,30 @@ export const pawPopProducts: PawPopProduct[] = [
     variants: [
       {
         id: 'print-12x18-standard',
-        name: '12"x18" Premium Art Print',
+        name: '12"x18" Fine Art Print',
         price: 2999,
         sku: 'PAWPOP-PRT-12X18',
         availability: 'in_stock',
         attributes: {
           size: '12"x18"',
-          material: 'Premium Photo Paper'
+          material: 'Fine Art Paper (285 g/m²)'
         }
       }
     ]
   },
   {
-    id: 'pawpop-art-print-18x24',
-    name: 'Custom Pet Pop Art Print - 18"x24"',
-    description: 'Your pet\'s pop art portrait printed on premium photo paper! This 18"x24" art print features your custom pet portrait with vibrant, fade-resistant inks.',
+    id: 'pawpop-art-print-16x24',
+    name: 'Custom Pet Pop Art Print - 16"x24"',
+    description: 'Your pet\'s pop art portrait printed on museum-quality fine art paper (285 g/m²)! This 16"x24" art print features your custom pet portrait with archival inks.',
     price: 3999, // $39.99
     currency: 'USD',
     category: 'Art & Collectibles > Art Prints',
     availability: 'in_stock',
     condition: 'new',
     brand: 'PawPop Art',
-    mpn: 'PAWPOP-PRINT-18X24',
+    mpn: 'PAWPOP-PRINT-16X24',
     images: [
-      '/images/pawpop-print-18x24-sample.jpg',
+      '/images/pawpop-print-16x24-sample.jpg',
       '/images/print-texture-detail.jpg'
     ],
     shippingWeight: 0.8,
@@ -128,14 +128,14 @@ export const pawPopProducts: PawPopProduct[] = [
     },
     variants: [
       {
-        id: 'print-18x24-standard',
-        name: '18"x24" Premium Art Print',
+        id: 'print-16x24-standard',
+        name: '16"x24" Fine Art Print',
         price: 3999,
-        sku: 'PAWPOP-PRT-18X24',
+        sku: 'PAWPOP-PRT-16X24',
         availability: 'in_stock',
         attributes: {
-          size: '18"x24"',
-          material: 'Premium Photo Paper'
+          size: '16"x24"',
+          material: 'Fine Art Paper (285 g/m²)'
         }
       }
     ]
@@ -143,7 +143,7 @@ export const pawPopProducts: PawPopProduct[] = [
   {
     id: 'pawpop-art-print-20x30',
     name: 'Custom Pet Pop Art Print - 20"x30"',
-    description: 'Your pet\'s pop art portrait printed on premium photo paper! This large 20"x30" art print makes a bold statement piece with your custom pet portrait in vibrant, fade-resistant inks.',
+    description: 'Your pet\'s pop art portrait printed on museum-quality fine art paper (285 g/m²)! This large 20"x30" art print makes a bold statement piece with your custom pet portrait in archival inks.',
     price: 4999, // $49.99
     currency: 'USD',
     category: 'Art & Collectibles > Art Prints',
@@ -165,13 +165,13 @@ export const pawPopProducts: PawPopProduct[] = [
     variants: [
       {
         id: 'print-20x30-standard',
-        name: '20"x30" Premium Art Print',
+        name: '20"x30" Fine Art Print',
         price: 4999,
         sku: 'PAWPOP-PRT-20X30',
         availability: 'in_stock',
         attributes: {
           size: '20"x30"',
-          material: 'Premium Photo Paper'
+          material: 'Fine Art Paper (285 g/m²)'
         }
       }
     ]
@@ -214,18 +214,18 @@ export const pawPopProducts: PawPopProduct[] = [
     ]
   },
   {
-    id: 'pawpop-framed-canvas-18x24',
-    name: 'Custom Pet Pop Art Framed Canvas - 18"x24"',
-    description: 'Your pet\'s pop art portrait professionally printed on canvas and framed! This 18"x24" framed canvas makes a stunning statement piece, ready to hang with premium materials.',
+    id: 'pawpop-framed-canvas-16x24',
+    name: 'Custom Pet Pop Art Framed Canvas - 16"x24"',
+    description: 'Your pet\'s pop art portrait professionally printed on canvas and framed! This 16"x24" framed canvas makes a stunning statement piece, ready to hang with premium materials.',
     price: 9999, // $99.99
     currency: 'USD',
     category: 'Art & Collectibles > Framed Canvas',
     availability: 'in_stock',
     condition: 'new',
     brand: 'PawPop Art',
-    mpn: 'PAWPOP-CANVAS-18X24',
+    mpn: 'PAWPOP-CANVAS-16X24',
     images: [
-      '/images/pawpop-canvas-18x24-sample.jpg',
+      '/images/pawpop-canvas-16x24-sample.jpg',
       '/images/canvas-frame-detail.jpg'
     ],
     shippingWeight: 4.0,
@@ -237,13 +237,13 @@ export const pawPopProducts: PawPopProduct[] = [
     },
     variants: [
       {
-        id: 'canvas-18x24-framed',
-        name: '18"x24" Framed Canvas',
+        id: 'canvas-16x24-framed',
+        name: '16"x24" Framed Canvas',
         price: 9999,
-        sku: 'PAWPOP-CAN-18X24',
+        sku: 'PAWPOP-CAN-16X24',
         availability: 'in_stock',
         attributes: {
-          size: '18"x24"',
+          size: '16"x24"',
           material: 'Canvas with Frame'
         }
       }

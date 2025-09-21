@@ -202,19 +202,6 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
                   </div>
                 </div>
 
-                {/* CTA Button */}
-                <div className="text-center">
-                  <button
-                    onClick={handleGetMasterpiece}
-                    className="btn btn-primary btn-lg px-12 text-xl w-full"
-                  >
-                    Make it Real
-                  </button>
-                  
-                  <p className="text-sm text-gray-500 mt-4">
-                    Choose your perfect format and bring your masterpiece home
-                  </p>
-                </div>
               </div>
 
               {/* Right Column: Product Mockups */}

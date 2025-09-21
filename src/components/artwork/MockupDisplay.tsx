@@ -127,8 +127,8 @@ export default function MockupDisplay({ artwork, onProductClick }: MockupDisplay
         setMockups([
           {
             type: 'art_print',
-            title: 'Premium Art Print',
-            description: 'Museum-quality paper',
+            title: 'Fine Art Print',
+            description: 'Museum-quality fine art paper (285 g/m²)',
             mockupUrl: artworkImageUrl,
             productId: 'fallback-print',
             size: '20x30'
@@ -177,8 +177,8 @@ export default function MockupDisplay({ artwork, onProductClick }: MockupDisplay
     } else {
       displayMockups.push({
         type: 'art_print',
-        title: 'Premium Art Print',
-        description: 'Museum-quality paper',
+        title: 'Fine Art Print',
+        description: 'Museum-quality fine art paper (285 g/m²)',
         mockupUrl: artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res || '',
         productId: 'fallback-art-print',
         size: '20x30'

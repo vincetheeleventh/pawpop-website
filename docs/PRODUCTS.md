@@ -30,42 +30,67 @@ PawPop offers four main product categories:
 
 ## 2. Art Print
 
-Premium paper prints available in multiple regions with different specifications.
+Premium Fine Art paper prints with museum-quality materials and archival inks.
 
-### North America Region
+### United States Region (Active)
 
 **Blueprint Configuration:**
-- **Blueprint ID**: 1191 (Photo Art Paper Posters)
-- **Print Provider ID**: 1 (Generic Brand)
+- **Blueprint ID**: 1220 (Rolled Posters - Fine Art)
+- **Print Provider ID**: 105 (Jondo)
 - **Product Type**: `art_print`
-- **Region**: `NORTH_AMERICA`
-- **Printify URL**: https://printify.com/app/products/1191/generic-brand/photo-art-paper-posters
+- **Region**: `US`
+- **Paper Type**: Fine Art (285 g/m²)
+- **Quality**: Museum-quality, archival, acid-free
+- **Finish**: Matte
+- **Printify URL**: https://printify.com/app/products/1220/jondo/rolled-posters
 
 **Available Sizes & Pricing:**
 | Size | Variant ID | Price (CAD) | Description |
 |------|------------|-------------|-------------|
-| 12x18 | poster_12x18 | $29.00 | 12″ × 18″ Portrait |
-| 18x24 | poster_18x24 | $36.00 | 18″ × 24″ Portrait |
-| 20x30 | poster_20x30 | $48.00 | 20″ × 30″ Portrait |
+| 12x18 | 92396 | $29.00 | 12″ × 18″ (Vertical) / Fine Art |
+| 18x24 | 92400 | $39.00 | 18″ × 24″ (Vertical) / Fine Art |
+| 20x30 | 92402 | $48.00 | 20″ × 30″ (Vertical) / Fine Art |
 
-### Europe Region
+**Shipping Coverage:**
+- ✅ United States: Full coverage
+- ❌ Canada: Not supported
+- ❌ Europe: Not supported
+- ❌ United Kingdom: Not supported
+
+### Europe Region (Future Implementation)
 
 **Blueprint Configuration:**
-- **Blueprint ID**: 494 (Giclee Art Print)
-- **Print Provider ID**: 1 (Generic Brand)
+- **Blueprint ID**: 494 (Giclée Art Print)
+- **Print Provider ID**: 36 (Print Pigeons)
 - **Product Type**: `art_print`
-- **Region**: `EUROPE`
-- **Printify URL**: https://printify.com/app/products/494/generic-brand/giclee-art-print
+- **Region**: `EUROPE_FUTURE`
+- **Paper Type**: Giclée quality (192 g/m²)
+- **Status**: Not implemented - EU shipping only, missing UK/US/CA coverage
+- **Printify URL**: https://printify.com/app/products/494/print-pigeons/giclee-art-print
 
-**Available Sizes & Pricing:**
+**Planned Sizes & Pricing:**
 | Size | Variant ID | Price (CAD) | Description |
 |------|------------|-------------|-------------|
-| 12x18 | giclee_12x18 | $29.00 | 12″ × 18″ Portrait |
-| 18x24 | giclee_18x24 | $36.00 | 18″ × 24″ Portrait |
-| 20x30 | giclee_20x30 | $48.00 | 20″ × 30″ Portrait |
+| 12x18 | TBD | $29.00 | 12″ × 18″ Portrait |
+| 18x24 | TBD | $39.00 | 18″ × 24″ Portrait |
+| 20x30 | TBD | $48.00 | 20″ × 30″ Portrait |
 
-**European Countries Supported:**
-Germany (DE), France (FR), Italy (IT), Spain (ES), Netherlands (NL), Belgium (BE), Austria (AT), Portugal (PT), Ireland (IE), Finland (FI), Sweden (SE), Denmark (DK), Norway (NO), Poland (PL), Czech Republic (CZ), Hungary (HU), Slovakia (SK), Slovenia (SI), Croatia (HR), Bulgaria (BG), Romania (RO), Lithuania (LT), Latvia (LV), Estonia (EE), Malta (MT), Cyprus (CY), Luxembourg (LU), Greece (GR)
+**Shipping Coverage:**
+- ❌ United States: Not supported
+- ❌ Canada: Not supported
+- ✅ Europe: EU countries only
+- ❌ United Kingdom: Not supported
+
+### Quality Comparison
+
+| Aspect | Blueprint 1220 (US) | Blueprint 494 (EU Future) |
+|--------|---------------------|---------------------------|
+| Paper Weight | 285 g/m² | 192 g/m² |
+| Paper Type | Fine Art | Giclée |
+| Quality Level | Museum-quality | High-quality |
+| Archival | Yes, acid-free | Standard |
+| Provider | Jondo | Print Pigeons |
+| Shipping | US only | EU only |
 
 ---
 
@@ -86,7 +111,7 @@ Premium stretched canvas prints with optional framing upgrade.
 | Size | Variant ID | Price (CAD) | Description | Frame Upgrade |
 |------|------------|-------------|-------------|---------------|
 | 12x18 | canvas_12x18 | $59.00 | 12″ × 18″ Portrait | +$40.00 CAD |
-| 18x24 | canvas_18x24 | $79.00 | 18″ × 24″ Portrait | +$40.00 CAD |
+| 16x24 | canvas_16x24 | $79.00 | 16″ × 24″ Portrait | +$40.00 CAD |
 | 20x30 | canvas_20x30 | $99.00 | 20″ × 30″ Portrait | +$40.00 CAD |
 
 **Canvas Features:**
@@ -115,7 +140,7 @@ Premium framed canvas prints - sold as upsell option.
 | Size | Variant ID | Price (CAD) | Description |
 |------|------------|-------------|-------------|
 | 12x18 | framed_12x18 | $99.00 | 12″ × 18″ Portrait |
-| 18x24 | framed_18x24 | $119.00 | 18″ × 24″ Portrait |
+| 16x24 | framed_16x24 | $119.00 | 16″ × 24″ Portrait |
 | 20x30 | framed_20x30 | $149.00 | 20″ × 30″ Portrait |
 
 **Canvas Features:**
@@ -136,8 +161,17 @@ function determineRegion(productType: ProductType, countryCode: string): string 
   }
   
   if (productType === ProductType.ART_PRINT) {
-    const europeanCountries = ['DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'PT', 'IE', 'FI', 'SE', 'DK', 'NO', 'PL', 'CZ', 'HU', 'SK', 'SI', 'HR', 'BG', 'RO', 'LT', 'LV', 'EE', 'MT', 'CY', 'LU', 'GR'];
-    return europeanCountries.includes(countryCode) ? 'EUROPE' : 'NORTH_AMERICA';
+    // Currently only US is supported for Fine Art prints (Blueprint 1220)
+    if (countryCode === 'US') {
+      return 'US';
+    }
+    
+    // Future EU implementation (Blueprint 494) - not active
+    // const europeanCountries = ['DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'PT', 'IE', 'FI', 'SE', 'DK', 'NO', 'PL', 'CZ', 'HU', 'SK', 'SI', 'HR', 'BG', 'RO', 'LT', 'LV', 'EE', 'MT', 'CY', 'LU', 'GR'];
+    // return europeanCountries.includes(countryCode) ? 'EUROPE_FUTURE' : 'UNSUPPORTED';
+    
+    // For now, all non-US customers cannot order art prints
+    return 'UNSUPPORTED';
   }
   
   return 'GLOBAL';
@@ -198,13 +232,14 @@ PRINTIFY_WEBHOOK_SECRET=your_printify_webhook_secret
 ## Shipping & Fulfillment
 
 ### Shipping Regions
-- **US/Canada**: Standard and expedited shipping available
-- **Europe**: Regional fulfillment centers for faster delivery
-- **Global**: International shipping for framed canvas products
+- **US Only**: Fine Art prints (Blueprint 1220) - Premium quality, limited region
+- **Global**: Canvas products (Blueprints 1159, 944) - Worldwide shipping
+- **Future EU**: Planned Giclée prints (Blueprint 494) - Pending implementation
 
 ### Fulfillment Partners
-- **Generic Brand**: Art print fulfillment (US/CA and Europe)
-- **Print Geek**: Framed canvas fulfillment (Global)
+- **Jondo**: Fine Art print fulfillment (US only) - Blueprint 1220
+- **Print Pigeons**: Future Giclée print fulfillment (EU only) - Blueprint 494
+- **Jondo**: Canvas fulfillment (Global) - Blueprints 1159, 944
 
 ### Delivery Times
 - **Digital**: Instant delivery via email
@@ -232,12 +267,19 @@ pending → paid → processing → shipped → delivered
 
 ## Future Product Roadmap
 
+### Immediate Priorities
+1. **EU Art Print Implementation**: Implement Blueprint 494 (Giclée) for European customers
+2. **Global Art Print Solution**: Find blueprint with worldwide shipping + Fine Art quality
+3. **Region Detection**: Implement customer location-based product filtering
+4. **International Customer Experience**: Clear messaging for shipping limitations
+
 ### Planned Additions
 1. **Canvas Side Printing**: Research "print on sides" and "mirror sides" options
-2. **Additional Sizes**: Explore larger format options
+2. **Additional Sizes**: Explore larger format options (24x36, 30x40)
 3. **New Product Types**: Metal prints, acrylic prints
 4. **Regional Expansion**: Additional print providers and regions
 5. **Custom Framing**: Premium framing options and materials
+6. **Paper Options**: Multiple paper types (Semi-Glossy, Matte) for different regions
 
 ### Enhancement Opportunities
 1. **Inventory Management**: Real-time stock tracking

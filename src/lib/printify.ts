@@ -84,21 +84,23 @@ export interface ProductConfig {
 // Printify product configurations for PawPop
 export const PRINTIFY_PRODUCTS: Partial<Record<ProductType, Record<string, ProductConfig>>> = {
   [ProductType.ART_PRINT]: {
-    NORTH_AMERICA: {
-      blueprint_id: 1191, // Photo Art Paper Posters
-      print_provider_id: 1, // Generic Brand
+    US: {
+      blueprint_id: 1220, // Rolled Posters (Fine Art)
+      print_provider_id: 105, // Jondo
       variants: [
-        { id: 'poster_12x18', size: '12x18', price: 2900 }, // $29.00 CAD
-        { id: 'poster_18x24', size: '18x24', price: 3600 }, // $36.00 CAD
-        { id: 'poster_20x30', size: '20x30', price: 4800 }  // $48.00 CAD
+        { id: '92396', size: '12x18', price: 2900 }, // $29.00 CAD - 12″ x 18″ (Vertical) / Fine Art
+        { id: '92400', size: '18x24', price: 3900 }, // $39.00 CAD - 18″ x 24″ (Vertical) / Fine Art
+        { id: '92402', size: '20x30', price: 4800 }  // $48.00 CAD - 20″ x 30″ (Vertical) / Fine Art
       ]
     },
-    EUROPE: {
-      blueprint_id: 494, // Giclee Art Print
-      print_provider_id: 1, // Generic Brand
+    // Future EU implementation - Blueprint 494 (Giclée Art Print) with Print Pigeons (ID: 36)
+    // Currently not implemented - ships to EU only, no UK/US/CA coverage
+    EUROPE_FUTURE: {
+      blueprint_id: 494, // Giclée Art Print
+      print_provider_id: 36, // Print Pigeons
       variants: [
         { id: 'giclee_12x18', size: '12x18', price: 2900 }, // $29.00 CAD
-        { id: 'giclee_18x24', size: '18x24', price: 3600 }, // $36.00 CAD
+        { id: 'giclee_18x24', size: '18x24', price: 3900 }, // $39.00 CAD
         { id: 'giclee_20x30', size: '20x30', price: 4800 }  // $48.00 CAD
       ]
     }
@@ -109,7 +111,7 @@ export const PRINTIFY_PRODUCTS: Partial<Record<ProductType, Record<string, Produ
       print_provider_id: 1, // Generic Brand
       variants: [
         { id: 'canvas_12x18', size: '12x18', price: 5900 }, // $59.00 CAD
-        { id: 'canvas_18x24', size: '18x24', price: 7900 }, // $79.00 CAD
+        { id: 'canvas_16x24', size: '16x24', price: 7900 }, // $79.00 CAD
         { id: 'canvas_20x30', size: '20x30', price: 9900 }  // $99.00 CAD
       ],
       frame_upgrade_price: 4000 // $40 CAD
@@ -121,7 +123,7 @@ export const PRINTIFY_PRODUCTS: Partial<Record<ProductType, Record<string, Produ
       print_provider_id: 1, // Generic Brand
       variants: [
         { id: 'framed_12x18', size: '12x18', price: 9900 }, // $99.00 CAD
-        { id: 'framed_18x24', size: '18x24', price: 11900 }, // $119.00 CAD
+        { id: 'framed_16x24', size: '16x24', price: 11900 }, // $119.00 CAD
         { id: 'framed_20x30', size: '20x30', price: 14900 }  // $149.00 CAD
       ]
     }
@@ -286,7 +288,13 @@ export async function createPrintifyProduct(
           }
         ]
       }
-    ]
+    ],
+    // Add canvas-specific print details for canvas products
+    ...(isCanvas && {
+      print_details: {
+        print_on_side: "mirror"
+      }
+    })
   };
 
   console.log("📤 Creating Printify product with data:", JSON.stringify(productData, null, 2));
@@ -395,14 +403,19 @@ export function getProductConfig(productType: ProductType, countryCode: string):
   }
 
   if (productType === ProductType.ART_PRINT) {
-    // Determine region based on country code
-    const europeanCountries = ['DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'PT', 'IE', 'FI', 'SE', 'DK', 'NO', 'PL', 'CZ', 'HU', 'SK', 'SI', 'HR', 'BG', 'RO', 'LT', 'LV', 'EE', 'MT', 'CY', 'LU', 'GR'];
-    
-    if (europeanCountries.includes(countryCode)) {
-      return PRINTIFY_PRODUCTS[ProductType.ART_PRINT]?.EUROPE || null;
-    } else {
-      return PRINTIFY_PRODUCTS[ProductType.ART_PRINT]?.NORTH_AMERICA || null;
+    // Currently only US is supported for Fine Art prints (Blueprint 1220)
+    if (countryCode === 'US') {
+      return PRINTIFY_PRODUCTS[ProductType.ART_PRINT]?.US || null;
     }
+    
+    // Future EU implementation (Blueprint 494) - not active
+    // const europeanCountries = ['DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'PT', 'IE', 'FI', 'SE', 'DK', 'NO', 'PL', 'CZ', 'HU', 'SK', 'SI', 'HR', 'BG', 'RO', 'LT', 'LV', 'EE', 'MT', 'CY', 'LU', 'GR'];
+    // if (europeanCountries.includes(countryCode)) {
+    //   return PRINTIFY_PRODUCTS[ProductType.ART_PRINT]?.EUROPE_FUTURE || null;
+    // }
+    
+    // For now, all non-US customers cannot order art prints
+    return null;
   }
 
   return null;
