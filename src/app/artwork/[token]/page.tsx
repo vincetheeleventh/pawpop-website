@@ -207,7 +207,7 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
               {/* Right Column: Product Mockups */}
               <div className="bg-white rounded-lg shadow-lg p-8">
                 <h3 className="text-xl font-playfair font-semibold text-charcoal-frame mb-6">
-                  See Your Masterpiece Come to Life
+                  Make Your Masterpiece Real
                 </h3>
                 
                 <MockupDisplay artwork={artwork} onProductClick={handleProductClick} />

@@ -1,12 +1,11 @@
 // src/app/api/shipping/methods/route.ts
 import { NextResponse } from 'next/server';
 import { getAvailableShippingMethods } from '@/lib/order-processing';
-import { ProductType } from '@/lib/printify';
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const productType = searchParams.get('productType') as ProductType;
+    const productType = searchParams.get('productType');
     const countryCode = searchParams.get('countryCode') || 'US';
 
     if (!productType) {
@@ -14,11 +13,12 @@ export async function GET(req: Request) {
     }
 
     // Validate product type
-    if (!Object.values(ProductType).includes(productType)) {
+    const validProductTypes = ['digital', 'art_print', 'canvas_stretched', 'canvas_framed'];
+    if (!validProductTypes.includes(productType)) {
       return new NextResponse('Invalid product type', { status: 400 });
     }
 
-    const shippingMethods = await getAvailableShippingMethods(productType, countryCode);
+    const shippingMethods = await getAvailableShippingMethods(productType as any, countryCode);
 
     return NextResponse.json({ 
       success: true,

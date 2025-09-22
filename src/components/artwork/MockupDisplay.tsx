@@ -126,6 +126,14 @@ export default function MockupDisplay({ artwork, onProductClick }: MockupDisplay
         console.log('⚠️ Using artwork image as mockup fallback')
         setMockups([
           {
+            type: 'digital',
+            title: 'Digital Download',
+            description: 'High-resolution PNG file for personal use',
+            mockupUrl: artworkImageUrl,
+            productId: 'fallback-digital',
+            size: 'digital'
+          },
+          {
             type: 'art_print',
             title: 'Fine Art Print',
             description: 'Museum-quality fine art paper (285 g/m²)',
@@ -170,6 +178,16 @@ export default function MockupDisplay({ artwork, onProductClick }: MockupDisplay
     const canvasFramed20x30 = canvasFramedMockups.find(m => m.size === '20x30') || canvasFramedMockups[0]
     
     const displayMockups = []
+    
+    // Always include digital download first (lowest price point)
+    displayMockups.push({
+      type: 'digital',
+      title: 'Digital Download',
+      description: 'High-resolution PNG file for personal use',
+      mockupUrl: artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res || '',
+      productId: 'digital-download',
+      size: 'digital'
+    })
     
     // Always include art print (create fallback if none exists)
     if (artPrint20x30) {
@@ -248,6 +266,12 @@ export default function MockupDisplay({ artwork, onProductClick }: MockupDisplay
           </div>
           <h4 className="font-semibold text-charcoal-frame">{mockup.title}</h4>
           <p className="text-sm text-gray-600">{mockup.description}</p>
+          <p className="text-sm font-bold text-cyclamen mt-2">
+            {mockup.type === 'digital' ? '$19' :
+             mockup.type === 'art_print' ? 'Starting at $49' :
+             mockup.type === 'canvas_stretched' ? 'Starting at $89' :
+             'Starting at $149'}
+          </p>
           <p className="text-xs text-gray-500 mt-1">Click to see all sizes</p>
         </div>
       ))}
