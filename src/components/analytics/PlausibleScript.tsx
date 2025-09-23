@@ -13,7 +13,7 @@ interface PlausibleScriptProps {
 
 export default function PlausibleScript({ 
   domain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN || 'pawpopart.com',
-  src = process.env.NEXT_PUBLIC_PLAUSIBLE_SRC || 'https://plausible.io/js/plausible.js'
+  src = process.env.NEXT_PUBLIC_PLAUSIBLE_SRC || 'https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js'
 }: PlausibleScriptProps) {
   
   useEffect(() => {
@@ -33,33 +33,35 @@ export default function PlausibleScript({
     return null;
   }
 
-  // Temporarily disable external script while keeping A/B testing
-  // TODO: Re-enable once Plausible account is fully configured
-  console.log('[PlausibleScript] A/B testing active, external tracking temporarily disabled');
-  
-  return null;
-  
-  // Uncomment when Plausible is ready:
-  /*
   return (
-    <Script
-      defer
-      data-domain={domain}
-      data-api="/api/event"
-      src={src}
-      strategy="afterInteractive"
-      onLoad={() => {
-        console.log('[PlausibleScript] Plausible script loaded successfully');
-        
-        // Verify plausible is available
-        if (typeof window !== 'undefined' && window.plausible) {
-          console.log('[PlausibleScript] Plausible tracking active');
-        }
-      }}
-      onError={(error) => {
-        console.error('[PlausibleScript] Failed to load Plausible script:', error);
-      }}
-    />
+    <>
+      {/* Enhanced Plausible script with file downloads, hash routing, outbound links, pageview props, and tagged events */}
+      <Script
+        defer
+        data-domain={domain}
+        src={src}
+        strategy="afterInteractive"
+        onLoad={() => {
+          console.log('[PlausibleScript] Enhanced Plausible script loaded successfully');
+          
+          // Verify plausible is available
+          if (typeof window !== 'undefined' && window.plausible) {
+            console.log('[PlausibleScript] Plausible tracking active with enhanced features');
+          }
+        }}
+        onError={(error) => {
+          console.error('[PlausibleScript] Failed to load Plausible script:', error);
+        }}
+      />
+      
+      {/* Plausible queue initialization script */}
+      <Script
+        id="plausible-init"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }`
+        }}
+      />
+    </>
   );
-  */
 }

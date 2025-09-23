@@ -7,7 +7,16 @@
 
 declare global {
   interface Window {
-    plausible?: (event: string, options?: PlausibleEventOptions) => void;
+    plausible?: {
+      (eventName: string, options?: { 
+        props?: Record<string, string | number | boolean>;
+        revenue?: { currency: string; amount: number };
+      }): void;
+      q?: any[];
+    } & ((eventName: string, options?: { 
+      props?: Record<string, string | number | boolean>;
+      revenue?: { currency: string; amount: number };
+    }) => void);
   }
 }
 
@@ -264,13 +273,60 @@ class PlausibleAnalytics {
   }
 
   /**
-   * A/B test specific tracking
+   * Track variant exposure for A/B testing
    */
   trackVariantExposure(element: string, props?: Record<string, string | number | boolean>): void {
     this.trackEvent('Variant Exposure', {
       element,
+      variant: this.getPriceVariant(),
+      variant_label: PRICE_VARIANTS[this.getPriceVariant()].label,
       ...props
     });
+  }
+
+  /**
+   * Track file downloads (enhanced script feature)
+   */
+  trackFileDownload(fileName: string, fileType: string, props?: Record<string, string | number | boolean>): void {
+    this.trackEvent('File Download', {
+      file_name: fileName,
+      file_type: fileType,
+      ...props
+    });
+  }
+
+  /**
+   * Track outbound link clicks (enhanced script feature)
+   */
+  trackOutboundLink(url: string, props?: Record<string, string | number | boolean>): void {
+    this.trackEvent('Outbound Link', {
+      url,
+      ...props
+    });
+  }
+
+  /**
+   * Track tagged events with custom properties (enhanced script feature)
+   */
+  trackTaggedEvent(eventName: string, props?: Record<string, string | number | boolean>): void {
+    if (!this.isEnabled || typeof window === 'undefined' || !window.plausible) {
+      console.log(`[Plausible] Tagged Event: ${eventName}`, props);
+      return;
+    }
+
+    try {
+      // Use plausible() directly for tagged events with enhanced features
+      const eventProps = {
+        ...props,
+        price_variant: this.getPriceVariant(),
+        variant_label: PRICE_VARIANTS[this.getPriceVariant()].label
+      };
+
+      window.plausible(eventName, { props: eventProps });
+      console.log(`[Plausible] Tagged Event: ${eventName}`, eventProps);
+    } catch (error) {
+      console.error('[Plausible] Error tracking tagged event:', error);
+    }
   }
 
   /**
@@ -345,6 +401,15 @@ export const trackConversion = (conversionType: string, value?: number, props?: 
 
 export const trackVariantExposure = (element: string, props?: Record<string, string | number | boolean>) => 
   plausible.trackVariantExposure(element, props);
+
+export const trackFileDownload = (fileName: string, fileType: string, props?: Record<string, string | number | boolean>) => 
+  plausible.trackFileDownload(fileName, fileType, props);
+
+export const trackOutboundLink = (url: string, props?: Record<string, string | number | boolean>) => 
+  plausible.trackOutboundLink(url, props);
+
+export const trackTaggedEvent = (eventName: string, props?: Record<string, string | number | boolean>) => 
+  plausible.trackTaggedEvent(eventName, props);
 
 export const getPriceVariant = () => plausible.getPriceVariant();
 export const getPriceConfig = () => plausible.getPriceConfig();
