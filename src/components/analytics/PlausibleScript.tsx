@@ -13,7 +13,7 @@ interface PlausibleScriptProps {
 
 export default function PlausibleScript({ 
   domain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN || 'pawpopart.com',
-  src = process.env.NEXT_PUBLIC_PLAUSIBLE_SRC || 'https://plausible.io/js/script.js'
+  src = process.env.NEXT_PUBLIC_PLAUSIBLE_SRC || 'https://plausible.io/js/plausible.js'
 }: PlausibleScriptProps) {
   
   useEffect(() => {
@@ -33,6 +33,14 @@ export default function PlausibleScript({
     return null;
   }
 
+  // Temporarily disable external script while keeping A/B testing
+  // TODO: Re-enable once Plausible account is fully configured
+  console.log('[PlausibleScript] A/B testing active, external tracking temporarily disabled');
+  
+  return null;
+  
+  // Uncomment when Plausible is ready:
+  /*
   return (
     <Script
       defer
@@ -53,4 +61,5 @@ export default function PlausibleScript({
       }}
     />
   );
+  */
 }
