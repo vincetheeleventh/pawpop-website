@@ -240,6 +240,28 @@ export async function processOrder({ session, metadata }: ProcessOrderParams): P
       if (order) {
         await addOrderStatusHistory(order.id, 'processing', 'Image upscaled successfully, creating Printify order');
       }
+
+      // Create admin review for high-res file (if enabled)
+      try {
+        const { createAdminReview } = await import('./admin-review');
+        await createAdminReview({
+          artwork_id: order.artwork_id,
+          review_type: 'highres_file',
+          image_url: finalImageUrl,
+          customer_name: customerName,
+          customer_email: session.customer_details?.email || '',
+          pet_name: petName
+        });
+        console.log('✅ Admin review created for high-res file');
+        
+        if (order) {
+          await addOrderStatusHistory(order.id, 'processing', 'High-res file submitted for admin review');
+        }
+      } catch (reviewError) {
+        console.error('Failed to create high-res file review:', reviewError);
+        // Don't fail the order if review creation fails
+      }
+
     } catch (upscaleError) {
       console.warn(`⚠️ Upscaling failed for order ${session.id}, using original image:`, upscaleError);
       

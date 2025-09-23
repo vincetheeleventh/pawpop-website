@@ -243,18 +243,62 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   artwork_id: artwork.id,
-                  generated_image_url: monaLisaImageUrl,
-                  generation_step: 'monalisa_generation'
+                  generated_images: {
+                    monalisa_base: monaLisaImageUrl
+                  },
+                  generation_step: 'faceswap'
                 })
               });
 
-              // Step 4: Call Pet Integration API
+              // Step 3.5: Perform FaceSwap using ViewComfy
+              const faceswapResponse = await fetch('/api/faceswap', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  sourceImageUrl: formData.petMomPhoto, // Pet mom photo
+                  targetImageUrl: monaLisaImageUrl,     // MonaLisa portrait
+                  artworkId: artwork.id.toString()
+                })
+              });
+
+              let faceswapImageUrl = monaLisaImageUrl; // Fallback to original
+              if (faceswapResponse.ok) {
+                const faceswapResult = await faceswapResponse.json();
+                faceswapImageUrl = faceswapResult.imageUrl;
+                
+                // Update artwork with faceswap result
+                await fetch('/api/artwork/update', {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    artwork_id: artwork.id,
+                    generated_images: {
+                      monalisa_base: monaLisaImageUrl,
+                      faceswap_result: faceswapImageUrl
+                    },
+                    generation_step: 'pet_integration'
+                  })
+                });
+              } else {
+                console.warn('FaceSwap failed, continuing with original MonaLisa portrait');
+                // Update step to pet_integration even if faceswap fails
+                await fetch('/api/artwork/update', {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    artwork_id: artwork.id,
+                    generation_step: 'pet_integration'
+                  })
+                });
+              }
+
+              // Step 4: Call Pet Integration API (using faceswap result or fallback)
               const petIntegrationFormData = new FormData();
               
-              // Add the MonaLisa portrait (fetch from URL and convert to File)
-              const portraitResponse = await fetch(monaLisaImageUrl);
+              // Add the faceswapped portrait (or MonaLisa if faceswap failed)
+              const portraitResponse = await fetch(faceswapImageUrl);
               const portraitBlob = await portraitResponse.blob();
-              const portraitFile = new File([portraitBlob], 'monalisa-portrait.jpg', { type: 'image/jpeg' });
+              const portraitFile = new File([portraitBlob], 'faceswap-portrait.jpg', { type: 'image/jpeg' });
               petIntegrationFormData.append('portrait', portraitFile);
               petIntegrationFormData.append('artworkId', artwork.id.toString());
               
@@ -281,7 +325,25 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                 const finalImageUrl = petIntegrationResult.imageUrl;
 
                 if (finalImageUrl) {
-                  // Step 5: Update with final completed artwork
+                  // Step 5: Create admin review for artwork proof (if enabled)
+                  try {
+                    const { createAdminReview } = await import('@/lib/admin-review');
+                    await createAdminReview({
+                      artwork_id: artwork.id,
+                      review_type: 'artwork_proof',
+                      image_url: finalImageUrl,
+                      fal_generation_url: petIntegrationResult.fal_generation_url || undefined,
+                      customer_name: formData.name,
+                      customer_email: formData.email,
+                      pet_name: undefined
+                    });
+                    console.log('✅ Admin review created for artwork proof');
+                  } catch (reviewError) {
+                    console.error('Failed to create admin review:', reviewError);
+                    // Don't fail the generation if review creation fails
+                  }
+
+                  // Step 6: Update with final completed artwork
                   await fetch('/api/artwork/update', {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
@@ -298,19 +360,24 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                     trackArtworkGeneration(artwork.id, 15); // $15 CAD qualified lead value
                   }
 
-                  // Send completion email with the generated image
+                  // Send completion email with the generated image (only if human review is disabled)
                   try {
-                    await fetch('/api/email/masterpiece-ready', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        customerName: formData.name,
-                        customerEmail: formData.email,
-                        artworkUrl: `${window.location.origin}/artwork/${access_token}`,
-                        generatedImageUrl: finalImageUrl
-                      })
-                    });
-                    console.log('Completion email sent successfully');
+                    const { isHumanReviewEnabled } = await import('@/lib/admin-review');
+                    if (!isHumanReviewEnabled()) {
+                      await fetch('/api/email/masterpiece-ready', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          customerName: formData.name,
+                          customerEmail: formData.email,
+                          artworkUrl: `${window.location.origin}/artwork/${access_token}`,
+                          generatedImageUrl: finalImageUrl
+                        })
+                      });
+                      console.log('Completion email sent successfully');
+                    } else {
+                      console.log('Human review enabled - completion email will be sent after approval');
+                    }
                   } catch (emailError) {
                     console.error('Failed to send completion email:', emailError);
                     // Don't fail the process if email fails
