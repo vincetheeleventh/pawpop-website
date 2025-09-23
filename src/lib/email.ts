@@ -50,6 +50,15 @@ export interface ShippingNotificationEmailData {
   productType: string
 }
 
+export interface AdminReviewNotificationData {
+  reviewId: string
+  reviewType: 'artwork_proof' | 'highres_file'
+  customerName: string
+  petName?: string
+  imageUrl: string
+  falGenerationUrl?: string
+}
+
 /**
  * Send email using Resend with domain reputation protection
  */
@@ -537,13 +546,132 @@ export async function sendSystemAlertEmail(data: SystemAlertEmailData) {
     </html>
   `
 
-  // In test mode, send to test recipient
-  const recipient = isTestMode ? testEmailRecipient : 'alerts@pawpopart.com'
+  // Always send monitoring alerts to pawpopart@gmail.com
+  const recipient = 'pawpopart@gmail.com'
 
   const result = await sendEmail({
     from: 'PawPop Alerts <alerts@pawpopart.com>',
     to: recipient,
     subject: `[${data.severity.toUpperCase()}] ${data.service} Alert: ${data.message}`,
+    html
+  })
+
+  return result
+}
+
+/**
+ * Send admin review notification email
+ */
+export async function sendAdminReviewNotification(data: AdminReviewNotificationData): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const reviewTypeDisplay = data.reviewType === 'artwork_proof' ? 'Artwork Proof' : 'High-Res File'
+  const petNameDisplay = data.petName ? ` for ${data.petName}` : ''
+  
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>ADMIN: ${reviewTypeDisplay} Review Required</title>
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: #fff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden;">
+        
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #ff6b6b, #ff8e8e); color: white; padding: 30px; text-align: center;">
+          <h1 style="margin: 0; font-size: 28px; font-weight: bold;">🔍 ADMIN REVIEW REQUIRED</h1>
+          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">${reviewTypeDisplay} needs your approval</p>
+        </div>
+        
+        <!-- Content -->
+        <div style="padding: 30px;">
+          
+          <!-- Customer Info -->
+          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+            <h3 style="color: #333; margin: 0 0 15px 0;">Customer Information</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; font-weight: bold; width: 30%;">Customer:</td>
+                <td style="padding: 8px 0;">${data.customerName}</td>
+              </tr>
+              ${data.petName ? `
+              <tr>
+                <td style="padding: 8px 0; font-weight: bold;">Pet Name:</td>
+                <td style="padding: 8px 0;">${data.petName}</td>
+              </tr>
+              ` : ''}
+              <tr>
+                <td style="padding: 8px 0; font-weight: bold;">Review Type:</td>
+                <td style="padding: 8px 0;">${reviewTypeDisplay}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; font-weight: bold;">Review ID:</td>
+                <td style="padding: 8px 0; font-family: monospace;">${data.reviewId}</td>
+              </tr>
+            </table>
+          </div>
+          
+          <!-- Image Preview -->
+          <div style="text-align: center; margin-bottom: 25px;">
+            <h3 style="color: #333; margin-bottom: 15px;">Image for Review</h3>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; display: inline-block;">
+              <img src="${data.imageUrl}" alt="Artwork for review" style="max-width: 400px; max-height: 400px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            </div>
+          </div>
+          
+          ${data.falGenerationUrl ? `
+          <!-- FAL.ai Reference -->
+          <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 25px;">
+            <h4 style="color: #1976d2; margin: 0 0 10px 0;">🔗 FAL.ai Generation Reference</h4>
+            <p style="margin: 0; font-family: monospace; font-size: 14px; word-break: break-all;">
+              <a href="${data.falGenerationUrl}" style="color: #1976d2; text-decoration: none;">${data.falGenerationUrl}</a>
+            </p>
+          </div>
+          ` : ''}
+          
+          <!-- Action Buttons -->
+          <div style="text-align: center; margin-bottom: 25px;">
+            <h3 style="color: #333; margin-bottom: 20px;">Review Actions</h3>
+            <div style="display: inline-block;">
+              <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/admin/reviews/${data.reviewId}" 
+                 style="display: inline-block; background: #4caf50; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 0 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                📋 Review in Dashboard
+              </a>
+            </div>
+          </div>
+          
+          <!-- Instructions -->
+          <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 8px;">
+            <h4 style="color: #856404; margin: 0 0 10px 0;">⚠️ Review Instructions</h4>
+            <ul style="margin: 0; padding-left: 20px; color: #856404;">
+              <li>Click "Review in Dashboard" to access the admin review interface</li>
+              <li>Carefully examine the ${reviewTypeDisplay.toLowerCase()} for quality and accuracy</li>
+              <li>Use the approve/reject buttons in the dashboard</li>
+              <li>Add notes if rejecting to help improve future generations</li>
+              <li>Customer orders are on hold until approval</li>
+            </ul>
+          </div>
+          
+        </div>
+        
+        <!-- Footer -->
+        <div style="background: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #e9ecef;">
+          <p style="color: #666; font-size: 14px; margin: 0;">
+            This is an automated admin notification from PawPop Quality Control System.<br>
+            Review ID: ${data.reviewId} | Generated at ${new Date().toISOString()}
+          </p>
+        </div>
+        
+      </div>
+    </body>
+    </html>
+  `
+
+  // Always send to pawpopart@gmail.com for admin reviews (tagged ADMIN in subject)
+  const result = await sendEmail({
+    from: 'PawPop Admin <admin@pawpopart.com>',
+    to: 'pawpopart@gmail.com',
+    subject: `[ADMIN] ${reviewTypeDisplay} Review Required${petNameDisplay} - ${data.customerName}`,
     html
   })
 
