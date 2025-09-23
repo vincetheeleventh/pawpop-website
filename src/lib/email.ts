@@ -433,3 +433,119 @@ export async function sendShippingNotificationEmail(data: ShippingNotificationEm
 
   return result
 }
+
+// System Alert Email Interface
+export interface SystemAlertEmailData {
+  alertId: string
+  service: string
+  severity: 'low' | 'medium' | 'high' | 'critical'
+  message: string
+  details: Record<string, any>
+  timestamp: Date
+}
+
+export async function sendSystemAlertEmail(data: SystemAlertEmailData) {
+  const severityColors = {
+    low: '#10B981',      // green
+    medium: '#F59E0B',   // yellow
+    high: '#EF4444',     // red
+    critical: '#DC2626'  // dark red
+  }
+
+  const severityEmojis = {
+    low: '💡',
+    medium: '⚠️',
+    high: '🚨',
+    critical: '🔥'
+  }
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>PawPop System Alert</title>
+    </head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+        <h1 style="color: white; margin: 0; font-size: 28px;">
+          ${severityEmojis[data.severity]} System Alert
+        </h1>
+        <p style="color: #f0f0f0; margin: 10px 0 0 0; font-size: 16px;">
+          PawPop Monitoring System
+        </p>
+      </div>
+      
+      <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div style="background: ${severityColors[data.severity]}; color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+          <h2 style="margin: 0; font-size: 20px; text-transform: uppercase;">
+            ${data.severity} Alert
+          </h2>
+          <p style="margin: 5px 0 0 0; font-size: 16px;">
+            Service: <strong>${data.service}</strong>
+          </p>
+        </div>
+        
+        <div style="margin-bottom: 25px;">
+          <h3 style="color: #333; margin-bottom: 10px;">Alert Message</h3>
+          <p style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin: 0; font-size: 16px;">
+            ${data.message}
+          </p>
+        </div>
+        
+        <div style="margin-bottom: 25px;">
+          <h3 style="color: #333; margin-bottom: 10px;">Alert Details</h3>
+          <div style="background: #f8f9fa; padding: 15px; border-radius: 6px;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e9ecef; font-weight: bold; width: 30%;">Alert ID:</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e9ecef; font-family: monospace;">${data.alertId}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e9ecef; font-weight: bold;">Timestamp:</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e9ecef;">${data.timestamp.toISOString()}</td>
+              </tr>
+              ${Object.entries(data.details).map(([key, value]) => `
+                <tr>
+                  <td style="padding: 8px 0; border-bottom: 1px solid #e9ecef; font-weight: bold;">${key}:</td>
+                  <td style="padding: 8px 0; border-bottom: 1px solid #e9ecef;">${typeof value === 'object' ? JSON.stringify(value, null, 2) : value}</td>
+                </tr>
+              `).join('')}
+            </table>
+          </div>
+        </div>
+        
+        <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; border-left: 4px solid #2196f3;">
+          <h3 style="color: #1976d2; margin: 0 0 10px 0;">Next Steps</h3>
+          <ul style="margin: 0; padding-left: 20px; color: #333;">
+            <li>Check the monitoring dashboard for current system status</li>
+            <li>Review service logs for additional context</li>
+            <li>Take appropriate action based on the alert severity</li>
+            <li>Mark the alert as resolved once the issue is fixed</li>
+          </ul>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef;">
+          <p style="color: #666; font-size: 14px; margin: 0;">
+            This alert was generated automatically by the PawPop monitoring system.<br>
+            For questions, contact the development team.
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+
+  // In test mode, send to test recipient
+  const recipient = isTestMode ? testEmailRecipient : 'alerts@pawpopart.com'
+
+  const result = await sendEmail({
+    from: 'PawPop Alerts <alerts@pawpopart.com>',
+    to: recipient,
+    subject: `[${data.severity.toUpperCase()}] ${data.service} Alert: ${data.message}`,
+    html
+  })
+
+  return result
+}

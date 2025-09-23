@@ -153,7 +153,7 @@ export default function ProductPurchaseModal({
                       productType === 'art_print' ? 'Fine Art Print' : 
                       productType === 'canvas_stretched' ? 'Canvas Stretched' : 'Canvas Framed'
   
-  const productDescription = productType === 'digital' ? 'High-resolution digital file to print locally' :
+  const productDescription = productType === 'digital' ? 'High-resolution digital file to enhance and print locally - add your own artistic touches!' :
                             productType === 'art_print' ? 'Museum-quality fine art paper (285 g/m²) with archival inks' :
                             productType === 'canvas_stretched' ? 'Gallery-wrapped canvas, ready to hang' : 
                             'Professional framing with museum-quality canvas'
@@ -306,8 +306,11 @@ export default function ProductPurchaseModal({
                         <div className="space-y-2 text-sm text-gray-600 font-geist">
                           <p>✓ High-resolution PNG file (300 DPI)</p>
                           <p>✓ Print-ready up to 20" × 30"</p>
+                          <p>✓ Add fine details to make it even more beautiful</p>
+                          <p>✓ Make every strand of fur pop with painterly strokes</p>
+                          <p>✓ Perfect for custom framing and personal touches</p>
                           <p>✓ Instant download after purchase</p>
-                          <p>✓ Lifetime access to your file</p>
+                          <p>✓ Lifetime access to your masterpiece</p>
                         </div>
                       </div>
                     </div>

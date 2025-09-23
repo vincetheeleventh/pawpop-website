@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fal } from '@fal-ai/client';
+import { trackFalAiUsage } from '@/lib/monitoring';
 
 // Configure fal client
 fal.config({
@@ -7,6 +8,9 @@ fal.config({
 });
 
 export async function POST(req: NextRequest) {
+  const startTime = Date.now();
+  const requestId = `monalisa_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
   try {
     console.log("🎨 MonaLisa Maker - Step 1: Portrait Transformation");
     
@@ -113,6 +117,15 @@ export async function POST(req: NextRequest) {
       );
       
       console.log(`📁 Image stored in Supabase: ${supabaseImageUrl}`);
+      
+      // Track successful fal.ai usage
+      await trackFalAiUsage({
+        endpoint: 'monalisa-maker',
+        requestId,
+        status: 'success',
+        responseTime: Date.now() - startTime,
+        cost: 0.05 // Estimated cost for MonaLisa generation
+      });
       
       // Return both URLs - Supabase for storage, fal.ai as fallback
       return NextResponse.json({

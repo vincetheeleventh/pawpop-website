@@ -3,8 +3,10 @@ import { headers } from 'next/headers';
 import { stripe } from '@/lib/stripe';
 import { processOrder, parseOrderMetadata, handleOrderStatusUpdate } from '@/lib/order-processing';
 import { sendOrderConfirmationEmail } from '@/lib/email';
+import { trackStripeWebhook } from '@/lib/monitoring';
 
 export async function POST(req: Request) {
+  const startTime = Date.now();
   const body = await req.text();
   const signature = headers().get('stripe-signature') as string;
 
@@ -23,6 +25,16 @@ export async function POST(req: Request) {
     );
   } catch (err) {
     console.error(`Webhook signature verification failed: ${err}`);
+    
+    // Track webhook failure
+    await trackStripeWebhook({
+      eventId: 'unknown',
+      eventType: 'signature_verification_failed',
+      status: 'failed',
+      processingTime: Date.now() - startTime,
+      errorMessage: err instanceof Error ? err.message : 'Signature verification failed'
+    });
+    
     return new NextResponse('Webhook Error', { status: 400 });
   }
 
@@ -98,21 +110,75 @@ export async function POST(req: Request) {
           // Don't fail the request if email fails
         }
         
+        // Track successful webhook processing
+        await trackStripeWebhook({
+          eventId: event.id,
+          eventType: event.type,
+          status: 'success',
+          processingTime: Date.now() - startTime
+        });
+        
       } catch (error) {
         console.error('Error processing checkout session:', error);
         console.error('Error details:', JSON.stringify(error, null, 2));
+        
+        // Track webhook failure
+        await trackStripeWebhook({
+          eventId: event.id,
+          eventType: event.type,
+          status: 'failed',
+          processingTime: Date.now() - startTime,
+          errorMessage: error instanceof Error ? error.message : 'Unknown error processing checkout session'
+        });
+        
         // Don't return error to Stripe - we'll handle retry logic separately
       }
       break;
       
     case 'payment_intent.succeeded':
-      const paymentIntent = event.data.object;
-      console.log('Payment succeeded:', paymentIntent.id);
+      try {
+        const paymentIntent = event.data.object;
+        console.log('Payment succeeded:', paymentIntent.id);
+        
+        // Track successful payment intent
+        await trackStripeWebhook({
+          eventId: event.id,
+          eventType: event.type,
+          status: 'success',
+          processingTime: Date.now() - startTime
+        });
+      } catch (error) {
+        await trackStripeWebhook({
+          eventId: event.id,
+          eventType: event.type,
+          status: 'failed',
+          processingTime: Date.now() - startTime,
+          errorMessage: error instanceof Error ? error.message : 'Error processing payment_intent.succeeded'
+        });
+      }
       break;
       
     case 'payment_intent.payment_failed':
-      const paymentFailed = event.data.object;
-      console.error('Payment failed:', paymentFailed.id);
+      try {
+        const paymentFailed = event.data.object;
+        console.error('Payment failed:', paymentFailed.id);
+        
+        // Track payment failure
+        await trackStripeWebhook({
+          eventId: event.id,
+          eventType: event.type,
+          status: 'success', // Webhook processing was successful, even though payment failed
+          processingTime: Date.now() - startTime
+        });
+      } catch (error) {
+        await trackStripeWebhook({
+          eventId: event.id,
+          eventType: event.type,
+          status: 'failed',
+          processingTime: Date.now() - startTime,
+          errorMessage: error instanceof Error ? error.message : 'Error processing payment_intent.payment_failed'
+        });
+      }
       break;
       
     // Note: Printify webhooks would be handled by a separate endpoint
@@ -120,6 +186,14 @@ export async function POST(req: Request) {
       
     default:
       console.log(`Unhandled event type: ${event.type}`);
+      
+      // Track unhandled event types for monitoring
+      await trackStripeWebhook({
+        eventId: event.id,
+        eventType: event.type,
+        status: 'success', // Successfully received but unhandled
+        processingTime: Date.now() - startTime
+      });
   }
 
   return new NextResponse(JSON.stringify({ received: true }), { status: 200 });
