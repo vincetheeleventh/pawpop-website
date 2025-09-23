@@ -79,7 +79,7 @@ export function generateOrganizationStructuredData(baseUrl: string) {
     '@type': 'Organization',
     name: 'PawPop Art',
     url: baseUrl,
-    logo: `${baseUrl}/images/pawpop-logo.png`,
+    logo: `${baseUrl}/images/logo_small.png`,
     description: 'Custom pet pop art portraits that transform your beloved pets into stunning artistic masterpieces.',
     contactPoint: {
       '@type': 'ContactPoint',

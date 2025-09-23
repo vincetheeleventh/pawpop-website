@@ -1,6 +1,7 @@
 // src/components/layout/Footer.tsx
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { landingPageCopy } from '@/lib/copy';
 
 export const Footer = () => {
@@ -12,13 +13,14 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Company Info - Minimal */}
           <div className="space-y-3">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-naples-yellow rounded-full flex items-center justify-center">
-                <span className="text-text-primary font-bold">P</span>
-              </div>
-              <span className="font-arvo text-xl font-bold text-card-surface">
-                PawPop
-              </span>
+            <div className="flex items-center">
+              <Image
+                src="/images/logo_small.png"
+                alt="PawPop Logo"
+                width={100}
+                height={33}
+                className="h-8 w-auto brightness-0 invert"
+              />
             </div>
             <div className="text-sm text-gray-600">
               <p><strong>Email:</strong> {footer.contact.email}</p>

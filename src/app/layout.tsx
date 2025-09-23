@@ -6,6 +6,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Providers } from './providers';
 import { GoogleAdsTracking } from '@/components/analytics/GoogleAdsTracking';
+import PlausibleScript from '@/components/analytics/PlausibleScript';
 
 // PawPop Brand Fonts
 const arvo = Arvo({ 
@@ -68,6 +69,7 @@ export default function RootLayout({
       <body className="font-geist bg-site-bg text-text-primary antialiased">
         <Providers>
           <GoogleAdsTracking />
+          <PlausibleScript />
           <Header />
           <main>{children}</main>
           <Footer />

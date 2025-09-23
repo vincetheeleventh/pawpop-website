@@ -2,6 +2,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import { landingPageCopy } from '@/lib/copy';
 
@@ -18,12 +19,17 @@ export const Header = () => {
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-naples-yellow rounded-full flex items-center justify-center">
-              <span className="text-text-primary font-bold">P</span>
-            </div>
+          <Link href="/" className="flex items-center space-x-3">
+            <Image
+              src="/images/logo_small.png"
+              alt="PawPop Logo"
+              width={120}
+              height={40}
+              className="h-10 w-auto"
+              priority
+            />
             <span className="font-arvo text-2xl font-bold text-text-primary">
-              {header.logoText}
+              PawPop Art
             </span>
           </Link>
 

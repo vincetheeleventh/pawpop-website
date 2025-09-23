@@ -63,7 +63,7 @@ export default function AdminReviewsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center" data-testid="loading-state">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyclamen mx-auto mb-4"></div>
           <p className="text-gray-600">Loading reviews...</p>
         </div>
@@ -93,6 +93,7 @@ export default function AdminReviewsPage() {
                 <button
                   onClick={fetchReviews}
                   className="bg-cyclamen text-white px-4 py-2 rounded-lg hover:bg-cyclamen/90 transition-colors"
+                  data-testid="refresh-button"
                 >
                   Refresh
                 </button>
@@ -113,6 +114,7 @@ export default function AdminReviewsPage() {
                   ? 'bg-cyclamen text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
+              data-testid="filter-all"
             >
               All Reviews ({reviews.length})
             </button>
@@ -123,6 +125,7 @@ export default function AdminReviewsPage() {
                   ? 'bg-cyclamen text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
+              data-testid="filter-artwork-proof"
             >
               Artwork Proofs ({reviews.filter(r => r.review_type === 'artwork_proof').length})
             </button>
@@ -133,6 +136,7 @@ export default function AdminReviewsPage() {
                   ? 'bg-cyclamen text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
+              data-testid="filter-highres-file"
             >
               High-Res Files ({reviews.filter(r => r.review_type === 'highres_file').length})
             </button>
@@ -141,16 +145,16 @@ export default function AdminReviewsPage() {
 
         {/* Error State */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <p className="text-red-800">{error}</p>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6" data-testid="error-message">
+            <p className="text-red-800">Error loading reviews: {error}</p>
           </div>
         )}
 
         {/* Reviews List */}
         {reviews.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+          <div className="bg-white rounded-lg shadow-sm p-8 text-center" data-testid="empty-state">
             <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No reviews found</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No pending reviews</h3>
             <p className="text-gray-600">
               {filter === 'all' 
                 ? 'No reviews have been created yet.' 
@@ -160,7 +164,7 @@ export default function AdminReviewsPage() {
         ) : (
           <div className="space-y-4">
             {reviews.map((review) => (
-              <div key={review.id} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
+              <div key={review.id} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow" data-testid="review-item">
                 <div className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -169,7 +173,7 @@ export default function AdminReviewsPage() {
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(review.status)}`}>
                           {review.status.charAt(0).toUpperCase() + review.status.slice(1)}
                         </span>
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-gray-500" data-testid="review-type">
                           {getReviewTypeDisplay(review.review_type)}
                         </span>
                         <span className="text-sm text-gray-400">
@@ -179,11 +183,11 @@ export default function AdminReviewsPage() {
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
-                          <h3 className="font-semibold text-gray-900 mb-1">
+                          <h3 className="font-semibold text-gray-900 mb-1" data-testid="customer-name">
                             {review.customer_name}
-                            {review.pet_name && <span className="text-gray-600"> ({review.pet_name})</span>}
+                            {review.pet_name && <span className="text-gray-600" data-testid="pet-name"> ({review.pet_name})</span>}
                           </h3>
-                          <p className="text-sm text-gray-600 mb-2">{review.customer_email}</p>
+                          <p className="text-sm text-gray-600 mb-2" data-testid="customer-email">{review.customer_email}</p>
                           <p className="text-xs text-gray-500 font-mono">ID: {review.id}</p>
                         </div>
                         
@@ -193,6 +197,7 @@ export default function AdminReviewsPage() {
                               src={review.image_url} 
                               alt="Review image"
                               className="w-32 h-32 object-contain rounded"
+                              data-testid="artwork-image"
                             />
                           </div>
                         </div>
@@ -205,6 +210,7 @@ export default function AdminReviewsPage() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+                            data-testid="fal-generation-link"
                           >
                             <ExternalLink className="w-4 h-4 mr-1" />
                             View FAL.ai Generation
@@ -232,6 +238,7 @@ export default function AdminReviewsPage() {
                       <a
                         href={`/admin/reviews/${review.id}`}
                         className="inline-flex items-center px-4 py-2 bg-cyclamen text-white rounded-lg hover:bg-cyclamen/90 transition-colors text-sm font-medium"
+                        data-testid="review-detail-link"
                       >
                         <Eye className="w-4 h-4 mr-2" />
                         Review

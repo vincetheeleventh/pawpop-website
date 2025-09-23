@@ -2,11 +2,13 @@
 
 /**
  * @file Centralized copy for the PawPop brand experience.
+ * Includes dynamic pricing based on A/B test variants.
  */
+
+import { getPriceConfig, type PriceVariantConfig } from './plausible';
 
 export const landingPageCopy = {
   header: {
-    logoText: 'PawPop',
     navLinks: [], // No navigation links for squeeze page
     ctaButton: 'Start',
   },
@@ -152,7 +154,7 @@ export const landingPageCopy = {
     options: [
       { 
         name: 'Digital Portrait', 
-        price: '$29', 
+        price: '$15', 
         features: ['High-resolution download', 'Perfect for social sharing', 'Instant delivery'], 
         cta: 'Get Digital',
         popular: false,
@@ -160,7 +162,7 @@ export const landingPageCopy = {
       },
       { 
         name: 'Premium Print', 
-        price: '$79', 
+        price: '$29', 
         features: ['Museum-quality fine art paper (285 g/m²)', 'Professional printing', 'Ready to frame'], 
         cta: 'Order Print',
         popular: true,
@@ -168,7 +170,7 @@ export const landingPageCopy = {
       },
       { 
         name: 'Framed Canvas', 
-        price: '$129', 
+        price: '$99', 
         features: ['Gallery-wrapped canvas', 'Ready to hang', 'Lifetime quality'], 
         cta: 'Order Canvas',
         popular: false,
@@ -292,5 +294,62 @@ export const pageContent = {
     copyright: "© 2024 PawPop. All rights reserved."
   }
 };
+
+/**
+ * Get dynamic pricing based on current A/B test variant
+ */
+export function getDynamicPricing() {
+  try {
+    const priceConfig = getPriceConfig();
+    
+    return {
+      title: 'Bring Your Masterpiece Home',
+      subtitle: 'Choose how you want to treasure your Renaissance transformation',
+      variant: priceConfig.variant,
+      variantLabel: priceConfig.label,
+      options: [
+        { 
+          name: 'Digital Portrait', 
+          price: `$${priceConfig.digital}`, 
+          numericPrice: priceConfig.digital,
+          features: ['High-resolution download', 'Perfect for social sharing', 'Instant delivery'], 
+          cta: 'Get Digital',
+          popular: false,
+          icon: '💾'
+        },
+        { 
+          name: 'Premium Print', 
+          price: `$${priceConfig.print}`, 
+          numericPrice: priceConfig.print,
+          features: ['Museum-quality fine art paper (285 g/m²)', 'Professional printing', 'Ready to frame'], 
+          cta: 'Order Print',
+          popular: true,
+          icon: '🖼️'
+        },
+        { 
+          name: 'Framed Canvas', 
+          price: `$${priceConfig.canvasFramed}`, 
+          numericPrice: priceConfig.canvasFramed,
+          features: ['Gallery-wrapped canvas', 'Ready to hang', 'Lifetime quality'], 
+          cta: 'Order Canvas',
+          popular: false,
+          icon: '🏛️'
+        },
+      ],
+    };
+  } catch (error) {
+    console.error('Error getting dynamic pricing, falling back to static:', error);
+    // Fallback to static pricing (Variant A)
+    return {
+      ...landingPageCopy.pricing,
+      variant: 'A' as const,
+      variantLabel: 'Standard Pricing',
+      options: landingPageCopy.pricing.options.map(option => ({
+        ...option,
+        numericPrice: parseInt(option.price.replace('$', ''))
+      }))
+    };
+  }
+}
 
 export default landingPageCopy;

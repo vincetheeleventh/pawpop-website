@@ -54,6 +54,7 @@ export const HeroSection = () => {
               transform hover:scale-105 shadow-xl hover:shadow-2xl
               min-h-[56px] touch-manipulation
             "
+            data-testid="upload-button"
           >
             {hero.ctaButton}
           </button>

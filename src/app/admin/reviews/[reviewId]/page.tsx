@@ -67,7 +67,18 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
       await fetchReview()
       
       // Show success message
-      alert(`Review ${status} successfully!`)
+      const successDiv = document.createElement('div')
+      successDiv.setAttribute('data-testid', 'success-message')
+      successDiv.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50'
+      successDiv.textContent = `Review ${status} successfully!`
+      document.body.appendChild(successDiv)
+      
+      // Remove success message after 3 seconds
+      setTimeout(() => {
+        if (document.body.contains(successDiv)) {
+          document.body.removeChild(successDiv)
+        }
+      }, 3000)
       
       // Redirect back to reviews list after a short delay
       setTimeout(() => {
@@ -153,12 +164,10 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
                   <ArrowLeft className="w-5 h-5" />
                 </button>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">
-                    {getReviewTypeDisplay(review.review_type)} Review
-                  </h1>
-                  <p className="text-gray-600">
+                  <h1 className="text-2xl font-bold text-gray-900">Review Details</h1>
+                  <p className="text-gray-600" data-testid="customer-name">
                     {review.customer_name}
-                    {review.pet_name && ` • ${review.pet_name}`}
+                    {review.pet_name && <span data-testid="pet-name"> • {review.pet_name}</span>}
                   </p>
                 </div>
               </div>
@@ -187,6 +196,7 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
                   src={review.image_url} 
                   alt="Review image"
                   className="max-w-full max-h-96 object-contain rounded mx-auto"
+                  data-testid="artwork-image"
                 />
               </div>
               <div className="mt-4 flex justify-center">
@@ -208,21 +218,21 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
               <div className="space-y-3">
                 <div>
                   <label className="text-sm font-medium text-gray-500">Customer Name</label>
-                  <p className="text-gray-900">{review.customer_name}</p>
+                  <p className="text-gray-900" data-testid="customer-name">{review.customer_name}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Email</label>
-                  <p className="text-gray-900">{review.customer_email}</p>
+                  <p className="text-gray-900" data-testid="customer-email">{review.customer_email}</p>
                 </div>
                 {review.pet_name && (
                   <div>
                     <label className="text-sm font-medium text-gray-500">Pet Name</label>
-                    <p className="text-gray-900">{review.pet_name}</p>
+                    <p className="text-gray-900" data-testid="pet-name">{review.pet_name}</p>
                   </div>
                 )}
                 <div>
                   <label className="text-sm font-medium text-gray-500">Review Type</label>
-                  <p className="text-gray-900">{getReviewTypeDisplay(review.review_type)}</p>
+                  <p className="text-gray-900" data-testid="review-type">{getReviewTypeDisplay(review.review_type)}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Created</label>
@@ -243,6 +253,7 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center text-blue-600 hover:text-blue-800 font-mono text-sm break-all"
+                    data-testid="fal-generation-link"
                   >
                     <ExternalLink className="w-4 h-4 mr-2 flex-shrink-0" />
                     {review.fal_generation_url}
@@ -286,6 +297,7 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
                 placeholder={isPending ? "Add notes about this review (optional)..." : "Review notes"}
                 disabled={!isPending}
                 className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-cyclamen focus:border-transparent disabled:bg-gray-50 disabled:text-gray-600"
+                data-testid="review-notes"
               />
               <p className="text-sm text-gray-500 mt-2">
                 {isPending 
@@ -304,14 +316,25 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
                     onClick={() => processReview('approved')}
                     disabled={processing}
                     className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center"
+                    data-testid="approve-button"
                   >
                     <CheckCircle className="w-5 h-5 mr-2" />
                     {processing ? 'Processing...' : 'Approve'}
                   </button>
                   <button
-                    onClick={() => processReview('rejected')}
+                    onClick={() => {
+                      if (window.confirm('Are you sure you want to reject this review?')) {
+                        // Add test ID to confirm dialog for E2E tests
+                        const confirmButton = document.querySelector('[data-testid="confirm-reject"]')
+                        if (confirmButton) {
+                          confirmButton.setAttribute('data-testid', 'confirm-reject')
+                        }
+                        processReview('rejected')
+                      }
+                    }}
                     disabled={processing}
                     className="w-full bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center"
+                    data-testid="reject-button"
                   >
                     <XCircle className="w-5 h-5 mr-2" />
                     {processing ? 'Processing...' : 'Reject'}

@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { X, Minus, Plus, Truck, Star } from 'lucide-react'
 import { loadStripe } from '@stripe/stripe-js'
+import { getDynamicPricing } from '@/lib/copy'
+import usePlausibleTracking from '@/hooks/usePlausibleTracking'
 
 interface Mockup {
   type: string
@@ -40,30 +42,15 @@ interface ProductPurchaseModalProps {
   onProductClick?: (productType: string, mockups: Mockup[]) => void
 }
 
-const PRODUCT_PRICING = {
-  digital: {
-    'digital': { price: 19, originalPrice: 29 }
-  },
-  art_print: {
-    '12x18': { price: 49, originalPrice: 59 },
-    '16x24': { price: 69, originalPrice: 79 },
-    '20x30': { price: 89, originalPrice: 99 }
-  },
-  canvas_stretched: {
-    '12x18': { price: 89, originalPrice: 109 },
-    '16x24': { price: 129, originalPrice: 149 },
-    '20x30': { price: 169, originalPrice: 199 }
-  },
-  canvas_framed: {
-    '12x18': { price: 149, originalPrice: 179 },
-    '16x24': { price: 199, originalPrice: 229 },
-    '20x30': { price: 249, originalPrice: 289 }
-  }
-}
+// Dynamic pricing based on A/B test variants - removed static pricing
+// Pricing is now handled by getCurrentPrice() function using Plausible variants
 
 // Create fallback mockups for all sizes when real mockups aren't available
 const createFallbackMockups = (productType: string, artworkUrl: string): Mockup[] => {
-  const sizes = ['12x18', '16x24', '20x30']
+  // Use different sizes based on product type to match PRODUCT_B.md
+  const sizes = productType === 'art_print' 
+    ? ['12x18', '18x24', '20x30']  // Art prints: 12×18, 18×24, 20×30
+    : ['12x18', '16x24', '20x30']  // Canvas: 12×18, 16×24, 20×30
   return sizes.map(size => ({
     type: productType,
     title: productType === 'art_print' ? `Fine Art Print (${size}")` : 
@@ -107,6 +94,23 @@ export default function ProductPurchaseModal({
   const [loadingShipping, setLoadingShipping] = useState(false)
   const [showTooltip, setShowTooltip] = useState(false)
 
+  // Plausible tracking and dynamic pricing
+  const { trackFunnel, trackInteraction, trackPriceExposure, getPriceConfig } = usePlausibleTracking()
+  const dynamicPricing = getDynamicPricing()
+  const priceConfig = getPriceConfig()
+
+  // Track modal opening and price exposure
+  useEffect(() => {
+    if (isOpen) {
+      trackFunnel.purchaseModalOpened(productType)
+      trackInteraction.modalOpen('Product Purchase Modal')
+      
+      // Track price variant exposure
+      const currentPrice = getCurrentPrice()
+      trackPriceExposure('Purchase Modal', productType, currentPrice)
+    }
+  }, [isOpen, productType, trackFunnel, trackInteraction, trackPriceExposure])
+
   // Fetch shipping options when modal opens
   useEffect(() => {
     if (isOpen && productType !== 'digital') {
@@ -147,6 +151,38 @@ export default function ProductPurchaseModal({
     }
   }
 
+  // Get current price based on A/B test variant and selected size
+  const getCurrentPrice = () => {
+    if (productType === 'digital') {
+      return priceConfig.digital
+    } else if (productType === 'art_print') {
+      // Art print pricing by size
+      switch (selectedSize) {
+        case '12x18': return priceConfig.print
+        case '18x24': return priceConfig.printMid
+        case '20x30': return priceConfig.printLarge
+        default: return priceConfig.print
+      }
+    } else if (productType === 'canvas_stretched') {
+      // Canvas stretched pricing by size
+      switch (selectedSize) {
+        case '12x18': return priceConfig.canvas
+        case '16x24': return priceConfig.canvasMid
+        case '20x30': return priceConfig.canvasLarge
+        default: return priceConfig.canvas
+      }
+    } else if (productType === 'canvas_framed') {
+      // Canvas framed pricing by size
+      switch (selectedSize) {
+        case '12x18': return priceConfig.canvasFramed
+        case '16x24': return priceConfig.canvasFramedMid
+        case '20x30': return priceConfig.canvasFramedLarge
+        default: return priceConfig.canvasFramed
+      }
+    }
+    return priceConfig.digital // fallback
+  }
+
   if (!isOpen) return null
 
   const productTitle = productType === 'digital' ? 'Digital Download' :
@@ -166,13 +202,20 @@ export default function ProductPurchaseModal({
   // Use provided mockups or create fallbacks
   const allMockups = mockups.length > 0 ? mockups : createFallbackMockups(productType, artworkImageUrl)
   const selectedMockup = allMockups.find(m => m.size === selectedSize) || allMockups[0]
+  
+  // Use dynamic pricing based on A/B test variant
+  const currentPrice = getCurrentPrice()
   const pricing = productType === 'digital' 
-    ? PRODUCT_PRICING.digital 
-    : PRODUCT_PRICING[productType as keyof typeof PRODUCT_PRICING] || PRODUCT_PRICING.canvas_stretched
+    ? { digital: { price: currentPrice, originalPrice: currentPrice + 10 } }
+    : { [selectedSize]: { price: currentPrice, originalPrice: currentPrice + 20 } }
 
   const handlePurchase = async () => {
     setLoading(true)
     setError(null)
+
+    // Track checkout initiation
+    trackFunnel.checkoutInitiated(productType, currentPrice, quantity)
+    trackInteraction.buttonClick('Buy Now', 'Purchase Modal')
 
     try {
       // Validate required data
@@ -293,10 +336,10 @@ export default function ProductPurchaseModal({
                     <div className="text-center space-y-4">
                       <div className="space-y-2">
                         <p className="text-xs text-gray-500 line-through font-geist">
-                          ${PRODUCT_PRICING.digital.digital.originalPrice}
+                          ${currentPrice + 10}
                         </p>
                         <p className="font-arvo font-bold text-3xl text-cyclamen">
-                          ${PRODUCT_PRICING.digital.digital.price}
+                          ${currentPrice}
                         </p>
                       </div>
                       <div className="bg-gray-50 rounded-lg p-4">
@@ -364,12 +407,12 @@ export default function ProductPurchaseModal({
                           </div>
                           <h4 className="font-arvo font-bold text-base text-text-primary mb-1">
                             {size === '12x18' ? 'The Charmer' :
-                             size === '16x24' ? 'The Showstopper' :
+                             (size === '16x24' || size === '18x24') ? 'The Showstopper' :
                              'The Masterpiece'}
                           </h4>
                           <p className="text-sm text-gray-600 font-geist">
                             {size === '12x18' ? 'Perfect for desks, nightstands, and cozy personal spaces' :
-                             size === '16x24' ? 'Ideal for living rooms, hallways, and office walls' :
+                             (size === '16x24' || size === '18x24') ? 'Ideal for living rooms, hallways, and office walls' :
                              'Statement piece that transforms any room'}
                           </p>
                         </div>
@@ -436,12 +479,12 @@ export default function ProductPurchaseModal({
                     <div>
                       <h4 className="font-arvo font-bold text-lg text-text-primary mb-1">
                         {selectedSize === '12x18' ? 'The Charmer' :
-                         selectedSize === '16x24' ? 'The Showstopper' :
+                         (selectedSize === '16x24' || selectedSize === '18x24') ? 'The Showstopper' :
                          'The Masterpiece'}
                       </h4>
                       <p className="text-sm text-gray-600 font-geist">
                         {selectedSize === '12x18' ? 'Perfect for desks, nightstands, and cozy personal spaces' :
-                         selectedSize === '16x24' ? 'Ideal for living rooms, hallways, and office walls' :
+                         (selectedSize === '16x24' || selectedSize === '18x24') ? 'Ideal for living rooms, hallways, and office walls' :
                          'Statement piece that transforms any room'}
                       </p>
                     </div>
@@ -557,8 +600,8 @@ export default function ProductPurchaseModal({
               >
                 {loading ? 'Processing...' : 
                  productType === 'digital' 
-                   ? `Download Now - $${PRODUCT_PRICING.digital.digital.price}`
-                   : `Buy Now - $${(((pricing as any)[selectedSize]?.price || 0) * quantity).toFixed(0)}`}
+                   ? `Download Now - $${currentPrice}`
+                   : `Buy Now - $${(currentPrice * quantity).toFixed(0)}`}
               </button>
               
               <div className="text-center text-sm text-gray-500 space-y-1 font-geist">

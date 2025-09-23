@@ -251,46 +251,59 @@ export default function MockupDisplay({ artwork, onProductClick }: MockupDisplay
           onClick={() => handleProductClick(mockup.type)}
         >
           {/* Responsive Layout: Mobile Portrait (vertical), Mobile Landscape + Desktop (horizontal with image on right) */}
-          <div className="flex portrait:flex-col landscape:flex-row md:flex-row items-center portrait:text-center landscape:text-left md:text-left gap-3 portrait:gap-0 landscape:gap-4 md:gap-6">
+          <div className="flex portrait:flex-col landscape:flex-row md:flex-row items-center portrait:text-center landscape:text-left md:text-left gap-3 portrait:gap-0 landscape:gap-2 md:gap-3">
             
-            {/* Content - 2 Column Layout for Landscape + Desktop */}
+            {/* Content - Full width on desktop, 2 columns on landscape mobile */}
             <div className="flex-1 portrait:text-center landscape:text-left md:text-left portrait:order-2 landscape:order-1 md:order-1">
-              <div className="portrait:block landscape:grid landscape:grid-cols-2 md:grid md:grid-cols-2 landscape:gap-4 md:gap-6 landscape:items-center md:items-center">
-                {/* Left Column: Title & Description */}
-                <div>
+              <div className="portrait:block landscape:grid landscape:grid-cols-2 md:block landscape:gap-4 landscape:items-center">
+                {/* Title & Description - Full width on desktop */}
+                <div className="landscape:col-span-1 md:col-span-1">
                   <h4 className="font-semibold text-charcoal-frame text-sm md:text-base">
                     {mockup.title.replace(/\s*\([^)]*\)/, '').trim()}
                   </h4>
                   <p className="text-xs md:text-sm text-gray-600 mt-0 md:mt-1">{mockup.description}</p>
                 </div>
                 
-                {/* Right Column: Price & CTA */}
-                <div className="portrait:text-center portrait:mt-2 landscape:text-right md:text-right">
-                  <p className="text-sm md:text-base font-bold text-cyclamen">
+                {/* Price & CTA - Only for portrait mobile */}
+                <div className="portrait:text-center portrait:mt-2 landscape:hidden md:hidden">
+                  <p className="text-sm font-bold text-cyclamen">
                     {mockup.type === 'digital' ? '$19' :
                      mockup.type === 'art_print' ? 'From $49' :
                      mockup.type === 'canvas_stretched' ? 'From $89' :
                      'From $149'}
                   </p>
-                  <p className="text-xs text-gray-500 portrait:block landscape:hidden md:block mt-1">Click to see all sizes</p>
+                  <p className="text-xs text-gray-500 mt-1">Click to see all sizes</p>
                 </div>
               </div>
             </div>
 
-            {/* Image */}
-            <div className="bg-gray-100 rounded-lg p-2 md:p-4 mb-0 portrait:mb-3 landscape:mb-0 md:mb-0 flex-shrink-0 portrait:order-1 landscape:order-2 md:order-2">
-              <img 
-                src={mockup.mockupUrl}
-                alt={mockup.title}
-                className="w-16 h-16 portrait:w-full portrait:h-48 landscape:w-20 landscape:h-20 md:w-32 md:h-32 object-contain rounded"
-                onError={(e) => {
-                  // Fallback to artwork image if mockup fails to load
-                  const artworkImageUrl = artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res;
-                  if (artworkImageUrl && e.currentTarget.src !== artworkImageUrl) {
-                    e.currentTarget.src = artworkImageUrl;
-                  }
-                }}
-              />
+            {/* Image with price below on desktop */}
+            <div className="flex-shrink-0 portrait:order-1 landscape:order-2 md:order-2">
+              <div className="bg-gray-100 rounded-lg p-2 md:p-4 mb-0 portrait:mb-3 landscape:mb-0 md:mb-2">
+                <img 
+                  src={mockup.mockupUrl}
+                  alt={mockup.title}
+                  className="w-16 h-16 portrait:w-full portrait:h-48 landscape:w-20 landscape:h-20 md:w-32 md:h-32 object-contain rounded"
+                  onError={(e) => {
+                    // Fallback to artwork image if mockup fails to load
+                    const artworkImageUrl = artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res;
+                    if (artworkImageUrl && e.currentTarget.src !== artworkImageUrl) {
+                      e.currentTarget.src = artworkImageUrl;
+                    }
+                  }}
+                />
+              </div>
+              
+              {/* Price below image on desktop only */}
+              <div className="hidden md:block text-center">
+                <p className="text-sm font-bold text-cyclamen">
+                  {mockup.type === 'digital' ? '$19' :
+                   mockup.type === 'art_print' ? 'From $49' :
+                   mockup.type === 'canvas_stretched' ? 'From $89' :
+                   'From $149'}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">Click to see all sizes</p>
+              </div>
             </div>
           </div>
         </div>

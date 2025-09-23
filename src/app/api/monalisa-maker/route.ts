@@ -138,6 +138,15 @@ export async function POST(req: NextRequest) {
     } catch (storageError) {
       console.warn('⚠️ Supabase storage failed, using fal.ai URL:', storageError);
       
+      // Track successful fal.ai usage (even with storage failure)
+      await trackFalAiUsage({
+        endpoint: 'monalisa-maker',
+        requestId,
+        status: 'success',
+        responseTime: Date.now() - startTime,
+        cost: 0.05 // Estimated cost for MonaLisa generation
+      });
+      
       // Fallback to fal.ai URL if Supabase storage fails
       return NextResponse.json({
         imageUrl: falImageUrl,
@@ -147,6 +156,15 @@ export async function POST(req: NextRequest) {
 
   } catch (error) {
     console.error("❌ MonaLisa Maker error:", error);
+    
+    // Track failed fal.ai usage
+    await trackFalAiUsage({
+      endpoint: 'monalisa-maker',
+      requestId,
+      status: 'error',
+      responseTime: Date.now() - startTime,
+      errorMessage: error instanceof Error ? error.message : 'Unknown error'
+    });
     
     // Handle fal.ai validation errors with detailed logging
     if (error && typeof error === 'object' && 'status' in error && error.status === 422) {

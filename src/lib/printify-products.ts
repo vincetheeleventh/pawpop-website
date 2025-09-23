@@ -125,30 +125,89 @@ function getProductTypeDisplayName(productType: ProductType): string {
   }
 }
 
-// Get pricing for a product type and size
+// Get pricing for a product type and size using A/B test variants
 export function getProductPricing(productType: ProductType, size: string, countryCode: string, frameUpgrade: boolean = false): number {
-  if (productType === ProductType.DIGITAL) {
-    return 1500; // $15.00 CAD for digital
-  }
-
-  const productConfig = getProductConfig(productType, countryCode);
-  if (!productConfig) {
-    throw new Error(`No product configuration found for ${productType} in ${countryCode}`);
-  }
-
-  const variant = productConfig.variants.find(v => v.size === size);
-  if (!variant) {
-    throw new Error(`No variant found for size ${size}`);
-  }
-
-  let price = variant.price;
+  // Import here to avoid circular dependency
+  const { getPriceConfig } = require('./plausible');
   
-  // Add frame upgrade cost for stretched canvas
-  if (productType === ProductType.CANVAS_STRETCHED && frameUpgrade && productConfig.frame_upgrade_price) {
-    price += productConfig.frame_upgrade_price;
-  }
+  try {
+    const priceConfig = getPriceConfig();
+    
+    if (productType === ProductType.DIGITAL) {
+      return priceConfig.digital * 100; // Convert to cents for Stripe
+    }
+    
+    if (productType === ProductType.ART_PRINT) {
+      switch (size) {
+        case '12x18': return priceConfig.print * 100;
+        case '18x24': return priceConfig.printMid * 100;
+        case '20x30': return priceConfig.printLarge * 100;
+        default: return priceConfig.print * 100;
+      }
+    }
+    
+    if (productType === ProductType.CANVAS_STRETCHED) {
+      let price: number;
+      switch (size) {
+        case '12x18': price = priceConfig.canvas; break;
+        case '16x24': price = priceConfig.canvasMid; break;
+        case '20x30': price = priceConfig.canvasLarge; break;
+        default: price = priceConfig.canvas; break;
+      }
+      
+      // Add frame upgrade cost (convert to framed canvas pricing)
+      if (frameUpgrade) {
+        switch (size) {
+          case '12x18': price = priceConfig.canvasFramed; break;
+          case '16x24': price = priceConfig.canvasFramedMid; break;
+          case '20x30': price = priceConfig.canvasFramedLarge; break;
+          default: price = priceConfig.canvasFramed; break;
+        }
+      }
+      
+      return price * 100; // Convert to cents
+    }
+    
+    if (productType === ProductType.CANVAS_FRAMED) {
+      switch (size) {
+        case '12x18': return priceConfig.canvasFramed * 100;
+        case '16x24': return priceConfig.canvasFramedMid * 100;
+        case '20x30': return priceConfig.canvasFramedLarge * 100;
+        default: return priceConfig.canvasFramed * 100;
+      }
+    }
+    
+    // Fallback to variant A pricing
+    return priceConfig.digital * 100;
+    
+  } catch (error) {
+    console.error('Error getting dynamic pricing, falling back to static:', error);
+    
+    // Fallback to static Variant A pricing
+    if (productType === ProductType.DIGITAL) {
+      return 1500; // $15.00 CAD
+    }
+    
+    // Use original static pricing logic as fallback
+    const productConfig = getProductConfig(productType, countryCode);
+    if (!productConfig) {
+      throw new Error(`No product configuration found for ${productType} in ${countryCode}`);
+    }
 
-  return price;
+    const variant = productConfig.variants.find(v => v.size === size);
+    if (!variant) {
+      throw new Error(`No variant found for size ${size}`);
+    }
+
+    let price = variant.price;
+    
+    // Add frame upgrade cost for stretched canvas
+    if (productType === ProductType.CANVAS_STRETCHED && frameUpgrade && productConfig.frame_upgrade_price) {
+      price += productConfig.frame_upgrade_price;
+    }
+
+    return price;
+  }
 }
 
 // Get available sizes for a product type

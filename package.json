@@ -26,6 +26,11 @@
     "test:overlay": "node tests/e2e/overlay.test.js",
     "test:supabase-direct": "node tests/integration/supabase-direct.test.js",
     "test:monitoring": "tsx scripts/test-monitoring-system.ts",
+    "test:faceswap": "vitest run tests/api/faceswap.test.ts tests/lib/viewcomfy.test.ts",
+    "test:admin-review": "tsx scripts/test-admin-review-system.ts",
+    "test:admin-review-unit": "vitest run tests/lib/admin-review-simple.test.ts tests/api/admin-reviews-simple.test.ts",
+    "test:admin-review-e2e": "playwright test tests/e2e/admin-review-system.spec.ts tests/e2e/admin-review-order-flow.spec.ts tests/e2e/admin-review-email-flow.spec.ts",
+    "test:admin-review-quick": "vitest run tests/lib/admin-review-simple.test.ts --reporter=verbose",
     "migration:status": "node scripts/migration-manager.js status",
     "migration:create": "node scripts/migration-manager.js create",
     "migration:apply": "node scripts/migration-manager.js apply",
@@ -35,7 +40,14 @@
     "migration:apply:staging": "MIGRATION_ENV=staging npm run migration:apply",
     "migration:apply:production": "MIGRATION_ENV=production npm run migration:apply",
     "migration:test": "node scripts/test-migration-system.js",
-    "test:new-schema-e2e": "node scripts/test/test-new-schema-e2e.js"
+    "test:new-schema-e2e": "node scripts/test/test-new-schema-e2e.js",
+    "test:plausible": "vitest run tests/lib/plausible.test.ts tests/hooks/usePlausibleTracking.test.tsx tests/integration/plausible-ab-testing.test.ts",
+    "test:plausible-watch": "vitest tests/lib/plausible.test.ts tests/hooks/usePlausibleTracking.test.tsx tests/integration/plausible-ab-testing.test.ts",
+    "test:plausible-e2e": "playwright test tests/e2e/plausible-ab-testing.spec.ts tests/e2e/plausible-purchase-flow.spec.ts tests/e2e/plausible-performance.spec.ts",
+    "test:plausible-e2e-headed": "playwright test tests/e2e/plausible-ab-testing.spec.ts tests/e2e/plausible-purchase-flow.spec.ts tests/e2e/plausible-performance.spec.ts --headed",
+    "test:plausible-all": "npm run test:plausible && npm run test:plausible-e2e",
+    "test:plausible-full": "node scripts/test-plausible-e2e.js",
+    "test:plausible-full-headed": "node scripts/test-plausible-e2e.js --headed"
   },
   "dependencies": {
     "@fal-ai/client": "^1.6.2",
