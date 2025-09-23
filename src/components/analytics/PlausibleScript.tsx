@@ -12,7 +12,7 @@ interface PlausibleScriptProps {
 }
 
 export default function PlausibleScript({ 
-  domain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN,
+  domain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN || 'pawpopart.com',
   src = process.env.NEXT_PUBLIC_PLAUSIBLE_SRC || 'https://plausible.io/js/script.js'
 }: PlausibleScriptProps) {
   
