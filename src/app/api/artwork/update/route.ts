@@ -120,21 +120,30 @@ export async function PATCH(request: NextRequest) {
     const updatedArtwork = await updateArtwork(artwork_id, updateData)
 
     // Send "masterpiece ready" email and generate mockups if generation just completed
+    // BUT ONLY if manual approval is disabled
     if (generation_step === 'completed' && existingArtwork.generation_step !== 'completed' && generated_image_url) {
       const artworkUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://pawpopart.com'}/artwork/${existingArtwork.access_token}`
       
-      try {
-        await sendMasterpieceReadyEmail({
-          customerName: existingArtwork.customer_name,
-          customerEmail: existingArtwork.customer_email,
-          petName: updatedArtwork.pet_name || existingArtwork.pet_name,
-          artworkUrl,
-          generatedImageUrl: generated_image_url
-        })
-        console.log('Masterpiece ready email sent successfully')
-      } catch (emailError) {
-        console.error('Failed to send masterpiece ready email:', emailError)
-        // Don't fail the request if email fails
+      // Check if manual approval is enabled
+      const { isHumanReviewEnabled } = await import('@/lib/admin-review');
+      
+      if (!isHumanReviewEnabled()) {
+        // Only send completion email if manual approval is disabled
+        try {
+          await sendMasterpieceReadyEmail({
+            customerName: existingArtwork.customer_name,
+            customerEmail: existingArtwork.customer_email,
+            petName: updatedArtwork.pet_name || existingArtwork.pet_name,
+            artworkUrl,
+            generatedImageUrl: generated_image_url
+          })
+          console.log('Masterpiece ready email sent successfully (manual approval disabled)')
+        } catch (emailError) {
+          console.error('Failed to send masterpiece ready email:', emailError)
+          // Don't fail the request if email fails
+        }
+      } else {
+        console.log('⏸️ Skipping completion email - manual approval enabled, waiting for admin approval')
       }
 
       // Generate Printify mockups in the background

@@ -41,10 +41,27 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
   const [selectedProductType, setSelectedProductType] = useState<string>('');
   const [selectedProductMockups, setSelectedProductMockups] = useState<Mockup[]>([]);
   const [modalVariant, setModalVariant] = useState<ModalVariant>('equal-tiers');
+  const [isManualApprovalEnabled, setIsManualApprovalEnabled] = useState<boolean>(false);
   const router = useRouter();
+
+  // Fetch manual approval status
+  const fetchReviewStatus = async () => {
+    try {
+      const response = await fetch('/api/admin/review-status');
+      const data = await response.json();
+      if (data.success) {
+        setIsManualApprovalEnabled(data.humanReviewEnabled);
+      }
+    } catch (error) {
+      console.error('Failed to fetch review status:', error);
+      // Default to false on error
+      setIsManualApprovalEnabled(false);
+    }
+  };
 
   useEffect(() => {
     fetchArtwork();
+    fetchReviewStatus();
     // Use physical-first variant for artwork pages
     setModalVariant('physical-first');
     
@@ -150,23 +167,42 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
         <div className="text-center max-w-md mx-auto p-6">
           <div className="text-6xl mb-4">✨</div>
           <h1 className="text-2xl font-playfair font-bold text-charcoal-frame mb-4">
-            Artwork Confirmed!
+            {isManualApprovalEnabled ? 'Artwork Submitted!' : 'Artwork Confirmed!'}
           </h1>
           <p className="text-gray-600 mb-4">
             Thank you! We've received your photos and started creating your masterpiece. 
           </p>
-          <p className="text-gray-600 mb-6">
-            <strong>Check your email</strong> - we've sent you a confirmation with all the details. Your artwork will be ready shortly!
-          </p>
-          <button 
-            onClick={fetchArtwork}
-            className="btn btn-primary mb-4"
-          >
-            Check if Ready
-          </button>
-          <p className="text-sm text-gray-500">
-            This usually takes just a few minutes to complete.
-          </p>
+          {isManualApprovalEnabled ? (
+            <>
+              <p className="text-gray-600 mb-6">
+                <strong>We'll review your artwork</strong> and email you when it's ready! This ensures the highest quality for your masterpiece.
+              </p>
+              <button 
+                onClick={fetchArtwork}
+                className="btn btn-primary mb-4"
+              >
+                Check Status
+              </button>
+              <p className="text-sm text-gray-500">
+                Our team will review and approve your artwork within 24 hours.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-gray-600 mb-6">
+                <strong>Check your email</strong> - we've sent you a confirmation with all the details. Your artwork will be ready shortly!
+              </p>
+              <button 
+                onClick={fetchArtwork}
+                className="btn btn-primary mb-4"
+              >
+                Check if Ready
+              </button>
+              <p className="text-sm text-gray-500">
+                This usually takes just a few minutes to complete.
+              </p>
+            </>
+          )}
         </div>
       </div>
     );

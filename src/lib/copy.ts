@@ -14,8 +14,9 @@ export const landingPageCopy = {
   },
   hero: {
     title: 'Pet Mom, But Make it Mona Lisa',
-    subtitle: 'Create a masterpiece simply by uploading a photo of a pet mom and their pet.',
+    subtitle: 'Create a masterpiece simply by uploading a photo of a pet mom and their pet. See your custom artwork before you buy.',
     ctaButton: 'Make My Masterpiece',
+    subCta: 'Takes about 3 minutes',
   },
   examples: {
     title: 'From Photo to Masterpiece',

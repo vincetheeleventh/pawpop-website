@@ -47,7 +47,6 @@ export interface Artwork {
   }
   generated_images: {
     monalisa_base: string
-    faceswap_result: string
     artwork_preview: string
     artwork_full_res: string
     generation_steps: any[]
@@ -59,7 +58,7 @@ export interface Artwork {
   }
   
   // New workflow tracking
-  generation_step: 'pending' | 'monalisa_generation' | 'faceswap' | 'pet_integration' | 'upscaling' | 'mockup_generation' | 'completed' | 'failed'
+  generation_step: 'pending' | 'monalisa_generation' | 'pet_integration' | 'upscaling' | 'mockup_generation' | 'completed' | 'failed'
   generation_metadata: Record<string, any>
   processing_status: {
     artwork_generation: 'pending' | 'processing' | 'completed' | 'failed'

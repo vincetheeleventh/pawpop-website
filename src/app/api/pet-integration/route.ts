@@ -32,8 +32,28 @@ export async function POST(req: NextRequest) {
       }
 
       console.log("☁️ Uploading images to fal storage...");
-      portraitUrl = await fal.storage.upload(portraitFile);
-      petUrl = await fal.storage.upload(petFile);
+      
+      // Log file types for debugging
+      console.log(`📁 Portrait file: ${portraitFile.name} (${portraitFile.type})`);
+      console.log(`📁 Pet file: ${petFile.name} (${petFile.type})`);
+      
+      // For now, let's try uploading with forced JPEG MIME type for AVIF files
+      const forceJpegMimeType = (file: File): File => {
+        if (file.type === 'image/avif') {
+          console.log(`🔄 Forcing MIME type change: ${file.type} → image/jpeg`);
+          return new File([file], file.name.replace(/\.avif$/i, '.jpg'), {
+            type: 'image/jpeg',
+            lastModified: file.lastModified
+          });
+        }
+        return file;
+      };
+      
+      const processedPortrait = forceJpegMimeType(portraitFile);
+      const processedPet = forceJpegMimeType(petFile);
+      
+      portraitUrl = await fal.storage.upload(processedPortrait);
+      petUrl = await fal.storage.upload(processedPet);
       console.log("✅ Images uploaded - Portrait:", portraitUrl, "Pet:", petUrl);
     } else {
       // Handle JSON request with image URLs
@@ -55,7 +75,7 @@ export async function POST(req: NextRequest) {
     const result = await fal.subscribe("fal-ai/flux-pro/kontext/max/multi", {
       input: {
         prompt: "Incorporate the pet into the painting of the woman. She is holding it in her lap. Keep the painted style and likeness of the woman and pet",
-        guidance_scale: 2.5,
+        guidance_scale: 3.0,
         num_images: 1,
         output_format: "jpeg",
         safety_tolerance: "2",
@@ -96,6 +116,40 @@ export async function POST(req: NextRequest) {
       
       console.log(`📁 Final artwork stored in Supabase: ${supabaseImageUrl}`);
       
+      // Create admin review for artwork proof (if enabled)
+      try {
+        const { createAdminReview, isHumanReviewEnabled } = await import('@/lib/admin-review');
+        const { supabaseAdmin } = await import('@/lib/supabase');
+        
+        if (isHumanReviewEnabled() && supabaseAdmin) {
+          console.log('🔍 Creating admin review for artwork proof...');
+          
+          // Get artwork details for the review
+          const { data: artwork } = await supabaseAdmin
+            .from('artworks')
+            .select('customer_name, customer_email, pet_name')
+            .eq('id', artworkId)
+            .single();
+          
+          if (artwork) {
+            await createAdminReview({
+              artwork_id: artworkId,
+              review_type: 'artwork_proof',
+              image_url: supabaseImageUrl,
+              fal_generation_url: falImageUrl,
+              customer_name: artwork.customer_name,
+              customer_email: artwork.customer_email,
+              pet_name: artwork.pet_name
+            });
+            
+            console.log('✅ Admin review created successfully');
+          }
+        }
+      } catch (reviewError) {
+        console.warn('⚠️ Failed to create admin review:', reviewError);
+        // Don't fail the main process if review creation fails
+      }
+      
       // Return both URLs - Supabase for storage, fal.ai as fallback
       return NextResponse.json({
         imageUrl: supabaseImageUrl,
@@ -118,6 +172,12 @@ export async function POST(req: NextRequest) {
 
   } catch (error) {
     console.error("❌ Pet integration error:", error);
+    
+    // Log detailed fal.ai validation errors
+    if (error && typeof error === 'object' && 'body' in error) {
+      console.error("🔍 Detailed fal.ai error:", JSON.stringify(error.body, null, 2));
+    }
+    
     return NextResponse.json(
       { error: 'Pet integration failed', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

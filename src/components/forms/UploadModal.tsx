@@ -166,18 +166,21 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
         const errorData = await createResponse.json();
         throw new Error(errorData.error || 'Failed to create artwork record');
       }
-
+      
       const { artwork, access_token } = await createResponse.json();
 
-      // Send confirmation email immediately using the artwork ID
+      // Send initial confirmation email via API
       try {
         const artworkUrl = `${window.location.origin}/artwork/${access_token}`;
-        const { sendMasterpieceCreatingEmail } = await import('@/lib/email');
-        await sendMasterpieceCreatingEmail({
-          customerName: formData.name,
-          customerEmail: formData.email,
-          petName: '',
-          artworkUrl
+        await fetch('/api/email/masterpiece-creating', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customerName: formData.name,
+            customerEmail: formData.email,
+            petName: formData.petName || '',
+            artworkUrl
+          })
         });
       } catch (emailError) {
         console.error('Failed to send confirmation email:', emailError);
@@ -190,8 +193,13 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
         trackPhotoUpload(5); // $5 CAD lead value
       }
       
-      // Show immediate confirmation
-      setProcessing({ step: 'complete', message: 'Thank you! We\'ve received your photos and started creating your masterpiece. Check your email for confirmation!', progress: 100 });
+      // Show immediate confirmation with appropriate message based on review mode
+      const { isHumanReviewEnabled } = await import('@/lib/admin-review');
+      const completionMessage = isHumanReviewEnabled() 
+        ? 'Thank you! We\'ve received your photos and started creating your masterpiece. We\'ll review your artwork and email you when it\'s ready!'
+        : 'Thank you! We\'ve received your photos and started creating your masterpiece. Check your email for confirmation!';
+      
+      setProcessing({ step: 'complete', message: completionMessage, progress: 100 });
       
       // Store artwork info for order page
       localStorage.setItem('pawpop-artwork-data', JSON.stringify({
@@ -263,7 +271,9 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
             const monaLisaImageUrl = monaLisaResult.imageUrl;
 
             if (monaLisaImageUrl) {
-              // Step 3: Update with MonaLisa intermediate result
+              console.log('✅ MonaLisa generation successful, proceeding to pet integration...');
+              
+              // Step 3: Update with MonaLisa result and move directly to pet integration
               await fetch('/api/artwork/update', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
@@ -272,59 +282,19 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                   generated_images: {
                     monalisa_base: monaLisaImageUrl
                   },
-                  generation_step: 'faceswap'
+                  generation_step: 'pet_integration'
                 })
               });
 
-              // Step 3.5: Perform FaceSwap using ViewComfy
-              const faceswapResponse = await fetch('/api/faceswap', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  sourceImageUrl: formData.petMomPhoto, // Pet mom photo
-                  targetImageUrl: monaLisaImageUrl,     // MonaLisa portrait
-                  artworkId: artwork.id.toString()
-                })
-              });
-
-              let faceswapImageUrl = monaLisaImageUrl; // Fallback to original
-              if (faceswapResponse.ok) {
-                const faceswapResult = await faceswapResponse.json();
-                faceswapImageUrl = faceswapResult.imageUrl;
-                
-                // Update artwork with faceswap result
-                await fetch('/api/artwork/update', {
-                  method: 'PATCH',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    artwork_id: artwork.id,
-                    generated_images: {
-                      monalisa_base: monaLisaImageUrl,
-                      faceswap_result: faceswapImageUrl
-                    },
-                    generation_step: 'pet_integration'
-                  })
-                });
-              } else {
-                console.warn('FaceSwap failed, continuing with original MonaLisa portrait');
-                // Update step to pet_integration even if faceswap fails
-                await fetch('/api/artwork/update', {
-                  method: 'PATCH',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    artwork_id: artwork.id,
-                    generation_step: 'pet_integration'
-                  })
-                });
-              }
-
-              // Step 4: Call Pet Integration API (using faceswap result or fallback)
+              // Step 4: Call Pet Integration API
+              console.log('🐕 Starting pet integration...');
               const petIntegrationFormData = new FormData();
               
-              // Add the faceswapped portrait (or MonaLisa if faceswap failed)
-              const portraitResponse = await fetch(faceswapImageUrl);
+              // Add the MonaLisa portrait
+              console.log('📥 Downloading MonaLisa portrait for pet integration...');
+              const portraitResponse = await fetch(monaLisaImageUrl);
               const portraitBlob = await portraitResponse.blob();
-              const portraitFile = new File([portraitBlob], 'faceswap-portrait.jpg', { type: 'image/jpeg' });
+              const portraitFile = new File([portraitBlob], 'monalisa-portrait.jpg', { type: 'image/jpeg' });
               petIntegrationFormData.append('portrait', portraitFile);
               petIntegrationFormData.append('artworkId', artwork.id.toString());
               

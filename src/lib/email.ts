@@ -669,7 +669,7 @@ export async function sendAdminReviewNotification(data: AdminReviewNotificationD
 
   // Always send to pawpopart@gmail.com for admin reviews (tagged ADMIN in subject)
   const result = await sendEmail({
-    from: 'PawPop Admin <admin@pawpopart.com>',
+    from: 'PawPop Admin <onboarding@resend.dev>',
     to: 'pawpopart@gmail.com',
     subject: `[ADMIN] ${reviewTypeDisplay} Review Required${petNameDisplay} - ${data.customerName}`,
     html

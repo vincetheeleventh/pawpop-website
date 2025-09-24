@@ -23,6 +23,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if manual approval is enabled
+    const { isHumanReviewEnabled } = await import('@/lib/admin-review');
+    
+    if (isHumanReviewEnabled()) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: 'Manual approval enabled - completion email will be sent after admin approval' 
+        },
+        { status: 200 }
+      );
+    }
+
     // Send masterpiece ready email
     const result = await sendMasterpieceReadyEmail({
       customerName,

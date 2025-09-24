@@ -1,3 +1,6 @@
+'use client';
+
+import { useSearchParams } from 'next/navigation';
 import { HeroSection } from "@/components/landing/HeroSection";
 import { GallerySection } from "@/components/landing/GallerySection";
 import { ReactionsSection } from "@/components/landing/ReactionsSection";
@@ -5,13 +8,26 @@ import { WhyPawPopSection } from "@/components/landing/WhyPawPopSection";
 import { ProcessSection } from "@/components/landing/ProcessSection";
 
 export default function Home() {
+  const searchParams = useSearchParams();
+  const autoOpenUpload = searchParams.get('upload') === 'true';
+
   return (
     <div className="min-h-screen">
-      <HeroSection />
-      <GallerySection />
-      <ReactionsSection />
-      <WhyPawPopSection />
-      <ProcessSection />
+      <section id="home">
+        <HeroSection autoOpenUpload={autoOpenUpload} />
+      </section>
+      <section id="gallery">
+        <GallerySection />
+      </section>
+      <section id="testimonials">
+        <ReactionsSection />
+      </section>
+      <section id="why">
+        <WhyPawPopSection />
+      </section>
+      <section id="process">
+        <ProcessSection />
+      </section>
     </div>
   );
 }

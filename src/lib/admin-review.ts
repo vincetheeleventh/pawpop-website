@@ -1,6 +1,5 @@
 // src/lib/admin-review.ts
 import { supabaseAdmin } from './supabase'
-import { sendAdminReviewNotification } from './email'
 
 export interface AdminReview {
   id: string
@@ -68,16 +67,34 @@ export async function createAdminReview(data: CreateReviewData): Promise<AdminRe
     // Update artwork review status
     await updateArtworkReviewStatus(data.artwork_id, data.review_type, 'pending')
 
-    // Send email notification to admin
+    // Send email notification to admin via API
     try {
-      await sendAdminReviewNotification({
-        reviewId: review.id,
-        reviewType: data.review_type,
-        customerName: data.customer_name,
-        petName: data.pet_name,
-        imageUrl: data.image_url,
-        falGenerationUrl: data.fal_generation_url
-      })
+      if (typeof window !== 'undefined') {
+        // Client-side: use fetch
+        await fetch('/api/email/admin-review-notification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reviewId: review.id,
+            reviewType: data.review_type,
+            customerName: data.customer_name,
+            petName: data.pet_name,
+            imageUrl: data.image_url,
+            falGenerationUrl: data.fal_generation_url
+          })
+        })
+      } else {
+        // Server-side: import and call directly
+        const { sendAdminReviewNotification } = await import('./email')
+        await sendAdminReviewNotification({
+          reviewId: review.id,
+          reviewType: data.review_type,
+          customerName: data.customer_name,
+          petName: data.pet_name,
+          imageUrl: data.image_url,
+          falGenerationUrl: data.fal_generation_url
+        })
+      }
     } catch (emailError) {
       console.error('Failed to send admin review notification:', emailError)
       // Don't fail the review creation if email fails

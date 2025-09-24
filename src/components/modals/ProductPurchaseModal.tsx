@@ -203,11 +203,51 @@ export default function ProductPurchaseModal({
   const allMockups = mockups.length > 0 ? mockups : createFallbackMockups(productType, artworkImageUrl)
   const selectedMockup = allMockups.find(m => m.size === selectedSize) || allMockups[0]
   
-  // Use dynamic pricing based on A/B test variant
+  // Create pricing for all available sizes
+  const getAllSizesPricing = () => {
+    if (productType === 'digital') {
+      const digitalPrice = priceConfig.digital
+      return { digital: { price: digitalPrice, originalPrice: digitalPrice + 10 } }
+    }
+    
+    // Get all available sizes for the product type
+    const sizes = productType === 'art_print' 
+      ? ['12x18', '18x24', '20x30']  // Art prints: 12×18, 18×24, 20×30
+      : ['12x18', '16x24', '20x30']  // Canvas: 12×18, 16×24, 20×30
+    
+    const pricing: Record<string, { price: number; originalPrice: number }> = {}
+    
+    sizes.forEach(size => {
+      let price = priceConfig.digital // fallback
+      
+      if (productType === 'art_print') {
+        switch (size) {
+          case '12x18': price = priceConfig.print; break
+          case '18x24': price = priceConfig.printMid; break
+          case '20x30': price = priceConfig.printLarge; break
+        }
+      } else if (productType === 'canvas_stretched') {
+        switch (size) {
+          case '12x18': price = priceConfig.canvas; break
+          case '16x24': price = priceConfig.canvasMid; break
+          case '20x30': price = priceConfig.canvasLarge; break
+        }
+      } else if (productType === 'canvas_framed') {
+        switch (size) {
+          case '12x18': price = priceConfig.canvasFramed; break
+          case '16x24': price = priceConfig.canvasFramedMid; break
+          case '20x30': price = priceConfig.canvasFramedLarge; break
+        }
+      }
+      
+      pricing[size] = { price, originalPrice: price + 20 }
+    })
+    
+    return pricing
+  }
+
+  const pricing = getAllSizesPricing()
   const currentPrice = getCurrentPrice()
-  const pricing = productType === 'digital' 
-    ? { digital: { price: currentPrice, originalPrice: currentPrice + 10 } }
-    : { [selectedSize]: { price: currentPrice, originalPrice: currentPrice + 20 } }
 
   const handlePurchase = async () => {
     setLoading(true)

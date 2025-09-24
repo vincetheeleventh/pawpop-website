@@ -236,7 +236,7 @@ export default function AdminReviewsPage() {
 
                     <div className="ml-6 flex flex-col space-y-2">
                       <a
-                        href={`/admin/reviews/${review.id}`}
+                        href={`/admin/reviews/${review.review_id || review.id}`}
                         className="inline-flex items-center px-4 py-2 bg-cyclamen text-white rounded-lg hover:bg-cyclamen/90 transition-colors text-sm font-medium"
                         data-testid="review-detail-link"
                       >

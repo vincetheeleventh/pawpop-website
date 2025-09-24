@@ -14,6 +14,11 @@
     scroll-behavior: smooth;
   }
 
+  /* Smooth scrolling with offset for fixed header */
+  section[id] {
+    scroll-margin-top: 80px;
+  }
+
   body {
     @apply bg-white text-gray-900;
   }

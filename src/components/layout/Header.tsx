@@ -33,22 +33,58 @@ export const Header = () => {
             </span>
           </Link>
 
-          {/* Single CTA for squeeze page */}
+          {/* Navigation Links - Hidden on mobile, shown on desktop */}
+          <nav className="hidden md:flex items-center space-x-8">
+            <a
+              href="#gallery"
+              className="text-text-primary/70 hover:text-text-primary transition-colors font-medium"
+            >
+              Gallery
+            </a>
+            <a
+              href="#testimonials"
+              className="text-text-primary/70 hover:text-text-primary transition-colors font-medium"
+            >
+              Reviews
+            </a>
+            <a
+              href="#process"
+              className="text-text-primary/70 hover:text-text-primary transition-colors font-medium"
+            >
+              How It Works
+            </a>
+            
+            {/* CTA Button */}
+            <Link
+              href="/upload"
+              className="
+                bg-atomic-tangerine hover:bg-orange-600
+                text-white font-fredoka font-medium
+                px-6 py-2 rounded-full
+                transition-all duration-200
+                hover:scale-105 hover:shadow-lg
+                focus:outline-none focus:ring-2 focus:ring-atomic-tangerine/50
+              "
+            >
+              {header.ctaButton}
+            </Link>
+          </nav>
+
+          {/* Mobile CTA only */}
           <Link
-            href="/create"
+            href="/upload"
             className="
+              md:hidden
               bg-atomic-tangerine hover:bg-orange-600
               text-white font-fredoka font-medium
-              px-6 py-2 rounded-full
+              px-4 py-2 rounded-full text-sm
               transition-all duration-200
               hover:scale-105 hover:shadow-lg
               focus:outline-none focus:ring-2 focus:ring-atomic-tangerine/50
             "
           >
-            {header.ctaButton}
+            Upload
           </Link>
-
-          {/* No mobile menu needed for squeeze page */}
         </div>
 
         {/* No mobile menu for squeeze page */}
