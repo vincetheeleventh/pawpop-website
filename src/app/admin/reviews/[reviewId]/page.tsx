@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckCircle, XCircle, ArrowLeft, ExternalLink, MessageSquare, Clock } from 'lucide-react'
+import { CheckCircle, XCircle, ArrowLeft, ExternalLink, MessageSquare, Clock, Upload } from 'lucide-react'
 import { AdminReview } from '@/lib/admin-review'
 
 interface ReviewDetailPageProps {
@@ -18,6 +18,8 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
   const [processing, setProcessing] = useState(false)
   const [notes, setNotes] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [uploadFile, setUploadFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
     fetchReview()
@@ -89,6 +91,57 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
       setError(err instanceof Error ? err.message : 'Failed to process review')
     } finally {
       setProcessing(false)
+    }
+  }
+
+  const handleManualUpload = async () => {
+    if (!uploadFile || !review) return
+
+    try {
+      setUploading(true)
+      
+      // Create FormData for file upload
+      const formData = new FormData()
+      formData.append('image', uploadFile)
+      formData.append('reviewId', params.reviewId)
+      formData.append('notes', notes.trim() || 'Manually replaced image')
+      formData.append('reviewedBy', 'admin@pawpopart.com') // TODO: Get from auth
+
+      const response = await fetch(`/api/admin/reviews/${params.reviewId}/manual-upload`, {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to upload replacement image')
+      }
+
+      // Refresh the review data
+      await fetchReview()
+      
+      // Show success message
+      const successDiv = document.createElement('div')
+      successDiv.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50'
+      successDiv.textContent = 'Image replaced and review approved successfully!'
+      document.body.appendChild(successDiv)
+      
+      // Remove success message after 3 seconds
+      setTimeout(() => {
+        if (document.body.contains(successDiv)) {
+          document.body.removeChild(successDiv)
+        }
+      }, 3000)
+      
+      // Redirect back to reviews list after a short delay
+      setTimeout(() => {
+        router.push('/admin/reviews')
+      }, 1500)
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to upload replacement image')
+    } finally {
+      setUploading(false)
+      setUploadFile(null)
     }
   }
 
@@ -212,6 +265,39 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
               </div>
             </div>
 
+            {/* Source Images */}
+            {review.source_images && (review.source_images.pet_mom_photo || review.source_images.pet_photo) && (
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Original Photos</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {review.source_images.pet_mom_photo && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 mb-2 block">Pet Mom Photo</label>
+                      <div className="bg-gray-100 rounded-lg p-2">
+                        <img 
+                          src={review.source_images.pet_mom_photo} 
+                          alt="Pet mom photo"
+                          className="w-full h-32 object-cover rounded"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {review.source_images.pet_photo && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 mb-2 block">Pet Photo</label>
+                      <div className="bg-gray-100 rounded-lg p-2">
+                        <img 
+                          src={review.source_images.pet_photo} 
+                          alt="Pet photo"
+                          className="w-full h-32 object-cover rounded"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Customer Details */}
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Customer Information</h3>
@@ -321,6 +407,37 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
                     <CheckCircle className="w-5 h-5 mr-2" />
                     {processing ? 'Processing...' : 'Approve'}
                   </button>
+                  
+                  {/* Manual Upload Button */}
+                  <div className="border-t pt-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Manual Upload Proof Image
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-cyclamen file:text-white hover:file:bg-cyclamen/90 mb-3"
+                    />
+                    {uploadFile && (
+                      <div className="mb-3 p-2 bg-gray-50 rounded border">
+                        <p className="text-sm text-gray-600">Selected: {uploadFile.name}</p>
+                      </div>
+                    )}
+                    <button
+                      onClick={handleManualUpload}
+                      disabled={!uploadFile || uploading || processing}
+                      className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center"
+                      data-testid="manual-upload-button"
+                    >
+                      <Upload className="w-5 h-5 mr-2" />
+                      {uploading ? 'Uploading...' : 'Manual Upload Proof Image'}
+                    </button>
+                    <p className="text-xs text-gray-500 mt-2">
+                      This will replace the generated image and automatically approve the review.
+                    </p>
+                  </div>
+                  
                   <button
                     onClick={() => {
                       if (window.confirm('Are you sure you want to reject this review?')) {

@@ -17,6 +17,11 @@ export interface AdminReview {
   reviewed_at?: string
   created_at: string
   artwork_token?: string
+  source_images?: {
+    pet_mom_photo?: string
+    pet_photo?: string
+  }
+  manually_replaced?: boolean // Track if image was manually replaced by admin
 }
 
 export interface CreateReviewData {
@@ -238,7 +243,7 @@ export async function getAdminReview(reviewId: string): Promise<AdminReview | nu
       .from('admin_reviews')
       .select(`
         *,
-        artworks!inner(access_token)
+        artworks!inner(access_token, source_images)
       `)
       .eq('id', reviewId)
       .single()
@@ -250,7 +255,8 @@ export async function getAdminReview(reviewId: string): Promise<AdminReview | nu
 
     return {
       ...data,
-      artwork_token: data.artworks?.access_token
+      artwork_token: data.artworks?.access_token,
+      source_images: data.artworks?.source_images
     }
   } catch (error) {
     console.error('Error in getAdminReview:', error)
