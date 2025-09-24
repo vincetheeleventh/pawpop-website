@@ -184,7 +184,7 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
                 Check Status
               </button>
               <p className="text-sm text-gray-500">
-                Our team will review and approve your artwork within 24 hours.
+                You will receive your artwork within 24 hours.
               </p>
             </>
           ) : (

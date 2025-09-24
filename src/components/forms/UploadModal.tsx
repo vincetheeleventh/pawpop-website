@@ -196,7 +196,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
       // Show immediate confirmation with appropriate message based on review mode
       const { isHumanReviewEnabled } = await import('@/lib/admin-review');
       const completionMessage = isHumanReviewEnabled() 
-        ? 'Thank you! We\'ve received your photos and started creating your masterpiece. We\'ll review your artwork and email you when it\'s ready!'
+        ? 'Thank you! We\'ve received your photos and started creating your masterpiece. We\'ll create your artwork and email you when it\'s ready!'
         : 'Thank you! We\'ve received your photos and started creating your masterpiece. Check your email for confirmation!';
       
       setProcessing({ step: 'complete', message: completionMessage, progress: 100 });
