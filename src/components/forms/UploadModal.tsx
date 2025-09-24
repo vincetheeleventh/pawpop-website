@@ -213,63 +213,100 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
       // Start background generation using direct API calls (bypassing problematic monalisa-complete)
       const generateArtwork = async () => {
         try {
-          // Step 1: Upload and store source images to Supabase first
+          // Step 1: Upload and store source images to Supabase (non-blocking)
           console.log('📤 Uploading source images to Supabase...');
           
           let petMomPhotoUrl = '';
           let petPhotoUrl = '';
           
-          // Upload pet mom photo
-          if (formData.petMomPhoto instanceof File) {
-            const petMomFormData = new FormData();
-            petMomFormData.append('image', formData.petMomPhoto);
-            petMomFormData.append('artworkId', artwork.id);
-            petMomFormData.append('imageType', 'pet_mom_photo');
-            
-            const petMomUploadResponse = await fetch('/api/upload-source-image', {
-              method: 'POST',
-              body: petMomFormData
-            });
-            
-            if (petMomUploadResponse.ok) {
-              const petMomResult = await petMomUploadResponse.json();
-              petMomPhotoUrl = petMomResult.imageUrl;
+          try {
+            // Upload pet mom photo
+            if (formData.petMomPhoto instanceof File) {
+              console.log('📤 Uploading pet mom photo for artwork:', artwork.id);
+              const petMomFormData = new FormData();
+              petMomFormData.append('image', formData.petMomPhoto);
+              petMomFormData.append('artworkId', artwork.id);
+              petMomFormData.append('imageType', 'pet_mom_photo');
+              
+              const petMomUploadResponse = await fetch('/api/upload-source-image', {
+                method: 'POST',
+                body: petMomFormData
+              });
+              
+              if (petMomUploadResponse.ok) {
+                const petMomResult = await petMomUploadResponse.json();
+                petMomPhotoUrl = petMomResult.imageUrl;
+                console.log('✅ Pet mom photo uploaded:', petMomPhotoUrl);
+              } else {
+                const errorText = await petMomUploadResponse.text();
+                console.warn('⚠️ Failed to upload pet mom photo:', errorText);
+              }
             }
-          }
-          
-          // Upload pet photo
-          if (formData.petPhoto instanceof File) {
-            const petFormData = new FormData();
-            petFormData.append('image', formData.petPhoto);
-            petFormData.append('artworkId', artwork.id);
-            petFormData.append('imageType', 'pet_photo');
             
-            const petUploadResponse = await fetch('/api/upload-source-image', {
-              method: 'POST',
-              body: petFormData
-            });
-            
-            if (petUploadResponse.ok) {
-              const petResult = await petUploadResponse.json();
-              petPhotoUrl = petResult.imageUrl;
+            // Upload pet photo
+            if (formData.petPhoto instanceof File) {
+              console.log('📤 Uploading pet photo for artwork:', artwork.id);
+              const petFormData = new FormData();
+              petFormData.append('image', formData.petPhoto);
+              petFormData.append('artworkId', artwork.id);
+              petFormData.append('imageType', 'pet_photo');
+              
+              const petUploadResponse = await fetch('/api/upload-source-image', {
+                method: 'POST',
+                body: petFormData
+              });
+              
+              if (petUploadResponse.ok) {
+                const petResult = await petUploadResponse.json();
+                petPhotoUrl = petResult.imageUrl;
+                console.log('✅ Pet photo uploaded:', petPhotoUrl);
+              } else {
+                const errorText = await petUploadResponse.text();
+                console.warn('⚠️ Failed to upload pet photo:', errorText);
+              }
             }
+            
+            // Step 2: Update artwork with source images (if any were uploaded)
+            if (petMomPhotoUrl || petPhotoUrl) {
+              await fetch('/api/artwork/update', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  artwork_id: artwork.id,
+                  source_images: {
+                    pet_mom_photo: petMomPhotoUrl,
+                    pet_photo: petPhotoUrl,
+                    uploadthing_keys: {}
+                  },
+                  generation_step: 'monalisa_generation'
+                })
+              });
+              console.log('✅ Source images stored in artwork record');
+            } else {
+              // Just update generation step
+              await fetch('/api/artwork/update', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  artwork_id: artwork.id,
+                  generation_step: 'monalisa_generation'
+                })
+              });
+            }
+          } catch (sourceImageError) {
+            console.warn('⚠️ Source image upload failed, continuing with generation:', sourceImageError);
+            // Continue with generation even if source image upload fails
+            await fetch('/api/artwork/update', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                artwork_id: artwork.id,
+                generation_step: 'monalisa_generation'
+              })
+            });
           }
-          
-          // Step 2: Update artwork with source images
-          await fetch('/api/artwork/update', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              artwork_id: artwork.id,
-              source_images: {
-                pet_mom_photo: petMomPhotoUrl,
-                pet_photo: petPhotoUrl,
-                uploadthing_keys: {}
-              },
-              generation_step: 'monalisa_generation'
-            })
-          });
 
+          console.log('🎨 Starting MonaLisa generation for artwork:', artwork.id);
           // Step 3: Call MonaLisa Maker API directly
           const monaLisaFormData = new FormData();
           if (formData.petMomPhoto instanceof File) {
