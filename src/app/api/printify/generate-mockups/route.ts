@@ -33,7 +33,7 @@ const PRODUCT_CONFIG = {
     print_provider_id: 105, // Jondo
     variants: [
       { id: 'canvas_12x18', size: '12x18', price: 5900 }, // $59 CAD
-      { id: 'canvas_18x24', size: '18x24', price: 7900 }, // $79 CAD
+      { id: 'canvas_16x24', size: '16x24', price: 7900 }, // $79 CAD
       { id: 'canvas_20x30', size: '20x30', price: 9900 } // $99 CAD
     ]
   },
@@ -42,7 +42,7 @@ const PRODUCT_CONFIG = {
     print_provider_id: 105, // Jondo
     variants: [
       { id: 'framed_12x18', size: '12x18', price: 9900 }, // $99 CAD
-      { id: 'framed_18x24', size: '18x24', price: 11900 }, // $119 CAD
+      { id: 'framed_16x24', size: '16x24', price: 11900 }, // $119 CAD
       { id: 'framed_20x30', size: '20x30', price: 14900 } // $149 CAD
     ]
   }
@@ -87,8 +87,8 @@ async function resolveVariantIds() {
       `/catalog/blueprints/${PRODUCT_CONFIG.CANVAS_STRETCHED.blueprint_id}/print_providers/${PRODUCT_CONFIG.CANVAS_STRETCHED.print_provider_id}/variants.json`
     )
     
-    // Filter for specific sizes: 12x18, 18x24, 20x30 (using Unicode quotes)
-    const targetSizes = ['12″ x 18″', '18″ x 24″', '20″ x 30″']
+    // Filter for specific sizes: 12x18, 16x24, 20x30 (using Unicode quotes)
+    const targetSizes = ['12″ x 18″', '16″ x 24″', '20″ x 30″']
     catalogCache.canvasStretchedVariants = canvasStretchedVariants.variants?.filter((v: any) => 
       targetSizes.some(size => v.title?.includes(size))
     ).map((v: any) => v.id) || []
@@ -104,8 +104,8 @@ async function resolveVariantIds() {
       `/catalog/blueprints/${PRODUCT_CONFIG.CANVAS_FRAMED.blueprint_id}/print_providers/${PRODUCT_CONFIG.CANVAS_FRAMED.print_provider_id}/variants.json`
     )
     
-    // Filter for specific sizes: 12x18, 18x24, 20x30 (using Unicode quotes)
-    const targetSizes = ['12″ x 18″', '18″ x 24″', '20″ x 30″']
+    // Filter for specific sizes: 12x18, 16x24, 20x30 (using Unicode quotes)
+    const targetSizes = ['12″ x 18″', '16″ x 24″', '20″ x 30″']
     catalogCache.canvasFramedVariants = canvasFramedVariants.variants?.filter((v: any) => 
       targetSizes.some(size => v.title?.includes(size))
     ).map((v: any) => v.id) || []
@@ -166,6 +166,7 @@ async function createProductWithMockups(
       // Map size to search patterns
       const sizePatterns: { [key: string]: string } = {
         '12x18': '12″ x 18″',
+        '16x24': '16″ x 24″', 
         '18x24': '18″ x 24″', 
         '20x30': '20″ x 30″'
       }
@@ -288,30 +289,45 @@ async function createProductWithMockups(
       return (a.order || 0) - (b.order || 0)
     })
     
-    // Try to find Context 3 mockup by checking camera_label or URL patterns
-    // Context 3 mockups often have specific camera angles or URL patterns
+    // For fine art prints, use Context 2 mockups; for canvas, use Context 3
+    // Context 2 mockups show the print in a cleaner, more focused setting
     let contextMockup = variantMockups.find((mockup: any) => {
       const url = mockup.src || ''
-      return url.includes('camera_label=context-3') || 
-             url.includes('camera_label=context3') ||
-             url.includes('camera_label=lifestyle') ||
-             url.includes('camera_label=room')
+      if (blueprintId === PRODUCT_CONFIG.ART_PRINT.US.blueprint_id) {
+        // Fine art prints: use context-2
+        return url.includes('camera_label=context-2') || 
+               url.includes('camera_label=context2')
+      } else {
+        // Canvas products: use context-3 (lifestyle/room shots)
+        return url.includes('camera_label=context-3') || 
+               url.includes('camera_label=context3') ||
+               url.includes('camera_label=lifestyle') ||
+               url.includes('camera_label=room')
+      }
     })
     
-    // If no specific Context 3 found, try the third mockup (index 2) which is often lifestyle
+    // If no specific context mockup found, use fallback based on product type
     if (!contextMockup) {
-      contextMockup = variantMockups[2] || variantMockups[1] || variantMockups[0]
+      if (blueprintId === PRODUCT_CONFIG.ART_PRINT.US.blueprint_id) {
+        // For fine art prints, prefer the second mockup (index 1) which is often context-2
+        contextMockup = variantMockups[1] || variantMockups[2] || variantMockups[0]
+      } else {
+        // For canvas, prefer the third mockup (index 2) which is often context-3/lifestyle
+        contextMockup = variantMockups[2] || variantMockups[1] || variantMockups[0]
+      }
     }
     if (contextMockup) {
       contextMockups.push(contextMockup)
     }
   }
   
-  console.log(`🎯 Selected Context 3 mockups: ${contextMockups.length}`)
-  console.log('🏠 Context mockup details:', contextMockups.map(m => ({ 
+  const contextType = blueprintId === PRODUCT_CONFIG.ART_PRINT.US.blueprint_id ? 'Context 2' : 'Context 3'
+  console.log(`🎯 Selected ${contextType} mockups: ${contextMockups.length}`)
+  console.log(`🏠 ${contextType} mockup details:`, contextMockups.map(m => ({ 
     src: m.src?.substring(0, 100) + '...', 
     is_default: m.is_default,
-    order: m.order 
+    order: m.order,
+    camera_label: m.src?.match(/camera_label=([^&]*)/)?.[1] || 'none'
   })))
   
   // Use the selected context mockups
@@ -433,7 +449,7 @@ export async function POST(request: NextRequest) {
 
     // Generate Canvas Stretched mockups for all sizes using Blueprint 1159 + Jondo (105)
     if (catalog.canvasStretchedVariants?.length) {
-      const sizes = ['12x18', '18x24', '20x30'];
+      const sizes = ['12x18', '16x24', '20x30'];
       for (const size of sizes) {
         try {
           const canvasStretched = await createProductWithMockups(
@@ -464,7 +480,7 @@ export async function POST(request: NextRequest) {
 
     // Generate Canvas Framed mockups for all sizes using Blueprint 944 + Jondo (105)
     if (catalog.canvasFramedVariants?.length) {
-      const sizes = ['12x18', '18x24', '20x30'];
+      const sizes = ['12x18', '16x24', '20x30'];
       for (const size of sizes) {
         try {
           const canvasFramed = await createProductWithMockups(

@@ -227,21 +227,18 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               
               {/* Left Column: Artwork Display */}
-              <div className="bg-white rounded-lg shadow-lg p-8">
-                <div className="mb-6">
-                  <div className="bg-gray-100 rounded-lg overflow-hidden mb-4">
-                    <img 
-                      src={artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res || artwork.generated_image_url}
-                      alt="Your PawPop Masterpiece"
-                      className="w-full h-auto object-contain"
-                    />
-                  </div>
+              <div className="bg-naples-yellow rounded-lg shadow-lg p-8 lg:self-start">
+                <div className="bg-naples-yellow rounded-lg overflow-hidden">
+                  <img 
+                    src={artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res || artwork.generated_image_url}
+                    alt="Your PawPop Masterpiece"
+                    className="w-full h-auto object-contain"
+                  />
                 </div>
-
               </div>
 
               {/* Right Column: Product Mockups */}
-              <div className="bg-white rounded-lg shadow-lg p-8">
+              <div className="bg-cyclamen/50 rounded-lg shadow-lg p-8">
                 <h3 className="text-xl font-playfair font-semibold text-charcoal-frame mb-6">
                   Make Your Masterpiece Real
                 </h3>

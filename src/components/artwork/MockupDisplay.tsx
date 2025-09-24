@@ -136,7 +136,7 @@ export default function MockupDisplay({ artwork, onProductClick }: MockupDisplay
           {
             type: 'art_print',
             title: 'Fine Art Print',
-            description: 'Museum-quality fine art paper (285 g/m²)',
+            description: 'Museum-quality fine art paper',
             mockupUrl: artworkImageUrl,
             productId: 'fallback-print',
             size: '20x30'
@@ -183,7 +183,7 @@ export default function MockupDisplay({ artwork, onProductClick }: MockupDisplay
     displayMockups.push({
       type: 'digital',
       title: 'Digital Download',
-      description: 'Enhance details for a perfect painterly finish that\'s ready to print.',
+      description: 'High-res, ready to print.',
       mockupUrl: artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res || '',
       productId: 'digital-download',
       size: 'digital'
@@ -242,48 +242,40 @@ export default function MockupDisplay({ artwork, onProductClick }: MockupDisplay
 
   const displayMockups = getDisplayMockups()
 
+  // Function to get white background with colored borders for each product type
+  const getBackgroundColor = (productType: string) => {
+    switch (productType) {
+      case 'digital':
+        return 'bg-white hover:bg-gray-50 border-2 border-pale-azure' // White bg, blue border
+      case 'art_print':
+        return 'bg-white hover:bg-gray-50 border-2 border-naples-yellow' // White bg, yellow border
+      case 'canvas_stretched':
+        return 'bg-white hover:bg-gray-50 border-2 border-atomic-tangerine' // White bg, orange border
+      case 'canvas_framed':
+        return 'bg-white hover:bg-gray-50 border-2 border-cyclamen' // White bg, pink border
+      default:
+        return 'bg-white hover:bg-gray-50 border-2 border-gray-300'
+    }
+  }
+
   return (
-    <div className="space-y-3 md:space-y-6">
+    <div className="grid grid-cols-2 gap-3 md:flex md:flex-col md:space-y-6">
       {displayMockups.map((mockup, index) => (
         <div 
           key={`${mockup.type}-${index}`} 
-          className="cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
+          className={`cursor-pointer p-3 md:p-6 transition-colors rounded-lg ${getBackgroundColor(mockup.type)}`}
           onClick={() => handleProductClick(mockup.type)}
         >
-          {/* Responsive Layout: Mobile Portrait (vertical), Mobile Landscape + Desktop (horizontal with image on right) */}
-          <div className="flex portrait:flex-col landscape:flex-row md:flex-row items-center portrait:text-center landscape:text-left md:text-left gap-3 portrait:gap-0 landscape:gap-2 md:gap-3">
+          {/* Responsive Layout: Mobile Grid (vertical), Desktop (horizontal with image on right) */}
+          <div className="flex flex-col md:flex-row items-center text-center md:text-left gap-2 md:gap-3">
             
-            {/* Content - Full width on desktop, 2 columns on landscape mobile */}
-            <div className="flex-1 portrait:text-center landscape:text-left md:text-left portrait:order-2 landscape:order-1 md:order-1">
-              <div className="portrait:block landscape:grid landscape:grid-cols-2 md:block landscape:gap-4 landscape:items-center">
-                {/* Title & Description - Full width on desktop */}
-                <div className="landscape:col-span-1 md:col-span-1">
-                  <h4 className="font-semibold text-charcoal-frame text-sm md:text-base">
-                    {mockup.title.replace(/\s*\([^)]*\)/, '').trim()}
-                  </h4>
-                  <p className="text-xs md:text-sm text-gray-600 mt-0 md:mt-1">{mockup.description}</p>
-                </div>
-                
-                {/* Price & CTA - Only for portrait mobile */}
-                <div className="portrait:text-center portrait:mt-2 landscape:hidden md:hidden">
-                  <p className="text-sm font-bold text-cyclamen">
-                    {mockup.type === 'digital' ? '$19' :
-                     mockup.type === 'art_print' ? 'From $49' :
-                     mockup.type === 'canvas_stretched' ? 'From $89' :
-                     'From $149'}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">Click to see all sizes</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Image with price below on desktop */}
-            <div className="flex-shrink-0 portrait:order-1 landscape:order-2 md:order-2">
-              <div className="bg-gray-100 rounded-lg p-2 md:p-4 mb-0 portrait:mb-3 landscape:mb-0 md:mb-2">
+            {/* Image - Top on mobile, right on desktop */}
+            <div className="flex-shrink-0 order-1 md:order-2">
+              <div className="mb-2 md:mb-2">
                 <img 
                   src={mockup.mockupUrl}
                   alt={mockup.title}
-                  className="w-16 h-16 portrait:w-full portrait:h-48 landscape:w-20 landscape:h-20 md:w-32 md:h-32 object-contain rounded"
+                  className="w-20 h-20 md:w-48 md:h-48 object-contain rounded mx-auto"
                   onError={(e) => {
                     // Fallback to artwork image if mockup fails to load
                     const artworkImageUrl = artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res;
@@ -293,16 +285,24 @@ export default function MockupDisplay({ artwork, onProductClick }: MockupDisplay
                   }}
                 />
               </div>
-              
-              {/* Price below image on desktop only */}
-              <div className="hidden md:block text-center">
-                <p className="text-sm font-bold text-cyclamen">
+            </div>
+
+            {/* Content - Bottom on mobile, left on desktop */}
+            <div className="flex-1 order-2 md:order-1">
+              <div>
+                <h4 className="font-semibold text-charcoal-frame text-sm md:text-xl mb-1">
+                  {mockup.title.replace(/\s*\([^)]*\)/, '').trim()}
+                </h4>
+                <p className="text-xs md:text-sm text-gray-600 mb-2 md:mb-1">{mockup.description}</p>
+                
+                {/* Price */}
+                <p className="text-sm md:text-lg font-bold text-cyclamen">
                   {mockup.type === 'digital' ? '$19' :
                    mockup.type === 'art_print' ? 'From $49' :
                    mockup.type === 'canvas_stretched' ? 'From $89' :
                    'From $149'}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">Click to see all sizes</p>
+                <p className="text-xs text-gray-500 mt-1 hidden md:block">Click to see all sizes</p>
               </div>
             </div>
           </div>
