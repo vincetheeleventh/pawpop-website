@@ -1,13 +1,14 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import { HeroSection } from "@/components/landing/HeroSection";
 import { GallerySection } from "@/components/landing/GallerySection";
 import { ReactionsSection } from "@/components/landing/ReactionsSection";
 import { WhyPawPopSection } from "@/components/landing/WhyPawPopSection";
 import { ProcessSection } from "@/components/landing/ProcessSection";
 
-export default function Home() {
+function HomeContent() {
   const searchParams = useSearchParams();
   const autoOpenUpload = searchParams.get('upload') === 'true';
 
@@ -29,5 +30,13 @@ export default function Home() {
         <ProcessSection />
       </section>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <HomeContent />
+    </Suspense>
   );
 }

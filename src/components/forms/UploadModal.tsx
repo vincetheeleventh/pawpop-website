@@ -178,7 +178,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
           body: JSON.stringify({
             customerName: formData.name,
             customerEmail: formData.email,
-            petName: formData.petName || '',
+            petName: '', // Pet name not collected in this form
             artworkUrl
           })
         });

@@ -3,6 +3,7 @@ import { supabaseAdmin } from './supabase'
 
 export interface AdminReview {
   id: string
+  review_id: string // API returns review_id as the primary identifier
   artwork_id: string
   review_type: 'artwork_proof' | 'highres_file'
   status: 'pending' | 'approved' | 'rejected'
