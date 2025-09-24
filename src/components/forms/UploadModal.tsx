@@ -213,17 +213,64 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
       // Start background generation using direct API calls (bypassing problematic monalisa-complete)
       const generateArtwork = async () => {
         try {
-          // Step 1: Update generation step in artwork record
+          // Step 1: Upload and store source images to Supabase first
+          console.log('📤 Uploading source images to Supabase...');
+          
+          let petMomPhotoUrl = '';
+          let petPhotoUrl = '';
+          
+          // Upload pet mom photo
+          if (formData.petMomPhoto instanceof File) {
+            const petMomFormData = new FormData();
+            petMomFormData.append('image', formData.petMomPhoto);
+            petMomFormData.append('artworkId', artwork.id);
+            petMomFormData.append('imageType', 'pet_mom_photo');
+            
+            const petMomUploadResponse = await fetch('/api/upload-source-image', {
+              method: 'POST',
+              body: petMomFormData
+            });
+            
+            if (petMomUploadResponse.ok) {
+              const petMomResult = await petMomUploadResponse.json();
+              petMomPhotoUrl = petMomResult.imageUrl;
+            }
+          }
+          
+          // Upload pet photo
+          if (formData.petPhoto instanceof File) {
+            const petFormData = new FormData();
+            petFormData.append('image', formData.petPhoto);
+            petFormData.append('artworkId', artwork.id);
+            petFormData.append('imageType', 'pet_photo');
+            
+            const petUploadResponse = await fetch('/api/upload-source-image', {
+              method: 'POST',
+              body: petFormData
+            });
+            
+            if (petUploadResponse.ok) {
+              const petResult = await petUploadResponse.json();
+              petPhotoUrl = petResult.imageUrl;
+            }
+          }
+          
+          // Step 2: Update artwork with source images
           await fetch('/api/artwork/update', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               artwork_id: artwork.id,
+              source_images: {
+                pet_mom_photo: petMomPhotoUrl,
+                pet_photo: petPhotoUrl,
+                uploadthing_keys: {}
+              },
               generation_step: 'monalisa_generation'
             })
           });
 
-          // Step 2: Call MonaLisa Maker API directly
+          // Step 3: Call MonaLisa Maker API directly
           const monaLisaFormData = new FormData();
           if (formData.petMomPhoto instanceof File) {
             monaLisaFormData.append('image', formData.petMomPhoto);
