@@ -300,10 +300,17 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
           
           try {
             // Upload pet mom photo
-            if (formData.petMomPhoto instanceof File) {
+            const isPetMomFileValid = formData.petMomPhoto && 
+              (formData.petMomPhoto instanceof File || 
+               (typeof formData.petMomPhoto === 'object' && 
+                (formData.petMomPhoto as any).constructor?.name === 'File' &&
+                'name' in formData.petMomPhoto && 
+                'size' in formData.petMomPhoto));
+            
+            if (isPetMomFileValid) {
               console.log('📤 Uploading pet mom photo for artwork:', artwork.id);
               const petMomFormData = new FormData();
-              petMomFormData.append('image', formData.petMomPhoto);
+              petMomFormData.append('image', formData.petMomPhoto as File);
               petMomFormData.append('artworkId', artwork.id);
               petMomFormData.append('imageType', 'pet_mom_photo');
               
@@ -323,10 +330,17 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
             }
             
             // Upload pet photo
-            if (formData.petPhoto instanceof File) {
+            const isPetFileValid = formData.petPhoto && 
+              (formData.petPhoto instanceof File || 
+               (typeof formData.petPhoto === 'object' && 
+                (formData.petPhoto as any).constructor?.name === 'File' &&
+                'name' in formData.petPhoto && 
+                'size' in formData.petPhoto));
+            
+            if (isPetFileValid) {
               console.log('📤 Uploading pet photo for artwork:', artwork.id);
               const petFormData = new FormData();
-              petFormData.append('image', formData.petPhoto);
+              petFormData.append('image', formData.petPhoto as File);
               petFormData.append('artworkId', artwork.id);
               petFormData.append('imageType', 'pet_photo');
               
