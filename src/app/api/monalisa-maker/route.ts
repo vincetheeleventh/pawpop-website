@@ -53,8 +53,17 @@ export async function POST(req: NextRequest) {
       }
 
       console.log("☁️ Uploading user photo to fal storage...");
-      imageUrl = await fal.storage.upload(imageFile);
-      console.log("✅ Image uploaded:", imageUrl);
+      try {
+        imageUrl = await fal.storage.upload(imageFile);
+        console.log("✅ Image uploaded:", imageUrl);
+        
+        if (!imageUrl) {
+          throw new Error("fal.storage.upload returned null/undefined");
+        }
+      } catch (uploadError) {
+        console.error("❌ fal.storage.upload failed:", uploadError);
+        throw new Error(`Failed to upload image to fal.ai storage: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`);
+      }
     } else {
       // Handle JSON request with image URL
       const body = await req.json();
@@ -68,6 +77,13 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'No imageUrl provided' }, { status: 400 });
       }
     }
+
+    // Validate imageUrl before calling fal.ai API
+    if (!imageUrl || typeof imageUrl !== 'string') {
+      throw new Error(`Invalid imageUrl: ${imageUrl} (type: ${typeof imageUrl})`);
+    }
+    
+    console.log("🔗 Using image URL:", imageUrl);
 
     // Step 1: Transform user photo into Mona Lisa portrait
     console.log("🎨 Running MonaLisa Maker transformation...");
