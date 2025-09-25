@@ -90,19 +90,54 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
     }
   };
 
-  const handleFileUpload = (file: File, type: 'petMom' | 'pet') => {
-    if (type === 'petMom') {
-      setFormData(prev => ({ ...prev, petMomPhoto: file }));
-    } else {
-      setFormData(prev => ({ ...prev, petPhoto: file }));
+  const handleFileUpload = async (file: File, type: 'petMom' | 'pet') => {
+    let processedFile = file;
+    
+    // Check if file is HEIC/HEIF and convert to JPEG
+    if (file.type === 'image/heic' || file.type === 'image/heif' || 
+        file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+      
+      console.log('🔄 Converting HEIC file to JPEG:', file.name);
+      
+      try {
+        // Dynamic import to avoid SSR issues
+        const heic2any = (await import('heic2any')).default;
+        
+        const convertedBlob = await heic2any({
+          blob: file,
+          toType: 'image/jpeg',
+          quality: 0.8
+        }) as Blob;
+        
+        // Create new File object with JPEG type
+        processedFile = new File(
+          [convertedBlob], 
+          file.name.replace(/\.(heic|heif)$/i, '.jpg'),
+          { type: 'image/jpeg' }
+        );
+        
+        console.log('✅ HEIC conversion successful:', processedFile.name);
+        
+      } catch (conversionError) {
+        console.error('❌ HEIC conversion failed:', conversionError);
+        setError('Failed to process HEIC image. Please try a different photo or convert to JPG first.');
+        return;
+      }
     }
     
-    // Track photo upload
+    if (type === 'petMom') {
+      setFormData(prev => ({ ...prev, petMomPhoto: processedFile }));
+    } else {
+      setFormData(prev => ({ ...prev, petPhoto: processedFile }));
+    }
+    
+    // Track photo upload (use original file type for analytics)
     trackFunnel.photoUploaded(file.size, file.type);
     trackInteraction.featureUsed('Photo Upload', {
       file_type: file.type,
       file_size_mb: Math.round(file.size / 1024 / 1024 * 100) / 100,
-      upload_type: type
+      upload_type: type,
+      converted_from_heic: file.type === 'image/heic' || file.type === 'image/heif'
     });
 
     // Scroll to bottom to reveal next button after upload
@@ -126,21 +161,22 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
     setDragActive(prev => ({ ...prev, [type]: false }));
   };
 
-  const handleDrop = (e: React.DragEvent, type: 'petMom' | 'pet') => {
+  const handleDrop = async (e: React.DragEvent, type: 'petMom' | 'pet') => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(prev => ({ ...prev, [type]: false }));
     
-    const files = e.dataTransfer.files;
-    if (files && files[0]) {
-      const file = files[0];
-      // Validate file type
-      if (file.type.startsWith('image/')) {
-        handleFileUpload(file, type);
-      }
+    const files = Array.from(e.dataTransfer.files);
+    const imageFile = files.find(file => 
+      file.type.startsWith('image/') || 
+      file.name.toLowerCase().endsWith('.heic') || 
+      file.name.toLowerCase().endsWith('.heif')
+    );
+    
+    if (imageFile) {
+      await handleFileUpload(imageFile, type);
     }
   };
-
   const handleNext = () => {
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
@@ -705,7 +741,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                       Click to upload or drag and drop
                     </p>
                     <p className="text-xs font-geist text-gray-500 mt-1">
-                      JPG, PNG, WebP up to 8MB
+                      JPG, PNG, WebP, HEIC up to 8MB
                     </p>
                   </div>
                 )}
@@ -714,11 +750,11 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
               <input
                 ref={petMomInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
                 className="hidden"
-                onChange={(e) => {
+                onChange={async (e) => {
                   const file = e.target.files?.[0];
-                  if (file) handleFileUpload(file, 'petMom');
+                  if (file) await handleFileUpload(file, 'petMom');
                 }}
               />
             </div>
@@ -796,7 +832,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                       Click to upload or drag and drop
                     </p>
                     <p className="text-xs font-geist text-gray-500 mt-1">
-                      JPG, PNG, WebP up to 8MB
+                      JPG, PNG, WebP, HEIC up to 8MB
                     </p>
                   </div>
                 )}
@@ -805,11 +841,11 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
               <input
                 ref={petInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
                 className="hidden"
-                onChange={(e) => {
+                onChange={async (e) => {
                   const file = e.target.files?.[0];
-                  if (file) handleFileUpload(file, 'pet');
+                  if (file) await handleFileUpload(file, 'pet');
                 }}
               />
             </div>
