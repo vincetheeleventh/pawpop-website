@@ -136,7 +136,7 @@ export default function MockupDisplay({ artwork, onProductClick }: MockupDisplay
           {
             type: 'art_print',
             title: 'Fine Art Print',
-            description: 'Museum-quality fine art paper',
+            description: 'Museum-quality Paper',
             mockupUrl: artworkImageUrl,
             productId: 'fallback-print',
             size: '20x30'
@@ -144,7 +144,7 @@ export default function MockupDisplay({ artwork, onProductClick }: MockupDisplay
           {
             type: 'canvas_stretched',
             title: 'Canvas Stretched',
-            description: 'Gallery-wrapped, ready to hang',
+            description: 'Ready to hang',
             mockupUrl: artworkImageUrl,
             productId: 'fallback-canvas-stretched',
             size: '20x30'
@@ -152,7 +152,7 @@ export default function MockupDisplay({ artwork, onProductClick }: MockupDisplay
           {
             type: 'canvas_framed',
             title: 'Canvas Framed',
-            description: 'Professional framing included',
+            description: 'The Total Package',
             mockupUrl: artworkImageUrl,
             productId: 'fallback-canvas-framed',
             size: '20x30'
@@ -196,7 +196,7 @@ export default function MockupDisplay({ artwork, onProductClick }: MockupDisplay
       displayMockups.push({
         type: 'art_print',
         title: 'Fine Art Print',
-        description: 'Make it real on museum-quality fine art paper.',
+        description: 'Museum-quality Paper',
         mockupUrl: artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res || '',
         productId: 'fallback-art-print',
         size: '20x30'
@@ -272,25 +272,38 @@ export default function MockupDisplay({ artwork, onProductClick }: MockupDisplay
             {/* Image - Top on mobile, right on desktop */}
             <div className="flex-shrink-0 order-1 md:order-2">
               <div className="mb-2 md:mb-2">
-                <img 
-                  src={mockup.mockupUrl}
-                  alt={mockup.title}
-                  className="w-20 h-20 md:w-48 md:h-48 object-contain rounded mx-auto"
-                  onError={(e) => {
-                    // Fallback to artwork image if mockup fails to load
-                    const artworkImageUrl = artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res;
-                    if (artworkImageUrl && e.currentTarget.src !== artworkImageUrl) {
-                      e.currentTarget.src = artworkImageUrl;
-                    }
-                  }}
-                />
+                {mockup.type === 'digital' ? (
+                  // Show downward arrow for digital downloads
+                  <div className="w-20 h-20 md:w-48 md:h-48 flex items-center justify-center bg-pale-azure/10 rounded mx-auto">
+                    <svg 
+                      className="w-10 h-10 md:w-24 md:h-24 text-pale-azure" 
+                      fill="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5l-3.5-3.5 1.41-1.41L11 13.67V7h2v6.67l2.09-2.08L16.5 13l-3.5 3.5z"/>
+                    </svg>
+                  </div>
+                ) : (
+                  <img 
+                    src={mockup.mockupUrl}
+                    alt={mockup.title}
+                    className="w-20 h-20 md:w-48 md:h-48 object-contain rounded mx-auto"
+                    onError={(e) => {
+                      // Fallback to artwork image if mockup fails to load
+                      const artworkImageUrl = artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res;
+                      if (artworkImageUrl && e.currentTarget.src !== artworkImageUrl) {
+                        e.currentTarget.src = artworkImageUrl;
+                      }
+                    }}
+                  />
+                )}
               </div>
             </div>
 
             {/* Content - Bottom on mobile, left on desktop */}
             <div className="flex-1 order-2 md:order-1">
               <div>
-                <h4 className="font-semibold text-charcoal-frame text-sm md:text-xl mb-1">
+                <h4 className="font-semibold text-charcoal-frame text-base md:text-2xl mb-1">
                   {mockup.title.replace(/\s*\([^)]*\)/, '').trim()}
                 </h4>
                 <p className="text-xs md:text-sm text-gray-600 mb-2 md:mb-1">{mockup.description}</p>

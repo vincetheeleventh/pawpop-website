@@ -210,40 +210,65 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-mona-cream to-white">
-        <div className="container mx-auto px-4 py-8">
+      <div className="min-h-screen bg-site-bg">
+        <div className="container mx-auto px-4 py-12">
           {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-playfair font-bold text-charcoal-frame mb-2">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-5xl font-arvo font-bold text-text-primary mb-4">
               Your Masterpiece is Ready!
             </h1>
-            <p className="text-lg text-gray-600">
+            <p className="text-xl text-gray-600 font-geist">
               Your personalized Renaissance masterpiece
             </p>
           </div>
 
-          <div className="max-w-6xl mx-auto">
+          <div className="max-w-7xl mx-auto">
             {/* 2-Column Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
               
               {/* Left Column: Artwork Display */}
-              <div className="bg-naples-yellow rounded-lg shadow-lg p-8 lg:self-start">
-                <div className="bg-naples-yellow rounded-lg overflow-hidden">
+              <div className="bg-card-surface rounded-2xl shadow-xl p-8 lg:sticky lg:top-8">
+                <div className="bg-gradient-to-br from-naples-yellow/20 to-mindaro/10 rounded-xl p-6 mb-6">
                   <img 
                     src={artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res || artwork.generated_image_url}
                     alt="Your PawPop Masterpiece"
-                    className="w-full h-auto object-contain"
+                    className="w-full h-auto object-contain rounded-lg shadow-md"
                   />
                 </div>
+                
               </div>
 
-              {/* Right Column: Product Mockups */}
-              <div className="bg-cyclamen/50 rounded-lg shadow-lg p-8">
-                <h3 className="text-xl font-playfair font-semibold text-charcoal-frame mb-6">
-                  Make Your Masterpiece Real
-                </h3>
-                
-                <MockupDisplay artwork={artwork} onProductClick={handleProductClick} />
+              {/* Right Column: Product Options */}
+              <div className="space-y-8">
+                {/* Section Header */}
+                <div className="bg-card-surface rounded-2xl shadow-lg p-8">
+                  <div className="text-center mb-8">
+                    <h3 className="text-2xl md:text-3xl font-arvo font-bold text-text-primary mb-3">
+                      Make It Real
+                    </h3>
+                    <p className="text-lg text-gray-600 font-geist">
+                      Choose how you want to treasure your fur baby masterpiece
+                    </p>
+                  </div>
+                  
+                  {/* Product Options */}
+                  <MockupDisplay artwork={artwork} onProductClick={handleProductClick} />
+                </div>
+
+                {/* Call to Action */}
+                <div className="bg-gradient-to-r from-atomic-tangerine/10 to-cyclamen/10 rounded-2xl p-8 text-center">
+                  <h4 className="text-xl font-arvo font-semibold text-text-primary mb-3">
+                    Ready to Order?
+                  </h4>
+                  <p className="text-gray-600 font-geist mb-6">
+                    Click any product above to see all sizes and complete your order
+                  </p>
+                  <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
+                    <span>✓ Free shipping on orders over $75</span>
+                    <span>•</span>
+                    <span>✓ 30-day satisfaction guarantee</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
