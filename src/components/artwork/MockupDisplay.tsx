@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { getPriceConfig } from '@/lib/plausible'
 
 interface Mockup {
   type: string
@@ -34,6 +35,9 @@ export default function MockupDisplay({ artwork, onProductClick }: MockupDisplay
   const [mockups, setMockups] = useState<Mockup[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // Get dynamic pricing based on A/B test variant
+  const priceConfig = getPriceConfig()
 
   useEffect(() => {
     const loadMockups = async () => {
@@ -310,10 +314,10 @@ export default function MockupDisplay({ artwork, onProductClick }: MockupDisplay
                 
                 {/* Price */}
                 <p className="text-sm md:text-lg font-bold text-cyclamen">
-                  {mockup.type === 'digital' ? '$19' :
-                   mockup.type === 'art_print' ? 'From $49' :
-                   mockup.type === 'canvas_stretched' ? 'From $89' :
-                   'From $149'}
+                  {mockup.type === 'digital' ? `$${priceConfig.digital}` :
+                   mockup.type === 'art_print' ? `From $${priceConfig.print}` :
+                   mockup.type === 'canvas_stretched' ? `From $${priceConfig.canvas}` :
+                   `From $${priceConfig.canvasFramed}`}
                 </p>
                 <p className="text-xs text-gray-500 mt-1 hidden md:block">Click to see all sizes</p>
               </div>

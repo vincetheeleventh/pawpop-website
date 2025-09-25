@@ -56,9 +56,9 @@ export const PRICE_VARIANTS = {
   A: {
     variant: 'A' as const,
     digital: 15,        // PRODUCT_A.md: $15.00 CAD
-    print: 29,          // PRODUCT_A.md: $29.00 CAD (12x18 size)
-    printMid: 39,       // PRODUCT_A.md: $39.00 CAD (18x24 size)
-    printLarge: 48,     // PRODUCT_A.md: $48.00 CAD (20x30 size)
+    print: 39,          // PRODUCT_A.md: $39.00 CAD (12x18 size) - UPDATED
+    printMid: 49,       // PRODUCT_A.md: $49.00 CAD (18x24 size) - UPDATED
+    printLarge: 59,     // PRODUCT_A.md: $59.00 CAD (20x30 size) - UPDATED
     canvas: 59,         // PRODUCT_A.md: $59.00 CAD (12x18 stretched)
     canvasMid: 79,      // PRODUCT_A.md: $79.00 CAD (16x24 stretched)
     canvasLarge: 99,    // PRODUCT_A.md: $99.00 CAD (20x30 stretched)

@@ -5,13 +5,14 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 // Email testing configuration
 const isTestMode = process.env.NODE_ENV === 'development' || process.env.EMAIL_TEST_MODE === 'true'
-const testEmailRecipient = process.env.EMAIL_TEST_RECIPIENT || 'hello@pawpopart.com'
+const testEmailRecipient = process.env.EMAIL_TEST_RECIPIENT || 'pawpopart@gmail.com'
 
 export interface EmailData {
   to: string
   subject: string
   html: string
   from?: string
+  replyTo?: string
 }
 
 export interface MasterpieceCreatingEmailData {
@@ -71,7 +72,8 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; me
 
     // In test mode, redirect all emails to test recipient and add prefix to subject
     const emailData = isTestMode ? {
-      from: data.from || 'PawPop <onboarding@resend.dev>',
+      from: data.from || 'PawPop <hello@updates.pawpopart.com>',
+      replyTo: data.replyTo || 'hello@pawpopart.com',
       to: testEmailRecipient,
       subject: `[TEST] ${data.subject} (Original: ${data.to})`,
       html: `
@@ -84,7 +86,8 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; me
         ${data.html}
       `,
     } : {
-      from: data.from || 'PawPop <onboarding@resend.dev>',
+      from: data.from || 'PawPop <hello@updates.pawpopart.com>',
+      replyTo: data.replyTo || 'hello@pawpopart.com',
       to: data.to,
       subject: data.subject,
       html: data.html,
@@ -167,7 +170,7 @@ export async function sendMasterpieceCreatingEmail(data: MasterpieceCreatingEmai
         <div class="footer">
           <p>PawPop - The Unforgettable Gift for Pet Moms</p>
           <p>2006-1323 Homer St, Vancouver BC Canada V6B 5T1</p>
-          <p>Questions? Reply to this email or contact us at hello@pawpopart.com</p>
+          <p>Questions? Reply to this email or contact us at hello@updates.pawpopart.com</p>
         </div>
       </div>
     </body>
@@ -253,7 +256,7 @@ export async function sendMasterpieceReadyEmail(data: MasterpieceReadyEmailData)
         <div class="footer">
           <p>PawPop - The Unforgettable Gift for Pet Moms</p>
           <p>2006-1323 Homer St, Vancouver BC Canada V6B 5T1</p>
-          <p>Questions? Reply to this email or contact us at hello@pawpopart.com</p>
+          <p>Questions? Reply to this email or contact us at hello@updates.pawpopart.com</p>
         </div>
       </div>
     </body>
@@ -345,7 +348,7 @@ export async function sendOrderConfirmationEmail(data: OrderConfirmationEmailDat
         <div class="footer">
           <p>PawPop - The Unforgettable Gift for Pet Moms</p>
           <p>2006-1323 Homer St, Vancouver BC Canada V6B 5T1</p>
-          <p>Questions? Reply to this email or contact us at hello@pawpopart.com</p>
+          <p>Questions? Reply to this email or contact us at hello@updates.pawpopart.com</p>
         </div>
       </div>
     </body>
@@ -427,7 +430,7 @@ export async function sendShippingNotificationEmail(data: ShippingNotificationEm
         <div class="footer">
           <p>PawPop - The Unforgettable Gift for Pet Moms</p>
           <p>2006-1323 Homer St, Vancouver BC Canada V6B 5T1</p>
-          <p>Questions? Reply to this email or contact us at hello@pawpopart.com</p>
+          <p>Questions? Reply to this email or contact us at hello@updates.pawpopart.com</p>
         </div>
       </div>
     </body>
@@ -550,7 +553,7 @@ export async function sendSystemAlertEmail(data: SystemAlertEmailData) {
   const recipient = 'pawpopart@gmail.com'
 
   const result = await sendEmail({
-    from: 'PawPop Alerts <alerts@pawpopart.com>',
+    from: 'PawPop Alerts <hello@updates.pawpopart.com>',
     to: recipient,
     subject: `[${data.severity.toUpperCase()}] ${data.service} Alert: ${data.message}`,
     html
@@ -669,7 +672,7 @@ export async function sendAdminReviewNotification(data: AdminReviewNotificationD
 
   // Always send to pawpopart@gmail.com for admin reviews (tagged ADMIN in subject)
   const result = await sendEmail({
-    from: 'PawPop Admin <onboarding@resend.dev>',
+    from: 'PawPop Admin <hello@updates.pawpopart.com>',
     to: 'pawpopart@gmail.com',
     subject: `[ADMIN] ${reviewTypeDisplay} Review Required${petNameDisplay} - ${data.customerName}`,
     html

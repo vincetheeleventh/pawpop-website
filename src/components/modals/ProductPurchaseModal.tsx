@@ -684,7 +684,7 @@ export default function ProductPurchaseModal({
                   </>
                 )}
                 
-                <p>✓ Uncontrollable smiles guaranteed</p>
+                <p>✓ Biggest Grin Guarantee</p>
               </div>
             </div>
           </div>
