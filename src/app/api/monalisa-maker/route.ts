@@ -125,8 +125,20 @@ export async function POST(req: NextRequest) {
         artworkId = body.artworkId;
       }
       
+      // Enhanced validation for imageUrl
       if (!imageUrl) {
-        return NextResponse.json({ error: 'No imageUrl provided' }, { status: 400 });
+        return NextResponse.json({ error: 'No imageUrl provided in request body' }, { status: 400 });
+      }
+      
+      if (typeof imageUrl !== 'string') {
+        console.error('❌ Invalid imageUrl type received:', {
+          imageUrl,
+          type: typeof imageUrl,
+          body: JSON.stringify(body, null, 2)
+        });
+        return NextResponse.json({ 
+          error: `Invalid imageUrl type: expected string, got ${typeof imageUrl}. Value: ${JSON.stringify(imageUrl)}` 
+        }, { status: 400 });
       }
     }
 

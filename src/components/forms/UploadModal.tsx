@@ -386,43 +386,16 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
           }
 
           console.log('🎨 Starting MonaLisa generation for artwork:', artwork.id);
-          // Step 3: Call MonaLisa Maker API directly
-          const monaLisaFormData = new FormData();
-          if (formData.petMomPhoto instanceof File) {
-            monaLisaFormData.append('image', formData.petMomPhoto);
-            monaLisaFormData.append('artworkId', artwork.id.toString());
-          } else {
-            // If it's already a URL, send as JSON
-            const monaLisaResponse = await fetch('/api/monalisa-maker', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                imageUrl: formData.petMomPhoto,
-                artworkId: artwork.id.toString()
-              })
-            });
-            
-            if (!monaLisaResponse.ok) {
-              throw new Error('MonaLisa generation failed');
-            }
-            
-            const monaLisaResult = await monaLisaResponse.json();
-            const monaLisaImageUrl = monaLisaResult.imageUrl;
-            
-            if (monaLisaImageUrl) {
-              // Continue with the rest of the flow...
-              await fetch('/api/artwork/update', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  artwork_id: artwork.id,
-                  generated_image_url: monaLisaImageUrl,
-                  generation_step: 'monalisa_generation'
-                })
-              });
-            }
-            return;
+          
+          // Validate that we have a valid pet mom photo file
+          if (!formData.petMomPhoto || !(formData.petMomPhoto instanceof File)) {
+            throw new Error('Pet mom photo is required for MonaLisa generation');
           }
+          
+          // Step 3: Call MonaLisa Maker API with FormData
+          const monaLisaFormData = new FormData();
+          monaLisaFormData.append('image', formData.petMomPhoto);
+          monaLisaFormData.append('artworkId', artwork.id.toString());
           
           const monaLisaResponse = await fetch('/api/monalisa-maker', {
             method: 'POST',
