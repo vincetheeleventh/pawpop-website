@@ -24,7 +24,7 @@ export const landingPageCopy = {
     pairs: [
       {
         before: '/images/test headshots/Screenshot_2.jpg',
-        after: '/images/hero_image.png',
+        after: '/images/hero_1.jpeg',
         altText: 'Sarah & Bella → Renaissance Masterpiece'
       },
       {

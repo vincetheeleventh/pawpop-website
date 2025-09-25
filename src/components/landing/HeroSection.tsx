@@ -29,7 +29,7 @@ export const HeroSection = ({ autoOpenUpload = false }: HeroSectionProps) => {
         {/* Hero Image - Full Width on Mobile */}
         <div className="mb-8 w-full px-6 md:px-0">
           <Image
-            src="/images/hero_image.png"
+            src="/images/hero_1.jpeg"
             alt="Pet mom transformed into Mona Lisa with her dog"
             width={800}
             height={600}

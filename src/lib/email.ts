@@ -4,7 +4,8 @@ import { Resend } from 'resend'
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 // Email testing configuration
-const isTestMode = process.env.NODE_ENV === 'development' || process.env.EMAIL_TEST_MODE === 'true'
+// Only use test mode if explicitly enabled via EMAIL_TEST_MODE
+const isTestMode = process.env.EMAIL_TEST_MODE === 'true'
 const testEmailRecipient = process.env.EMAIL_TEST_RECIPIENT || 'pawpopart@gmail.com'
 
 export interface EmailData {

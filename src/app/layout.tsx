@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     siteName: "PawPop",
     images: [
       {
-        url: "https://pawpop.art/images/hero_image.png",
+        url: "https://pawpop.art/images/hero_1.jpeg",
         width: 1200,
         height: 630,
         alt: "Pet mom transformed into Mona Lisa with her dog - PawPop Art",
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "PawPop - The Unforgettable Gift for Pet Moms",
     description: "Transform into the Mona Lisa with your beloved pet! Museum-quality AI Renaissance art in 60 seconds.",
-    images: ["https://pawpop.art/images/hero_image.png"],
+    images: ["https://pawpop.art/images/hero_1.jpeg"],
     creator: "@pawpopart",
     site: "@pawpopart",
   },

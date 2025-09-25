@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Upload Your Pet Photo | PawPop',
     description: 'Transform your pet\'s photo into a beautiful custom portrait',
-    images: ['/images/hero_image.png'],
+    images: ['/images/hero_1.jpeg'],
   },
 };
 
