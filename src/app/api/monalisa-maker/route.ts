@@ -60,34 +60,37 @@ export async function POST(req: NextRequest) {
         console.log("📦 Upload result (truncated):", JSON.stringify(uploadResult).substring(0, 200) + '...');
         
         // Handle multiple possible response formats from fal.ai
+        let extractedUrl: string | undefined;
+        
         if (typeof uploadResult === 'string') {
           // Direct string URL
-          imageUrl = uploadResult;
+          extractedUrl = uploadResult;
         } else if (uploadResult && typeof uploadResult === 'object') {
           // Try common property names for URLs
           const possibleUrlProps = ['url', 'file_url', 'download_url', 'public_url', 'data_url', 'href', 'link'];
           
           for (const prop of possibleUrlProps) {
             if (prop in uploadResult && typeof (uploadResult as any)[prop] === 'string') {
-              imageUrl = (uploadResult as any)[prop];
-              console.log(`✅ Found URL in property '${prop}':`, imageUrl);
+              extractedUrl = (uploadResult as any)[prop];
+              console.log(`✅ Found URL in property '${prop}':`, extractedUrl);
               break;
             }
           }
           
           // If no direct URL property, check nested data object
-          if (!imageUrl && 'data' in uploadResult && uploadResult.data && typeof uploadResult.data === 'object') {
+          if (!extractedUrl && 'data' in uploadResult && (uploadResult as any).data && typeof (uploadResult as any).data === 'object') {
+            const dataObj = (uploadResult as any).data;
             for (const prop of possibleUrlProps) {
-              if (prop in uploadResult.data && typeof (uploadResult.data as any)[prop] === 'string') {
-                imageUrl = (uploadResult.data as any)[prop];
-                console.log(`✅ Found URL in data.${prop}:`, imageUrl);
+              if (prop in dataObj && typeof dataObj[prop] === 'string') {
+                extractedUrl = dataObj[prop];
+                console.log(`✅ Found URL in data.${prop}:`, extractedUrl);
                 break;
               }
             }
           }
           
           // If still no URL found, log the full object for debugging
-          if (!imageUrl) {
+          if (!extractedUrl) {
             console.error("❌ Could not extract URL from upload result:", JSON.stringify(uploadResult, null, 2));
             throw new Error(`No valid URL found in upload response. Available properties: ${Object.keys(uploadResult).join(', ')}`);
           }
@@ -96,6 +99,8 @@ export async function POST(req: NextRequest) {
           throw new Error(`Unexpected upload result format: ${typeof uploadResult}`);
         }
         
+        // Assign the extracted URL to imageUrl
+        imageUrl = extractedUrl;
         console.log("✅ Image uploaded, extracted URL:", imageUrl);
         
         if (!imageUrl || typeof imageUrl !== 'string') {
