@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   const requestId = `monalisa_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   
   try {
-    console.log("🎨 MonaLisa Maker - Step 1: Portrait Transformation");
+    console.log("🎨 MonaLisa Maker - Step 1: Portrait Transformation [v2.0]");
     
     let imageUrl: string;
     let artworkId = `temp_${Date.now()}`;
