@@ -125,6 +125,33 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
       }
     }
     
+    // Compress image if it's too large (>3MB) to avoid Vercel payload limits
+    if (processedFile.size > 3 * 1024 * 1024) {
+      console.log('🗜️ Compressing large image:', processedFile.name, `${Math.round(processedFile.size / 1024 / 1024)}MB`);
+      
+      try {
+        // Dynamic import to avoid SSR issues
+        const imageCompression = (await import('browser-image-compression')).default;
+        
+        const compressedFile = await imageCompression(processedFile, {
+          maxSizeMB: 2.5, // Target 2.5MB max to stay under Vercel's 4.5MB limit
+          maxWidthOrHeight: 1920, // Max dimension
+          useWebWorker: true,
+          fileType: 'image/jpeg'
+        });
+        
+        console.log('✅ Image compression successful:', 
+          `${Math.round(processedFile.size / 1024 / 1024)}MB → ${Math.round(compressedFile.size / 1024 / 1024)}MB`);
+        
+        processedFile = compressedFile;
+        
+      } catch (compressionError) {
+        console.error('❌ Image compression failed:', compressionError);
+        setError('Failed to process large image. Please try a smaller photo.');
+        return;
+      }
+    }
+    
     if (type === 'petMom') {
       setFormData(prev => ({ ...prev, petMomPhoto: processedFile }));
     } else {
@@ -741,7 +768,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                       Click to upload or drag and drop
                     </p>
                     <p className="text-xs font-geist text-gray-500 mt-1">
-                      JPG, PNG, WebP, HEIC up to 8MB
+                      JPG, PNG, WebP, HEIC (auto-compressed)
                     </p>
                   </div>
                 )}
@@ -832,7 +859,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                       Click to upload or drag and drop
                     </p>
                     <p className="text-xs font-geist text-gray-500 mt-1">
-                      JPG, PNG, WebP, HEIC up to 8MB
+                      JPG, PNG, WebP, HEIC (auto-compressed)
                     </p>
                   </div>
                 )}
