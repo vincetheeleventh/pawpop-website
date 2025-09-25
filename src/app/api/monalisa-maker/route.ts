@@ -15,13 +15,14 @@ export async function POST(req: NextRequest) {
     console.log("🎨 MonaLisa Maker - Step 1: Portrait Transformation [v2.0]");
     
     let imageUrl: string;
+    let imageFile: File | null = null;
     let artworkId = `temp_${Date.now()}`;
     const contentType = req.headers.get('content-type');
 
     if (contentType?.includes('multipart/form-data')) {
       // Handle file upload
       const formData = await req.formData();
-      const imageFile = formData.get('image') as File;
+      imageFile = formData.get('image') as File;
       
       if (!imageFile) {
         return NextResponse.json({ error: 'No image file provided' }, { status: 400 });
@@ -143,40 +144,50 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Validate imageUrl before calling fal.ai API
-    console.log("🔍 Final imageUrl validation - value:", imageUrl);
-    console.log("🔍 Final imageUrl validation - type:", typeof imageUrl);
-    console.log("🔍 Final imageUrl validation - stringified:", JSON.stringify(imageUrl));
-    
-    if (!imageUrl || typeof imageUrl !== 'string') {
-      console.error("❌ imageUrl validation failed:", {
-        value: imageUrl,
-        type: typeof imageUrl,
-        stringified: JSON.stringify(imageUrl),
-        isString: typeof imageUrl === 'string',
-        isObject: typeof imageUrl === 'object',
-        keys: typeof imageUrl === 'object' ? Object.keys(imageUrl as any) : 'N/A'
+    // Validate that we have either an image file or imageUrl
+    if (!imageFile && (!imageUrl || typeof imageUrl !== 'string')) {
+      console.error("❌ No valid image input:", {
+        hasImageFile: !!imageFile,
+        imageUrl: imageUrl,
+        imageUrlType: typeof imageUrl
       });
-      throw new Error(`Invalid imageUrl: ${JSON.stringify(imageUrl)} (type: ${typeof imageUrl})`);
+      throw new Error(`No valid image input: need either image file or valid imageUrl`);
     }
     
-    console.log("🔗 Using image URL:", imageUrl);
+    if (imageFile) {
+      console.log("📎 Using direct image file:", imageFile.name);
+    } else {
+      console.log("🔗 Using image URL:", imageUrl);
+    }
 
     // Step 1: Transform user photo into Mona Lisa portrait
     console.log("🎨 Running MonaLisa Maker transformation...");
+    
+    // Use image file directly if we have FormData, otherwise use image_url
+    const falInput: any = {
+      prompt: "keep likeness and hairstyle the same, change pose and style to mona lisa",
+      loras: [{
+        path: "https://v3.fal.media/files/koala/HV-XcuBOG0z0apXA9dzP7_adapter_model.safetensors",
+        scale: 1.0
+      }],
+      resolution_mode: "2:3" as const,
+      guidance_scale: 2.5,
+      num_inference_steps: 28,
+      seed: Math.floor(Math.random() * 1000000)
+    };
+
+    if (imageFile) {
+      // Use direct file upload for FormData
+      console.log("📎 Using direct image file upload to fal.ai");
+      falInput.image = imageFile;
+    } else {
+      // Use image URL for JSON requests
+      console.log("🔗 Using image URL for fal.ai");
+      falInput.image_url = imageUrl;
+    }
+
     const stream = await fal.stream('fal-ai/flux-kontext-lora', {
-      input: {
-        image_url: imageUrl,
-        prompt: "keep likeness and hairstyle the same, change pose and style to mona lisa",
-        loras: [{
-          path: "https://v3.fal.media/files/koala/HV-XcuBOG0z0apXA9dzP7_adapter_model.safetensors",
-          scale: 1.0
-        }],
-        resolution_mode: "2:3" as const,
-        guidance_scale: 2.5,
-        num_inference_steps: 28,
-        seed: Math.floor(Math.random() * 1000000)
-      }
+      input: falInput
     });
 
     console.log("📡 Processing MonaLisa transformation...");
