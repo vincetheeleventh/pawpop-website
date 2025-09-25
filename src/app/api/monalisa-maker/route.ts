@@ -54,11 +54,25 @@ export async function POST(req: NextRequest) {
 
       console.log("☁️ Uploading user photo to fal storage...");
       try {
-        imageUrl = await fal.storage.upload(imageFile);
-        console.log("✅ Image uploaded:", imageUrl);
+        const uploadResult = await fal.storage.upload(imageFile);
+        console.log("📦 Upload result:", typeof uploadResult, uploadResult);
         
-        if (!imageUrl) {
-          throw new Error("fal.storage.upload returned null/undefined");
+        // Extract URL from response object if needed
+        if (typeof uploadResult === 'string') {
+          imageUrl = uploadResult;
+        } else if (uploadResult && typeof uploadResult === 'object' && 'url' in uploadResult) {
+          imageUrl = (uploadResult as any).url;
+        } else if (uploadResult && typeof uploadResult === 'object' && 'file_url' in uploadResult) {
+          imageUrl = (uploadResult as any).file_url;
+        } else {
+          console.error("❌ Unexpected upload result format:", uploadResult);
+          throw new Error(`Unexpected upload result format: ${typeof uploadResult}`);
+        }
+        
+        console.log("✅ Image uploaded, extracted URL:", imageUrl);
+        
+        if (!imageUrl || typeof imageUrl !== 'string') {
+          throw new Error(`Invalid URL extracted: ${imageUrl} (type: ${typeof imageUrl})`);
         }
       } catch (uploadError) {
         console.error("❌ fal.storage.upload failed:", uploadError);
