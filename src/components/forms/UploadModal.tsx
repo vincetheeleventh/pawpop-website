@@ -227,7 +227,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
       }));
       
       // Start background generation using direct API calls (bypassing problematic monalisa-complete)
-      const generateArtwork = async () => {
+      const generateArtwork = async (): Promise<void> => {
         try {
           // Step 1: Upload and store source images to Supabase (non-blocking)
           console.log('📤 Uploading source images to Supabase...');
@@ -497,25 +497,37 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                 console.error('Pet integration failed:', await petIntegrationResponse.text());
               }
             } else {
-              console.error('MonaLisa generation failed - no image URL returned');
+              const errorMsg = 'MonaLisa generation failed - no image URL returned';
+              console.error(errorMsg);
+              throw new Error(errorMsg);
             }
           } else {
-            console.error('MonaLisa generation failed:', await monaLisaResponse.text());
+            const errorText = await monaLisaResponse.text();
+            console.error('MonaLisa generation failed:', errorText);
+            throw new Error(`MonaLisa generation failed: ${errorText}`);
           }
         } catch (generationError) {
           console.error('Artwork generation failed:', generationError);
+          throw generationError; // Re-throw so the Promise.catch() can handle it
         }
       };
 
-      // Start the generation process in the background
-      generateArtwork();
+      // Start the generation process and wait for completion
+      setIsSubmitting(false);
       
-      // Redirect immediately after showing confirmation
-      setTimeout(() => {
-        setIsSubmitting(false);
-        onClose();
-        router.push(`/artwork/${access_token}`);
-      }, 1500);
+      // Start generation process with progress tracking
+      generateArtwork().then(() => {
+        console.log('✅ Generation completed successfully');
+        // Wait a bit longer before redirecting to show completion
+        setTimeout(() => {
+          onClose();
+          router.push(`/artwork/${access_token}`);
+        }, 3000);
+      }).catch((error) => {
+        console.error('❌ Generation failed:', error);
+        setError('Generation failed: ' + (error.message || 'Unknown error'));
+        setProcessing({ step: 'error', message: 'Generation failed', progress: 0 });
+      });
       
     } catch (error) {
       console.error('Artwork submission failed:', {

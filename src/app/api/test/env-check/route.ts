@@ -6,6 +6,11 @@ export async function GET() {
     printifyApiToken: process.env.PRINTIFY_API_TOKEN ? 'SET' : 'NOT SET',
     printifyShopId: process.env.PRINTIFY_SHOP_ID ? process.env.PRINTIFY_SHOP_ID : 'NOT SET',
     printifyWebhookSecret: process.env.PRINTIFY_WEBHOOK_SECRET ? 'SET' : 'NOT SET',
-    nodeEnv: process.env.NODE_ENV
+    nodeEnv: process.env.NODE_ENV,
+    // Email and review settings
+    resendApiKey: process.env.RESEND_API_KEY ? 'SET' : 'NOT SET',
+    emailTestMode: process.env.EMAIL_TEST_MODE,
+    enableHumanReview: process.env.ENABLE_HUMAN_REVIEW,
+    humanReviewEnabled: process.env.ENABLE_HUMAN_REVIEW === 'true'
   });
 }
