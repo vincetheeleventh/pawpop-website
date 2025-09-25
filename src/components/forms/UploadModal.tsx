@@ -528,8 +528,8 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl" data-testid="upload-modal">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto">
+      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl my-8 max-h-[90vh] overflow-y-auto" data-testid="upload-modal">
         {/* Close Button */}
         <button
           onClick={onClose}
