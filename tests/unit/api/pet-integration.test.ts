@@ -46,8 +46,12 @@ describe('/api/pet-integration', () => {
       const response = await POST(request);
       
       expect(response.status).toBe(200);
-      expect(response.headers.get('Content-Type')).toBe('image/jpeg');
-      expect(response.headers.get('X-Generated-Image-URL')).toBeTruthy();
+      expect(response.headers.get('Content-Type')).toContain('application/json');
+      
+      const body = await response.json();
+      expect(body.success).toBe(true);
+      expect(body.imageUrl).toBeTruthy();
+      
       const { fal } = await import('@fal-ai/client');
       expect(fal.subscribe).toHaveBeenCalledWith('fal-ai/flux-pro/kontext/max/multi', expect.any(Object));
     });
@@ -81,7 +85,11 @@ describe('/api/pet-integration', () => {
       const response = await POST(request);
       
       expect(response.status).toBe(200);
-      expect(response.headers.get('Content-Type')).toBe('image/jpeg');
+      expect(response.headers.get('Content-Type')).toContain('application/json');
+      
+      const body = await response.json();
+      expect(body.success).toBe(true);
+      expect(body.imageUrl).toBeTruthy();
     });
 
     it('should return 400 when missing URLs', async () => {
@@ -121,12 +129,14 @@ describe('/api/pet-integration', () => {
               'https://example.com/portrait.jpg',
               'https://example.com/pet.jpg'
             ],
-            guidance_scale: 3.5,
+            guidance_scale: 3.0,
             num_images: 1,
             output_format: 'jpeg',
             safety_tolerance: '2',
             aspect_ratio: '2:3'
-          })
+          }),
+          logs: true,
+          onQueueUpdate: expect.any(Function)
         })
       );
     });

@@ -44,8 +44,11 @@ describe('/api/monalisa-maker', () => {
       const response = await POST(request);
       
       expect(response.status).toBe(200);
-      expect(response.headers.get('Content-Type')).toBe('image/png');
-      expect(response.headers.get('X-Generated-Image-URL')).toBeTruthy();
+      expect(response.headers.get('Content-Type')).toContain('application/json');
+      
+      const body = await response.json();
+      expect(body.success).toBe(true);
+      expect(body.imageUrl).toBeTruthy();
     });
 
     it('should return 400 when no image provided', async () => {
@@ -59,7 +62,7 @@ describe('/api/monalisa-maker', () => {
       
       expect(response.status).toBe(400);
       const body = await response.json();
-      expect(body.error).toBe('No imageUrl provided');
+      expect(body.error).toBe('No imageUrl provided in request body');
     });
   });
 
@@ -74,7 +77,11 @@ describe('/api/monalisa-maker', () => {
       const response = await POST(request);
       
       expect(response.status).toBe(200);
-      expect(response.headers.get('Content-Type')).toBe('image/png');
+      expect(response.headers.get('Content-Type')).toContain('application/json');
+      
+      const body = await response.json();
+      expect(body.success).toBe(true);
+      expect(body.imageUrl).toBeTruthy();
     });
 
     it('should return 400 when no imageUrl provided', async () => {
@@ -88,7 +95,7 @@ describe('/api/monalisa-maker', () => {
       
       expect(response.status).toBe(400);
       const body = await response.json();
-      expect(body.error).toBe('No imageUrl provided');
+      expect(body.error).toBe('No imageUrl provided in request body');
     });
   });
 
@@ -99,20 +106,17 @@ describe('/api/monalisa-maker', () => {
         throw new Error('API Error');
       });
 
-      const imageBuffer = loadTestImage(TEST_IMAGES.USER_PHOTO);
-      const formData = createTestFormData(imageBuffer, 'test-user.png', 'image');
-      
       const request = new NextRequest('http://localhost:3000/api/monalisa-maker', {
         method: 'POST',
-        body: formData,
-        headers: { 'content-type': 'multipart/form-data' }
+        body: JSON.stringify({ imageUrl: 'https://example.com/user-photo.jpg' }),
+        headers: { 'content-type': 'application/json' }
       });
 
       const response = await POST(request);
       
       expect(response.status).toBe(500);
       const body = await response.json();
-      expect(body.error).toBe('MonaLisa Maker transformation failed');
+      expect(body.error).toBe('Failed to generate MonaLisa portrait');
     });
   });
 });
