@@ -388,7 +388,20 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
           console.log('🎨 Starting MonaLisa generation for artwork:', artwork.id);
           
           // Validate that we have a valid pet mom photo file
+          console.log('🔍 Validating pet mom photo:', {
+            hasPetMomPhoto: !!formData.petMomPhoto,
+            petMomPhotoType: typeof formData.petMomPhoto,
+            isFile: formData.petMomPhoto ? formData.petMomPhoto instanceof File : false,
+            fileName: formData.petMomPhoto?.name,
+            fileSize: formData.petMomPhoto?.size
+          });
+          
           if (!formData.petMomPhoto || !(formData.petMomPhoto instanceof File)) {
+            console.error('❌ Pet mom photo validation failed:', {
+              petMomPhoto: formData.petMomPhoto,
+              type: typeof formData.petMomPhoto,
+              isFile: formData.petMomPhoto ? formData.petMomPhoto instanceof File : false
+            });
             throw new Error('Pet mom photo is required for MonaLisa generation');
           }
           
