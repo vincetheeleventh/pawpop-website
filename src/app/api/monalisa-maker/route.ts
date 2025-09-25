@@ -55,15 +55,42 @@ export async function POST(req: NextRequest) {
       console.log("☁️ Uploading user photo to fal storage...");
       try {
         const uploadResult = await fal.storage.upload(imageFile);
-        console.log("📦 Upload result:", typeof uploadResult, uploadResult);
+        console.log("📦 Upload result type:", typeof uploadResult);
+        console.log("📦 Upload result keys:", uploadResult && typeof uploadResult === 'object' ? Object.keys(uploadResult) : 'N/A');
+        console.log("📦 Upload result (truncated):", JSON.stringify(uploadResult).substring(0, 200) + '...');
         
-        // Extract URL from response object if needed
+        // Handle multiple possible response formats from fal.ai
         if (typeof uploadResult === 'string') {
+          // Direct string URL
           imageUrl = uploadResult;
-        } else if (uploadResult && typeof uploadResult === 'object' && 'url' in uploadResult) {
-          imageUrl = (uploadResult as any).url;
-        } else if (uploadResult && typeof uploadResult === 'object' && 'file_url' in uploadResult) {
-          imageUrl = (uploadResult as any).file_url;
+        } else if (uploadResult && typeof uploadResult === 'object') {
+          // Try common property names for URLs
+          const possibleUrlProps = ['url', 'file_url', 'download_url', 'public_url', 'data_url', 'href', 'link'];
+          
+          for (const prop of possibleUrlProps) {
+            if (prop in uploadResult && typeof (uploadResult as any)[prop] === 'string') {
+              imageUrl = (uploadResult as any)[prop];
+              console.log(`✅ Found URL in property '${prop}':`, imageUrl);
+              break;
+            }
+          }
+          
+          // If no direct URL property, check nested data object
+          if (!imageUrl && 'data' in uploadResult && uploadResult.data && typeof uploadResult.data === 'object') {
+            for (const prop of possibleUrlProps) {
+              if (prop in uploadResult.data && typeof (uploadResult.data as any)[prop] === 'string') {
+                imageUrl = (uploadResult.data as any)[prop];
+                console.log(`✅ Found URL in data.${prop}:`, imageUrl);
+                break;
+              }
+            }
+          }
+          
+          // If still no URL found, log the full object for debugging
+          if (!imageUrl) {
+            console.error("❌ Could not extract URL from upload result:", JSON.stringify(uploadResult, null, 2));
+            throw new Error(`No valid URL found in upload response. Available properties: ${Object.keys(uploadResult).join(', ')}`);
+          }
         } else {
           console.error("❌ Unexpected upload result format:", uploadResult);
           throw new Error(`Unexpected upload result format: ${typeof uploadResult}`);
@@ -74,6 +101,12 @@ export async function POST(req: NextRequest) {
         if (!imageUrl || typeof imageUrl !== 'string') {
           throw new Error(`Invalid URL extracted: ${imageUrl} (type: ${typeof imageUrl})`);
         }
+        
+        // Validate URL format
+        if (!imageUrl.startsWith('http')) {
+          throw new Error(`Invalid URL format: ${imageUrl}`);
+        }
+        
       } catch (uploadError) {
         console.error("❌ fal.storage.upload failed:", uploadError);
         throw new Error(`Failed to upload image to fal.ai storage: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`);
