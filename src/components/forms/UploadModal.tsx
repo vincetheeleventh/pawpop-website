@@ -42,6 +42,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
 
   const petMomInputRef = useRef<HTMLInputElement>(null);
   const petInputRef = useRef<HTMLInputElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   // Store object URLs for cleanup
   const [objectUrls, setObjectUrls] = useState<{ petMom?: string; pet?: string }>({});
@@ -77,6 +78,18 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
 
   if (!isOpen) return null;
 
+  // Scroll to bottom of modal to reveal next button
+  const scrollToBottom = () => {
+    if (modalRef.current) {
+      setTimeout(() => {
+        modalRef.current?.scrollTo({
+          top: modalRef.current.scrollHeight,
+          behavior: 'smooth'
+        });
+      }, 100); // Small delay to ensure DOM has updated
+    }
+  };
+
   const handleFileUpload = (file: File, type: 'petMom' | 'pet') => {
     if (type === 'petMom') {
       setFormData(prev => ({ ...prev, petMomPhoto: file }));
@@ -91,6 +104,9 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
       file_size_mb: Math.round(file.size / 1024 / 1024 * 100) / 100,
       upload_type: type
     });
+
+    // Scroll to bottom to reveal next button after upload
+    scrollToBottom();
   };
 
   const handleDragOver = (e: React.DragEvent, type: 'petMom' | 'pet') => {
@@ -529,7 +545,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto">
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl my-8 max-h-[90vh] overflow-y-auto" data-testid="upload-modal">
+      <div ref={modalRef} className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl my-8 max-h-[90vh] overflow-y-auto" data-testid="upload-modal">
         {/* Close Button */}
         <button
           onClick={onClose}

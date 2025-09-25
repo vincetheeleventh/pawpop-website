@@ -66,6 +66,10 @@ export interface AdminReviewNotificationData {
  */
 export async function sendEmail(data: EmailData): Promise<{ success: boolean; messageId?: string; error?: string }> {
   try {
+    console.log(`📧 Attempting to send email to: ${data.to}`)
+    console.log(`📧 Test mode: ${isTestMode}`)
+    console.log(`📧 EMAIL_TEST_MODE env var: ${process.env.EMAIL_TEST_MODE}`)
+    
     if (!process.env.RESEND_API_KEY) {
       console.error('RESEND_API_KEY not configured')
       return { success: false, error: 'Email service not configured' }
