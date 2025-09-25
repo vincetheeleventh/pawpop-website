@@ -1,10 +1,12 @@
 // src/app/api/shipping/methods/route.ts
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getAvailableShippingMethods } from '@/lib/order-processing';
 
-export async function GET(req: Request) {
+export const dynamic = 'force-dynamic'
+
+export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = req.nextUrl;
     const productType = searchParams.get('productType');
     const countryCode = searchParams.get('countryCode') || 'US';
 

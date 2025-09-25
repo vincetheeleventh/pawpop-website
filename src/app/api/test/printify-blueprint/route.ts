@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     if (!process.env.PRINTIFY_API_TOKEN) {
       return NextResponse.json({ error: "Printify API token not configured" }, { status: 500 });
     }
 
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = request.nextUrl;
     const blueprintId = searchParams.get('id') || '944'; // Default to canvas blueprint
 
     console.log(`📋 Fetching Printify blueprint ${blueprintId}...`);
