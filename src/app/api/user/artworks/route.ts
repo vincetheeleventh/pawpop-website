@@ -5,7 +5,7 @@ import { isValidEmail } from '@/lib/utils'
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
+    const { searchParams } = request.nextUrl
     const email = searchParams.get('email')
 
     if (!email || !isValidEmail(email)) {

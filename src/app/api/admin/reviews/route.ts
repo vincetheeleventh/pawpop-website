@@ -3,7 +3,7 @@ import { getPendingReviews } from '@/lib/admin-review'
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
+    const { searchParams } = request.nextUrl
     const reviewType = searchParams.get('type') as 'artwork_proof' | 'highres_file' | null
 
     // Get all reviews (pending and completed)
