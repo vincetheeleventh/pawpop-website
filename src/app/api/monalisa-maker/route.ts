@@ -179,7 +179,7 @@ export async function POST(req: NextRequest) {
     if (imageFile) {
       // Use direct file upload for FormData
       console.log("📎 Using direct image file upload to fal.ai");
-      falInput.image = imageFile;
+      falInput.image_url = imageUrl;
     } else {
       // Use image URL for JSON requests
       console.log("🔗 Using image URL for fal.ai");
