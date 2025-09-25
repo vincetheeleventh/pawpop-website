@@ -92,6 +92,8 @@ export async function POST(req: NextRequest) {
           // If still no URL found, log the full object for debugging
           if (!extractedUrl) {
             console.error("❌ Could not extract URL from upload result:", JSON.stringify(uploadResult, null, 2));
+            console.error("❌ Upload result type:", typeof uploadResult);
+            console.error("❌ Upload result constructor:", (uploadResult as any)?.constructor?.name);
             throw new Error(`No valid URL found in upload response. Available properties: ${Object.keys(uploadResult).join(', ')}`);
           }
         } else {
@@ -99,7 +101,6 @@ export async function POST(req: NextRequest) {
           throw new Error(`Unexpected upload result format: ${typeof uploadResult}`);
         }
         
-        // Assign the extracted URL to imageUrl
         imageUrl = extractedUrl;
         console.log("✅ Image uploaded, extracted URL:", imageUrl);
         
@@ -143,8 +144,20 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate imageUrl before calling fal.ai API
+    console.log("🔍 Final imageUrl validation - value:", imageUrl);
+    console.log("🔍 Final imageUrl validation - type:", typeof imageUrl);
+    console.log("🔍 Final imageUrl validation - stringified:", JSON.stringify(imageUrl));
+    
     if (!imageUrl || typeof imageUrl !== 'string') {
-      throw new Error(`Invalid imageUrl: ${imageUrl} (type: ${typeof imageUrl})`);
+      console.error("❌ imageUrl validation failed:", {
+        value: imageUrl,
+        type: typeof imageUrl,
+        stringified: JSON.stringify(imageUrl),
+        isString: typeof imageUrl === 'string',
+        isObject: typeof imageUrl === 'object',
+        keys: typeof imageUrl === 'object' ? Object.keys(imageUrl as any) : 'N/A'
+      });
+      throw new Error(`Invalid imageUrl: ${JSON.stringify(imageUrl)} (type: ${typeof imageUrl})`);
     }
     
     console.log("🔗 Using image URL:", imageUrl);
