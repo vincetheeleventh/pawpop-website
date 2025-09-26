@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { redirectToCheckout, isFallbackMode } from '@/lib/stripe-fallback';
+import { redirectToCheckout } from '@/lib/stripe-simple';
 
 // Using enhanced Stripe integration with ad-blocker fallback
 interface CheckoutButtonProps {
@@ -67,10 +67,6 @@ export default function CheckoutButton({
       }
       
       console.log('Initializing Stripe redirect with session ID:', data.sessionId);
-      
-      if (isFallbackMode()) {
-        console.log('🔄 Ad-blocker detected, using fallback checkout method');
-      }
       
       const { error: stripeError } = await redirectToCheckout(data.sessionId);
 

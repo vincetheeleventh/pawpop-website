@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { X, Minus, Plus, Truck, Star } from 'lucide-react'
-import { redirectToCheckout, isFallbackMode } from '@/lib/stripe-fallback'
+import { redirectToCheckout } from '@/lib/stripe-simple'
 import { getDynamicPricing } from '@/lib/copy'
 import usePlausibleTracking from '@/hooks/usePlausibleTracking'
 
@@ -302,12 +302,8 @@ export default function ProductPurchaseModal({
 
       console.log('🎫 Session ID received:', data.sessionId);
 
-      // Use enhanced checkout with ad-blocker fallback
-      console.log('💳 Redirecting to checkout with fallback support...');
-      
-      if (isFallbackMode()) {
-        console.log('🔄 Ad-blocker detected, using fallback checkout method');
-      }
+      // Use simple, correct Stripe integration
+      console.log('💳 Redirecting to Stripe checkout...');
       
       const { error: stripeError } = await redirectToCheckout(data.sessionId);
 
@@ -315,9 +311,7 @@ export default function ProductPurchaseModal({
         console.error('❌ Stripe redirect error:', stripeError);
         
         // Handle specific error types
-        if (stripeError.type === 'redirect_error') {
-          setError('Unable to open checkout. Please disable ad blockers or try a different browser.');
-        } else if (stripeError.message?.includes('test mode') && stripeError.message?.includes('live mode')) {
+        if (stripeError.message?.includes('test mode') && stripeError.message?.includes('live mode')) {
           setError('Payment system configuration error. Please try again or contact support.');
         } else {
           setError(stripeError.message || 'Payment failed. Please try again.');
