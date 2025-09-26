@@ -94,15 +94,29 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
     let processedFile = file;
     
     // Enhanced logging for iPhone camera uploads
+    const fileSizeMB = file.size / (1024 * 1024);
     console.log('📱 File upload details:', {
       name: file.name,
       type: file.type,
       size: file.size,
+      sizeMB: fileSizeMB.toFixed(2),
       lastModified: file.lastModified,
       isHeicByName: file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif'),
       isHeicByType: file.type === 'image/heic' || file.type === 'image/heif',
       uploadType: type
     });
+    
+    // Check for extremely large files (>50MB) that might cause issues
+    if (fileSizeMB > 50) {
+      console.error('❌ File extremely large:', `${fileSizeMB.toFixed(2)}MB`);
+      setError(`Image is too large (${fileSizeMB.toFixed(1)}MB). Please use an image smaller than 50MB. Try reducing the resolution or using a different format.`);
+      return;
+    }
+    
+    // Warn about very large files that will need heavy compression
+    if (fileSizeMB > 25) {
+      console.warn('⚠️ Very large file detected:', `${fileSizeMB.toFixed(2)}MB - will require significant compression`);
+    }
     
     // Check if file is HEIC/HEIF and convert to JPEG
     // Also handle cases where iPhone camera uploads have generic MIME types
@@ -159,31 +173,89 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
       }
     }
     
-    // Compress image if it's too large (>3MB) to avoid Vercel payload limits
+    // Smart compression strategy for large images
+    const originalSizeMB = processedFile.size / (1024 * 1024);
+    
     if (processedFile.size > 3 * 1024 * 1024) {
-      console.log('🗜️ Compressing large image:', processedFile.name, `${Math.round(processedFile.size / 1024 / 1024)}MB`);
+      console.log('🗜️ Compressing large image:', processedFile.name, `${originalSizeMB.toFixed(2)}MB`);
       
       try {
         // Dynamic import to avoid SSR issues
         const imageCompression = (await import('browser-image-compression')).default;
         
-        const compressedFile = await imageCompression(processedFile, {
-          maxSizeMB: 2.5, // Target 2.5MB max to stay under Vercel's 4.5MB limit
-          maxWidthOrHeight: 1920, // Max dimension
-          useWebWorker: true,
-          fileType: 'image/jpeg'
+        // Smart compression settings based on original file size
+        let compressionOptions;
+        
+        if (originalSizeMB > 15) {
+          // Very large files (>15MB) - more aggressive compression
+          compressionOptions = {
+            maxSizeMB: 4, // Stay under Vercel's 4.5MB limit but allow more space
+            maxWidthOrHeight: 2048, // Higher resolution for very large originals
+            useWebWorker: true,
+            fileType: 'image/jpeg',
+            initialQuality: 0.8 // Start with good quality
+          };
+        } else if (originalSizeMB > 8) {
+          // Large files (8-15MB) - moderate compression
+          compressionOptions = {
+            maxSizeMB: 4,
+            maxWidthOrHeight: 2048,
+            useWebWorker: true,
+            fileType: 'image/jpeg',
+            initialQuality: 0.85 // Better quality for moderately large files
+          };
+        } else {
+          // Medium files (3-8MB) - gentle compression
+          compressionOptions = {
+            maxSizeMB: 4,
+            maxWidthOrHeight: 2048,
+            useWebWorker: true,
+            fileType: 'image/jpeg',
+            initialQuality: 0.9 // High quality for smaller files
+          };
+        }
+        
+        console.log('🔧 Compression settings:', {
+          originalSize: `${originalSizeMB.toFixed(2)}MB`,
+          targetSize: `${compressionOptions.maxSizeMB}MB`,
+          maxDimension: compressionOptions.maxWidthOrHeight,
+          quality: compressionOptions.initialQuality
         });
         
-        console.log('✅ Image compression successful:', 
-          `${Math.round(processedFile.size / 1024 / 1024)}MB → ${Math.round(compressedFile.size / 1024 / 1024)}MB`);
+        const compressedFile = await imageCompression(processedFile, compressionOptions);
+        
+        const compressedSizeMB = compressedFile.size / (1024 * 1024);
+        console.log('✅ Image compression successful:', {
+          original: `${originalSizeMB.toFixed(2)}MB`,
+          compressed: `${compressedSizeMB.toFixed(2)}MB`,
+          reduction: `${((1 - compressedSizeMB / originalSizeMB) * 100).toFixed(1)}%`,
+          fileName: compressedFile.name
+        });
+        
+        // Verify the compressed file is still reasonable quality
+        if (compressedFile.size < 50 * 1024) { // Less than 50KB is probably too small
+          console.warn('⚠️ Compressed file very small, may have quality issues');
+        }
         
         processedFile = compressedFile;
         
       } catch (compressionError) {
-        console.error('❌ Image compression failed:', compressionError);
-        setError('Failed to process large image. Please try a smaller photo.');
+        console.error('❌ Image compression failed:', {
+          error: compressionError,
+          originalSize: `${originalSizeMB.toFixed(2)}MB`,
+          fileName: processedFile.name
+        });
+        
+        // More specific error message
+        if (originalSizeMB > 20) {
+          setError(`Image is very large (${originalSizeMB.toFixed(1)}MB). Please try a smaller image or reduce the resolution before uploading.`);
+        } else {
+          setError('Failed to process large image. Please try reducing the image size or using a different format.');
+        }
         return;
       }
+    } else {
+      console.log('📊 Image size acceptable:', `${originalSizeMB.toFixed(2)}MB (no compression needed)`);
     }
     
     if (type === 'petMom') {
