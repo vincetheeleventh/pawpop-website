@@ -78,6 +78,10 @@ export interface Order {
   product_type: 'digital' | 'art_print' | 'framed_canvas'
   product_size: string
   price_cents: number
+  original_price_cents: number
+  discount_cents: number
+  coupon_id?: string
+  coupon_code?: string
   customer_email: string
   customer_name: string
   shipping_address?: any
@@ -99,4 +103,22 @@ export interface OrderStatusHistory {
   status: string
   notes?: string
   created_at: string
+}
+
+export type CouponDiscountType = 'set_price' | 'amount_off' | 'percent_off'
+
+export interface CouponCode {
+  id: string
+  code: string
+  description?: string
+  discount_type: CouponDiscountType
+  discount_value: number
+  max_redemptions?: number
+  redemption_count: number
+  valid_from?: string
+  valid_until?: string
+  is_active: boolean
+  metadata: Record<string, any>
+  created_at: string
+  updated_at: string
 }

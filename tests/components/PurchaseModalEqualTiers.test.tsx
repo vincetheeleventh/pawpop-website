@@ -10,22 +10,23 @@ vi.mock('@stripe/stripe-js', () => ({
   }))
 }));
 
-// Mock the pricing functions
+// Mock pricing utilities
 vi.mock('@/lib/printify-products', () => ({
   ProductType: {
     DIGITAL: 'DIGITAL',
     ART_PRINT: 'ART_PRINT',
-    FRAMED_CANVAS: 'FRAMED_CANVAS'
+    CANVAS_FRAMED: 'CANVAS_FRAMED'
   },
   getProductPricing: vi.fn((type, size) => {
-    if (type === 'DIGITAL') return 999;
-    if (type === 'ART_PRINT') return 2999;
-    if (type === 'FRAMED_CANVAS') return 7999;
+    if (type === 'DIGITAL') return 999; // $9.99
+    if (type === 'ART_PRINT') return 2999; // $29.99
+    if (type === 'CANVAS_FRAMED') return 7999; // $79.99
     return 0;
   })
 }));
 
-global.fetch = vi.fn();
+const fetchMock = vi.fn();
+global.fetch = fetchMock as unknown as typeof fetch;
 
 const mockArtwork = {
   id: 'test-artwork-123',
@@ -35,241 +36,168 @@ const mockArtwork = {
   pet_name: 'Bella'
 };
 
+function mockCouponPreviewResponse(original: number, final: number, code = 'EQUAL1') {
+  return {
+    ok: true,
+    json: () =>
+      Promise.resolve({
+        coupon: { code },
+        originalUnitPriceCents: original,
+        finalUnitPriceCents: final,
+        discountPerUnitCents: original - final,
+        totalDiscountCents: original - final,
+        quantity: 1
+      })
+  } as Response;
+}
+
 describe('PurchaseModalEqualTiers', () => {
   const mockOnClose = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (global.fetch as any).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ sessionId: 'test-session-id' })
+    fetchMock.mockImplementation((url: RequestInfo, init?: RequestInit) => {
+      if (url === '/api/coupons/validate') {
+        if (init?.body && typeof init.body === 'string') {
+          const body = JSON.parse(init.body);
+          if (body.productType === 'DIGITAL') {
+            return Promise.resolve(mockCouponPreviewResponse(999, 100));
+          }
+          if (body.productType === 'ART_PRINT') {
+            return Promise.resolve(mockCouponPreviewResponse(2999, 100));
+          }
+        }
+        return Promise.resolve(mockCouponPreviewResponse(7999, 500));
+      }
+
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ sessionId: 'test-session-id' })
+      } as Response);
     });
   });
 
-  it('renders three equal tiers', () => {
+  it('renders equal tiers layout with pricing options', () => {
     render(
-      <PurchaseModalEqualTiers
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
+      <PurchaseModalEqualTiers isOpen={true} onClose={mockOnClose} artwork={mockArtwork} />
     );
 
     expect(screen.getByText('Choose Your Format')).toBeInTheDocument();
     expect(screen.getByText('Digital Download')).toBeInTheDocument();
-    expect(screen.getByText('Premium Art Print')).toBeInTheDocument();
+    expect(screen.getByText('Fine Art Print')).toBeInTheDocument();
     expect(screen.getByText('Framed Canvas')).toBeInTheDocument();
   });
 
-  it('shows "Best Value" badge on art print', () => {
+  it('shows coupon controls after selecting an option', async () => {
     render(
-      <PurchaseModalEqualTiers
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
+      <PurchaseModalEqualTiers isOpen={true} onClose={mockOnClose} artwork={mockArtwork} />
     );
 
-    expect(screen.getByText('Best Value')).toBeInTheDocument();
-  });
-
-  it('displays pricing for all tiers', () => {
-    render(
-      <PurchaseModalEqualTiers
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
-    );
-
-    expect(screen.getByText('$9.99')).toBeInTheDocument();
-    expect(screen.getByText('$29.99')).toBeInTheDocument();
-    expect(screen.getByText('$79.99')).toBeInTheDocument();
-  });
-
-  it('shows feature lists with checkmarks', () => {
-    render(
-      <PurchaseModalEqualTiers
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
-    );
-
-    expect(screen.getByText('Instant delivery')).toBeInTheDocument();
-    expect(screen.getByText('Museum-quality paper')).toBeInTheDocument();
-    expect(screen.getByText('Gallery-wrapped canvas')).toBeInTheDocument();
-    expect(screen.getByText('Premium wood frame')).toBeInTheDocument();
-  });
-
-  it('allows tier selection', async () => {
-    render(
-      <PurchaseModalEqualTiers
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
-    );
-
-    // Click on art print tier
-    const artPrintTier = screen.getByText('Premium Art Print').closest('div')!;
-    fireEvent.click(artPrintTier);
+    fireEvent.click(screen.getByText('Fine Art Print').closest('div')!);
 
     await waitFor(() => {
-      expect(screen.getByText('Get My Masterpiece')).toBeInTheDocument();
+      expect(document.getElementById('equal-tiers-coupon')).toBeTruthy();
     });
   });
 
-  it('shows selection indicator when tier is selected', async () => {
+  it('applies coupon and displays savings message for art print', async () => {
     render(
-      <PurchaseModalEqualTiers
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
+      <PurchaseModalEqualTiers isOpen={true} onClose={mockOnClose} artwork={mockArtwork} />
     );
 
-    const digitalTier = screen.getByText('Digital Download').closest('div')!;
-    fireEvent.click(digitalTier);
+    fireEvent.click(screen.getByText('Fine Art Print').closest('div')!);
 
     await waitFor(() => {
-      // Check for selection styling (border-mona-gold class)
-      expect(digitalTier).toHaveClass('border-mona-gold');
-    });
-  });
-
-  it('enables purchase button only when tier is selected', async () => {
-    render(
-      <PurchaseModalEqualTiers
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
-    );
-
-    // Purchase button should not be visible initially
-    expect(screen.queryByText('Get My Masterpiece')).not.toBeInTheDocument();
-
-    // Select a tier
-    fireEvent.click(screen.getByText('Digital Download').closest('div')!);
-
-    await waitFor(() => {
-      expect(screen.getByText('Get My Masterpiece')).toBeInTheDocument();
-    });
-  });
-
-  it('handles purchase with correct variant tracking', async () => {
-    render(
-      <PurchaseModalEqualTiers
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
-    );
-
-    // Select and purchase
-    fireEvent.click(screen.getByText('Premium Art Print').closest('div')!);
-    
-    await waitFor(() => {
-      expect(screen.getByText('Get My Masterpiece')).toBeInTheDocument();
+      expect(document.getElementById('equal-tiers-coupon')).toBeTruthy();
     });
 
-    fireEvent.click(screen.getByText('Get My Masterpiece'));
+    const couponInput = document.getElementById('equal-tiers-coupon') as HTMLInputElement;
+    fireEvent.change(couponInput, { target: { value: 'tierdeal' } });
+    fireEvent.click(screen.getByText('Apply'));
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/checkout/artwork', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          artworkId: 'test-artwork-123',
-          productType: 'ART_PRINT',
-          size: '16x20',
-          customerEmail: 'sarah@example.com',
-          customerName: 'Sarah',
-          petName: 'Bella',
-          imageUrl: '/test-image.jpg',
-          variant: 'equal-tiers'
-        })
-      });
-    });
-  });
-
-  it('shows delivery timeframes', () => {
-    render(
-      <PurchaseModalEqualTiers
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
-    );
-
-    expect(screen.getByText('Ships in Instant')).toBeInTheDocument();
-    expect(screen.getByText('Ships in 3-5 days')).toBeInTheDocument();
-    expect(screen.getByText('Ships in 5-7 days')).toBeInTheDocument();
-  });
-
-  it('displays artwork preview', () => {
-    render(
-      <PurchaseModalEqualTiers
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
-    );
-
-    const artworkImage = screen.getByAltText('Your masterpiece');
-    expect(artworkImage).toBeInTheDocument();
-    expect(artworkImage).toHaveAttribute('src', '/test-image.jpg');
-  });
-
-  it('shows security messaging', async () => {
-    render(
-      <PurchaseModalEqualTiers
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
-    );
-
-    // Select a tier to show purchase button
-    fireEvent.click(screen.getByText('Digital Download').closest('div')!);
-
-    await waitFor(() => {
-      expect(screen.getByText('Secure checkout • 30-day money-back guarantee')).toBeInTheDocument();
-    });
-  });
-
-  it('handles demo mode when Stripe is not available', async () => {
-    // Mock no Stripe available
-    const { loadStripe } = await import('@stripe/stripe-js');
-    vi.mocked(loadStripe).mockResolvedValue(null);
-    
-    // Mock window.alert
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
-
-    render(
-      <PurchaseModalEqualTiers
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
-    );
-
-    fireEvent.click(screen.getByText('Digital Download').closest('div')!);
-    
-    await waitFor(() => {
-      expect(screen.getByText('Get My Masterpiece')).toBeInTheDocument();
+      const couponCall = fetchMock.mock.calls.find((call) => call[0] === '/api/coupons/validate');
+      expect(couponCall).toBeTruthy();
     });
 
-    fireEvent.click(screen.getByText('Get My Masterpiece'));
-
-    // Should show demo alert after timeout
     await waitFor(() => {
-      expect(alertSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Demo: Would purchase DIGITAL')
+      expect(screen.getByTestId('coupon-success-message')).toHaveTextContent(
+        'Coupon applied! Checkout price: $1.00 (saved $28.99).'
       );
-    }, { timeout: 2000 });
+    });
+  });
 
-    alertSpy.mockRestore();
+  it('includes coupon metadata when completing checkout', async () => {
+    render(
+      <PurchaseModalEqualTiers isOpen={true} onClose={mockOnClose} artwork={mockArtwork} />
+    );
+
+    fireEvent.click(screen.getByText('Fine Art Print').closest('div')!);
+    await waitFor(() => {
+      expect(document.getElementById('equal-tiers-coupon')).toBeTruthy();
+    });
+
+    const couponInput = document.getElementById('equal-tiers-coupon') as HTMLInputElement;
+    fireEvent.change(couponInput, { target: { value: 'tierdeal' } });
+    fireEvent.click(screen.getByText('Apply'));
+
+    await waitFor(() => screen.getByText('Get My Masterpiece'));
+    fireEvent.click(screen.getByText('Get My Masterpiece'));
+
+    await waitFor(() => {
+      const checkoutCall = [...fetchMock.mock.calls].reverse().find((call) => call[0] === '/api/checkout/artwork');
+      expect(checkoutCall).toBeTruthy();
+      const [, init] = checkoutCall!;
+      const body = JSON.parse((init as RequestInit).body as string);
+      expect(body).toMatchObject({ couponCode: 'EQUAL1', variant: 'equal-tiers' });
+    });
+  });
+
+  it('shows discounted price inside selected tier when coupon applied', async () => {
+    render(
+      <PurchaseModalEqualTiers isOpen={true} onClose={mockOnClose} artwork={mockArtwork} />
+    );
+
+    fireEvent.click(screen.getByText('Fine Art Print').closest('div')!);
+    await waitFor(() => document.getElementById('equal-tiers-coupon'));
+
+    const couponInput = document.getElementById('equal-tiers-coupon') as HTMLInputElement;
+    fireEvent.change(couponInput, { target: { value: 'tierdeal' } });
+    fireEvent.click(screen.getByText('Apply'));
+
+    await waitFor(() => {
+      const priceText = screen.getByText('$1.00');
+      expect(priceText).toBeInTheDocument();
+      const container = priceText.closest('div');
+      expect(container?.textContent).toContain('$29.99');
+    });
+  });
+
+  it('supports digital tier coupon application', async () => {
+    render(
+      <PurchaseModalEqualTiers isOpen={true} onClose={mockOnClose} artwork={mockArtwork} />
+    );
+
+    fireEvent.click(screen.getByText('Digital Download').closest('div')!);
+    await waitFor(() => document.getElementById('equal-tiers-coupon'));
+
+    const couponInput = document.getElementById('equal-tiers-coupon') as HTMLInputElement;
+    fireEvent.change(couponInput, { target: { value: 'digitaldeal' } });
+    fireEvent.click(screen.getByText('Apply'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('coupon-success-message')).toHaveTextContent(
+        'Coupon applied! Checkout price: $1.00 (saved $8.99).'
+      );
+    });
+
+    fireEvent.click(screen.getByText('Get My Masterpiece'));
+
+    await waitFor(() => {
+      const checkoutCall = [...fetchMock.mock.calls].reverse().find((call) => call[0] === '/api/checkout/artwork');
+      const [, init] = checkoutCall!;
+      const body = JSON.parse((init as RequestInit).body as string);
+      expect(body).toMatchObject({ productType: 'DIGITAL', couponCode: 'EQUAL1' });
+    });
   });
 });

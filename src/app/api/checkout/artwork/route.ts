@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { ProductType, getProductPricing } from '@/lib/printify-products';
 import { createOrder } from '@/lib/supabase-orders';
+import { normalizeCouponCode, validateCouponAndCalculate } from '@/lib/supabase-coupons';
 
 export async function POST(req: Request) {
   let requestData: any = {};
@@ -20,7 +21,8 @@ export async function POST(req: Request) {
       frameUpgrade = false,
       quantity = 1,
       shippingMethodId,
-      testMode = false
+      testMode = false,
+      couponCode
     } = body;
 
     // Store request data for error logging
@@ -66,8 +68,30 @@ export async function POST(req: Request) {
 
     // Get pricing (including frame upgrade if applicable)
     const priceInCents = getProductPricing(productType as ProductType, size, 'US', frameUpgrade);
-    console.log('💰 Calculated price:', priceInCents);
-    
+    const quantityInt = Math.max(1, Number(quantity) || 1);
+    console.log('💰 Calculated price:', priceInCents, 'Quantity:', quantityInt);
+
+    let finalUnitPriceCents = priceInCents;
+    let discountPerUnitCents = 0;
+    let appliedCoupon: { id: string; code: string } | null = null;
+
+    if (couponCode && typeof couponCode === 'string') {
+      try {
+        const couponResult = await validateCouponAndCalculate(couponCode, priceInCents, quantityInt);
+        finalUnitPriceCents = couponResult.finalUnitPriceCents;
+        discountPerUnitCents = couponResult.discountPerUnitCents;
+        appliedCoupon = {
+          id: couponResult.coupon.id,
+          code: normalizeCouponCode(couponResult.coupon.code)
+        };
+        console.log('🎟️ Coupon applied:', appliedCoupon.code, 'Discount per unit:', discountPerUnitCents);
+      } catch (couponError) {
+        const message = couponError instanceof Error ? couponError.message : 'Invalid coupon code';
+        console.warn('⚠️ Coupon validation failed:', message);
+        return NextResponse.json({ error: message }, { status: 400 });
+      }
+    }
+
     // Create order in database first
     console.log('📝 Creating order in database...');
     let order;
@@ -77,7 +101,11 @@ export async function POST(req: Request) {
         stripe_session_id: '', // Will be updated after session creation
         product_type: productType as ProductType,
         product_size: size,
-        price_cents: priceInCents,
+        price_cents: finalUnitPriceCents,
+        original_price_cents: priceInCents,
+        discount_cents: discountPerUnitCents,
+        coupon_id: appliedCoupon?.id,
+        coupon_code: appliedCoupon?.code,
         customer_email: customerEmail,
         customer_name: customerName
       });
@@ -91,7 +119,11 @@ export async function POST(req: Request) {
         stripe_session_id: '',
         product_type: productType as ProductType,
         product_size: size,
-        price_cents: priceInCents,
+        price_cents: finalUnitPriceCents,
+        original_price_cents: priceInCents,
+        discount_cents: discountPerUnitCents,
+        coupon_id: appliedCoupon?.id,
+        coupon_code: appliedCoupon?.code,
         customer_email: customerEmail,
         customer_name: customerName,
         order_status: 'pending',
@@ -111,42 +143,47 @@ export async function POST(req: Request) {
     let session;
     try {
       session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [{
-        price_data: {
-          currency: 'cad',
-          product_data: {
-            name: `PawPop ${productType === 'digital' ? 'Digital Download' : 
-                   productType === 'art_print' ? 'Art Print' :
-                   productType === 'canvas_stretched' ? `Canvas (Stretched)${frameUpgrade ? ' + Frame' : ''}` :
-                   'Canvas (Framed)'} - ${size}`,
-            description: `Custom artwork featuring ${customerName}${petName ? ` & ${petName}` : ''} in the style of the Mona Lisa${frameUpgrade ? ' with professional framing' : ''}`,
-            images: [imageUrl]
+        payment_method_types: ['card'],
+        line_items: [{
+          price_data: {
+            currency: 'cad',
+            product_data: {
+              name: `PawPop ${productType === 'digital' ? 'Digital Download' :
+                     productType === 'art_print' ? 'Art Print' :
+                     productType === 'canvas_stretched' ? `Canvas (Stretched)${frameUpgrade ? ' + Frame' : ''}` :
+                     'Canvas (Framed)'} - ${size}`,
+              description: `Custom artwork featuring ${customerName}${petName ? ` & ${petName}` : ''} in the style of the Mona Lisa${frameUpgrade ? ' with professional framing' : ''}`,
+              images: [imageUrl]
+            },
+            unit_amount: finalUnitPriceCents
           },
-          unit_amount: priceInCents
+          quantity: quantityInt
+        }],
+        mode: 'payment',
+        success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/artwork/${artworkId}?cancelled=true`,
+        customer_email: customerEmail,
+        metadata: {
+          artworkId,
+          productType,
+          size,
+          customerName,
+          petName: petName || '',
+          imageUrl,
+          frameUpgrade: frameUpgrade.toString(),
+          quantity: quantityInt.toString(),
+          shippingMethodId: shippingMethodId?.toString() || '1',
+          orderId: order.id,
+          couponCode: appliedCoupon?.code || '',
+          originalUnitPriceCents: priceInCents.toString(),
+          finalUnitPriceCents: finalUnitPriceCents.toString(),
+          discountPerUnitCents: discountPerUnitCents.toString(),
+          totalDiscountCents: (discountPerUnitCents * quantityInt).toString()
         },
-        quantity: quantity
-      }],
-      mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/artwork/${artworkId}?cancelled=true`,
-      customer_email: customerEmail,
-      metadata: {
-        artworkId,
-        productType,
-        size,
-        customerName,
-        petName: petName || '',
-        imageUrl,
-        frameUpgrade: frameUpgrade.toString(),
-        quantity: quantity.toString(),
-        shippingMethodId: shippingMethodId?.toString() || '1',
-        orderId: order.id
-      },
-      // Collect shipping address for physical products
-      shipping_address_collection: productType !== 'digital' ? {
-        allowed_countries: ['US', 'CA', 'GB', 'DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'PT', 'IE', 'FI', 'SE', 'DK', 'NO', 'PL', 'CZ', 'HU', 'SK', 'SI', 'HR', 'BG', 'RO', 'LT', 'LV', 'EE', 'MT', 'CY', 'LU', 'GR']
-      } : undefined
+        // Collect shipping address for physical products
+        shipping_address_collection: productType !== 'digital' ? {
+          allowed_countries: ['US', 'CA', 'GB', 'DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'PT', 'IE', 'FI', 'SE', 'DK', 'NO', 'PL', 'CZ', 'HU', 'SK', 'SI', 'HR', 'BG', 'RO', 'LT', 'LV', 'EE', 'MT', 'CY', 'LU', 'GR']
+        } : undefined
       });
       console.log('✅ Stripe session created:', session.id);
 

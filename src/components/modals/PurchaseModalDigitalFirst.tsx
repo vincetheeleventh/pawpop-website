@@ -8,6 +8,7 @@ import { Artwork } from '@/lib/supabase';
 import { createCheckoutSession } from '@/lib/stripe-client';
 import { ProductType, getProductPricing } from '@/lib/printify-products';
 import { loadStripe } from '@stripe/stripe-js';
+import { useCoupon } from '@/hooks/useCoupon';
 
 const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
   ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
@@ -32,12 +33,31 @@ export const PurchaseModalDigitalFirst = ({ isOpen, onClose, artwork }: Purchase
   const [showPhysical, setShowPhysical] = useState(false);
   const [selectedPhysical, setSelectedPhysical] = useState<{ type: ProductType; size: string } | null>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const {
+    couponCode,
+    setCouponCode,
+    appliedCoupon,
+    couponError,
+    setCouponError,
+    isApplying: isApplyingCoupon,
+    applyCoupon,
+    resetCoupon
+  } = useCoupon();
+  const [couponSuccessMessage, setCouponSuccessMessage] = useState<string | null>(null);
+  const artworkImageUrl = artwork.generated_images?.artwork_preview ||
+    artwork.generated_images?.artwork_full_res ||
+    (artwork as any).generated_image_url || '';
+
+  useEffect(() => {
+    resetCoupon();
+    setCouponSuccessMessage(null);
+  }, [resetCoupon, showPhysical, selectedPhysical?.type, selectedPhysical?.size]);
 
   if (!isOpen) return null;
 
   const handlePurchase = async (productType: ProductType, size: string) => {
     setIsCheckingOut(true);
-    
+
     // Demo mode - just show alert instead of real checkout
     if (!stripePromise) {
       setTimeout(() => {
@@ -58,12 +78,16 @@ export const PurchaseModalDigitalFirst = ({ isOpen, onClose, artwork }: Purchase
           customerEmail: artwork.customer_email,
           customerName: artwork.customer_name,
           petName: artwork.pet_name,
-          imageUrl: artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res || '',
-          variant: 'digital-first' // For A/B testing analytics
+          imageUrl: artworkImageUrl,
+          variant: 'digital-first', // For A/B testing analytics
+          couponCode: appliedCoupon?.code || couponCode.trim() || undefined
         })
       });
 
-      if (!response.ok) throw new Error('Checkout failed');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Checkout failed');
+      }
 
       const { sessionId } = await response.json();
       const stripe = await stripePromise;
@@ -73,9 +97,46 @@ export const PurchaseModalDigitalFirst = ({ isOpen, onClose, artwork }: Purchase
       await stripe.redirectToCheckout({ sessionId });
     } catch (error) {
       console.error('Checkout error:', error);
+      if (error instanceof Error && error.message.includes('Coupon')) {
+        setCouponError(error.message);
+      }
     } finally {
       setIsCheckingOut(false);
     }
+  };
+
+  const handleApplyCoupon = async () => {
+    const context = showPhysical
+      ? selectedPhysical
+        ? { productType: selectedPhysical.type, size: selectedPhysical.size, quantity: 1 }
+        : null
+      : { productType: ProductType.DIGITAL, size: 'digital', quantity: 1 };
+
+    if (!context) {
+      setCouponError('Select a product option before applying the coupon.');
+      setCouponSuccessMessage(null);
+      return;
+    }
+
+    const result = await applyCoupon(context);
+    if (result) {
+      const finalPrice = (result.finalUnitPriceCents / 100).toFixed(2);
+      const savings = result.totalDiscountCents > 0 ? (result.totalDiscountCents / 100).toFixed(2) : null;
+      setCouponSuccessMessage(
+        savings
+          ? `Coupon applied! Checkout price: $${finalPrice} (saved $${savings}).`
+          : `Coupon applied! Checkout price: $${finalPrice}.`
+      );
+    } else {
+      setCouponSuccessMessage(null);
+    }
+  };
+
+  const handleCouponInputChange = (value: string) => {
+    setCouponCode(value.toUpperCase());
+    resetCoupon();
+    setCouponSuccessMessage(null);
+    setCouponError(null);
   };
 
   const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;
@@ -128,6 +189,34 @@ export const PurchaseModalDigitalFirst = ({ isOpen, onClose, artwork }: Purchase
                 <div className="text-3xl font-bold text-mona-gold mb-4">
                   {formatPrice(getProductPricing(ProductType.DIGITAL, 'digital', 'US'))}
                 </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-600" htmlFor="digital-coupon">Coupon Code</label>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      id="digital-coupon"
+                      type="text"
+                      value={couponCode}
+                      onChange={(event) => handleCouponInputChange(event.target.value)}
+                      className="input input-bordered flex-1 uppercase"
+                      placeholder="ENTER CODE"
+                      aria-label="Coupon code"
+                    />
+                    <button
+                      onClick={handleApplyCoupon}
+                      disabled={isApplyingCoupon || (!couponCode.trim() && !appliedCoupon)}
+                      className={`btn btn-outline ${isApplyingCoupon ? 'loading' : ''}`}
+                      type="button"
+                    >
+                      {appliedCoupon ? 'Reapply' : 'Apply'}
+                    </button>
+                  </div>
+                  {couponError && <p className="text-sm text-red-500">{couponError}</p>}
+                  {couponSuccessMessage && !couponError && (
+                    <p className="text-sm text-green-600" data-testid="coupon-success-message">
+                      {couponSuccessMessage}
+                    </p>
+                  )}
+                </div>
                 <button
                   onClick={() => handlePurchase(ProductType.DIGITAL, 'digital')}
                   disabled={isCheckingOut}
@@ -166,9 +255,9 @@ export const PurchaseModalDigitalFirst = ({ isOpen, onClose, artwork }: Purchase
 
               <div className="grid gap-4">
                 {/* Art Print */}
-                <div 
+                <div
                   className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                    selectedPhysical?.type === ProductType.ART_PRINT 
+                    selectedPhysical?.type === ProductType.ART_PRINT
                       ? 'border-mona-gold bg-mona-gold/5' 
                       : 'border-gray-200 hover:border-mona-gold/50'
                   }`}
@@ -209,13 +298,43 @@ export const PurchaseModalDigitalFirst = ({ isOpen, onClose, artwork }: Purchase
               </div>
 
               {selectedPhysical && (
-                <button
-                  onClick={() => handlePurchase(selectedPhysical.type, selectedPhysical.size)}
-                  disabled={isCheckingOut}
-                  className={`btn btn-primary w-full mt-4 ${isCheckingOut ? 'loading' : ''}`}
-                >
-                  {isCheckingOut ? 'Processing...' : 'Order Physical Print'}
-                </button>
+                <>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-600" htmlFor="physical-coupon">Coupon Code</label>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input
+                        id="physical-coupon"
+                        type="text"
+                        value={couponCode}
+                        onChange={(event) => handleCouponInputChange(event.target.value)}
+                        className="input input-bordered flex-1 uppercase"
+                        placeholder="ENTER CODE"
+                        aria-label="Coupon code"
+                      />
+                      <button
+                        onClick={handleApplyCoupon}
+                        disabled={isApplyingCoupon || (!couponCode.trim() && !appliedCoupon)}
+                        className={`btn btn-outline ${isApplyingCoupon ? 'loading' : ''}`}
+                        type="button"
+                      >
+                        {appliedCoupon ? 'Reapply' : 'Apply'}
+                      </button>
+                    </div>
+                    {couponError && <p className="text-sm text-red-500">{couponError}</p>}
+                    {couponSuccessMessage && !couponError && (
+                      <p className="text-sm text-green-600" data-testid="coupon-success-message">
+                        {couponSuccessMessage}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => handlePurchase(selectedPhysical.type, selectedPhysical.size)}
+                    disabled={isCheckingOut}
+                    className={`btn btn-primary w-full mt-4 ${isCheckingOut ? 'loading' : ''}`}
+                  >
+                    {isCheckingOut ? 'Processing...' : 'Order Physical Print'}
+                  </button>
+                </>
               )}
             </div>
           )}

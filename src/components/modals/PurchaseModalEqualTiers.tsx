@@ -3,11 +3,12 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { X, Download, Frame, Star, Check, FileImage } from 'lucide-react';
+import { X, Download, Frame, Check, FileImage } from 'lucide-react';
 import { Artwork } from '@/lib/supabase';
 import { createCheckoutSession } from '@/lib/stripe-client';
 import { ProductType, getProductPricing } from '@/lib/printify-products';
 import { loadStripe } from '@stripe/stripe-js';
+import { useCoupon } from '@/hooks/useCoupon';
 
 const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
   ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
@@ -31,12 +32,32 @@ interface PurchaseModalEqualTiersProps {
 export const PurchaseModalEqualTiers = ({ isOpen, onClose, artwork }: PurchaseModalEqualTiersProps) => {
   const [selectedOption, setSelectedOption] = useState<{ type: ProductType; size: string } | null>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const {
+    couponCode,
+    setCouponCode,
+    appliedCoupon,
+    couponError,
+    setCouponError,
+    isApplying: isApplyingCoupon,
+    applyCoupon,
+    resetCoupon
+  } = useCoupon();
+  const [couponSuccessMessage, setCouponSuccessMessage] = useState<string | null>(null);
+  const artworkImageUrl = artwork.generated_images?.artwork_preview ||
+    artwork.generated_images?.artwork_full_res ||
+    (artwork as any).generated_image_url || '';
+
+  useEffect(() => {
+    resetCoupon();
+    setCouponSuccessMessage(null);
+    setCouponError(null);
+  }, [resetCoupon, setCouponError, selectedOption?.type, selectedOption?.size]);
 
   if (!isOpen) return null;
 
   const handlePurchase = async (productType: ProductType, size: string) => {
     setIsCheckingOut(true);
-    
+
     // Demo mode - just show alert instead of real checkout
     if (!stripePromise) {
       setTimeout(() => {
@@ -57,12 +78,16 @@ export const PurchaseModalEqualTiers = ({ isOpen, onClose, artwork }: PurchaseMo
           customerEmail: artwork.customer_email,
           customerName: artwork.customer_name,
           petName: artwork.pet_name,
-          imageUrl: artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res || '',
-          variant: 'equal-tiers' // For A/B testing analytics
+          imageUrl: artworkImageUrl,
+          variant: 'equal-tiers', // For A/B testing analytics
+          couponCode: appliedCoupon?.code || couponCode.trim() || undefined
         })
       });
 
-      if (!response.ok) throw new Error('Checkout failed');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Checkout failed');
+      }
 
       const { sessionId } = await response.json();
       const stripe = await stripePromise;
@@ -72,8 +97,47 @@ export const PurchaseModalEqualTiers = ({ isOpen, onClose, artwork }: PurchaseMo
       await stripe.redirectToCheckout({ sessionId });
     } catch (error) {
       console.error('Checkout error:', error);
+      if (error instanceof Error && error.message.toLowerCase().includes('coupon')) {
+        setCouponError(error.message);
+        setCouponSuccessMessage(null);
+      }
     } finally {
       setIsCheckingOut(false);
+    }
+  };
+
+  const handleCouponInputChange = (value: string) => {
+    setCouponCode(value.toUpperCase());
+    resetCoupon();
+    setCouponSuccessMessage(null);
+    setCouponError(null);
+  };
+
+  const formatCouponMessage = (finalUnitPriceCents: number, totalDiscountCents: number) => {
+    const finalPrice = (finalUnitPriceCents / 100).toFixed(2);
+    const savings = totalDiscountCents > 0 ? (totalDiscountCents / 100).toFixed(2) : null;
+    return savings
+      ? `Coupon applied! Checkout price: $${finalPrice} (saved $${savings}).`
+      : `Coupon applied! Checkout price: $${finalPrice}.`;
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!selectedOption) {
+      setCouponError('Select a product option before applying the coupon.');
+      setCouponSuccessMessage(null);
+      return;
+    }
+
+    const result = await applyCoupon({
+      productType: selectedOption.type,
+      size: selectedOption.size,
+      quantity: 1
+    });
+
+    if (result) {
+      setCouponSuccessMessage(formatCouponMessage(result.finalUnitPriceCents, result.totalDiscountCents));
+    } else {
+      setCouponSuccessMessage(null);
     }
   };
 
@@ -156,7 +220,8 @@ export const PurchaseModalEqualTiers = ({ isOpen, onClose, artwork }: PurchaseMo
               const Icon = tier.icon;
               const isSelected = selectedOption?.type === tier.type;
               const isBestValue = tier.badge === 'Best Value';
-              
+              const isCouponActive = Boolean(isSelected && appliedCoupon && couponSuccessMessage);
+
               return (
                 <div
                   key={tier.type}
@@ -195,9 +260,18 @@ export const PurchaseModalEqualTiers = ({ isOpen, onClose, artwork }: PurchaseMo
                     </h3>
                     <p className="text-sm text-gray-600 mb-2">{tier.subtitle}</p>
                     <p className="text-sm text-gray-500 mb-4">{tier.description}</p>
-                    
+
                     <div className="text-3xl font-bold text-mona-gold mb-2">
-                      {formatPrice(tier.price)}
+                      {isCouponActive ? (
+                        <>
+                          <span className="text-2xl text-gray-400 line-through mr-2">
+                            {formatPrice(appliedCoupon.originalUnitPriceCents)}
+                          </span>
+                          <span>{formatPrice(appliedCoupon.finalUnitPriceCents)}</span>
+                        </>
+                      ) : (
+                        formatPrice(tier.price)
+                      )}
                     </div>
                     <p className="text-xs text-gray-500 mb-4">Ships in {tier.delivery}</p>
                     
@@ -217,7 +291,35 @@ export const PurchaseModalEqualTiers = ({ isOpen, onClose, artwork }: PurchaseMo
 
           {/* Purchase Button */}
           {selectedOption && (
-            <div className="text-center">
+            <div className="max-w-md mx-auto text-center">
+              <div className="space-y-2 mb-4 text-left">
+                <label className="text-sm font-medium text-gray-600" htmlFor="equal-tiers-coupon">Coupon Code</label>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    id="equal-tiers-coupon"
+                    type="text"
+                    value={couponCode}
+                    onChange={(event) => handleCouponInputChange(event.target.value)}
+                    className="input input-bordered flex-1 uppercase"
+                    placeholder="ENTER CODE"
+                    aria-label="Coupon code"
+                  />
+                  <button
+                    onClick={handleApplyCoupon}
+                    disabled={isApplyingCoupon || (!couponCode.trim() && !appliedCoupon)}
+                    className={`btn btn-outline ${isApplyingCoupon ? 'loading' : ''}`}
+                    type="button"
+                  >
+                    {appliedCoupon ? 'Reapply' : 'Apply'}
+                  </button>
+                </div>
+                {couponError && (
+                  <p className="text-sm text-red-500">{couponError}</p>
+                )}
+                {couponSuccessMessage && !couponError && (
+                  <p className="text-sm text-green-600" data-testid="coupon-success-message">{couponSuccessMessage}</p>
+                )}
+              </div>
               <button
                 onClick={() => handlePurchase(selectedOption.type, selectedOption.size)}
                 disabled={isCheckingOut}

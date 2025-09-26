@@ -5,6 +5,7 @@ import { X, Minus, Plus, Truck, Star } from 'lucide-react'
 import { loadStripe } from '@stripe/stripe-js'
 import { getDynamicPricing } from '@/lib/copy'
 import usePlausibleTracking from '@/hooks/usePlausibleTracking'
+import { useCoupon } from '@/hooks/useCoupon'
 
 interface Mockup {
   type: string
@@ -93,6 +94,17 @@ export default function ProductPurchaseModal({
   const [selectedShipping, setSelectedShipping] = useState<number | null>(null)
   const [loadingShipping, setLoadingShipping] = useState(false)
   const [showTooltip, setShowTooltip] = useState(false)
+  const {
+    couponCode,
+    setCouponCode,
+    appliedCoupon,
+    couponError,
+    setCouponError,
+    isApplying: isApplyingCoupon,
+    applyCoupon,
+    resetCoupon
+  } = useCoupon()
+  const [couponSuccessMessage, setCouponSuccessMessage] = useState<string | null>(null)
 
   // Plausible tracking and dynamic pricing
   const { trackFunnel, trackInteraction, trackPriceExposure, getPriceConfig } = usePlausibleTracking()
@@ -150,6 +162,11 @@ export default function ProductPurchaseModal({
       setLoadingShipping(false)
     }
   }
+
+  useEffect(() => {
+    resetCoupon()
+    setCouponSuccessMessage(null)
+  }, [resetCoupon, selectedSize, productType, quantity])
 
   // Get current price based on A/B test variant and selected size
   const getCurrentPrice = () => {
@@ -278,13 +295,14 @@ export default function ProductPurchaseModal({
           imageUrl: artworkImageUrl,
           frameUpgrade: false,
           quantity: productType === 'digital' ? 1 : quantity,
-          shippingMethodId: productType === 'digital' ? null : selectedShipping
+          shippingMethodId: productType === 'digital' ? null : selectedShipping,
+          couponCode: appliedCoupon?.code || couponCode.trim() || undefined
         }),
       })
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
+        throw new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`)
       }
 
       const data = await response.json()
@@ -310,8 +328,38 @@ export default function ProductPurchaseModal({
       const error = err instanceof Error ? err : new Error('An error occurred during checkout')
       console.error('Checkout error:', error)
       setError(error.message)
+      if (error.message.toLowerCase().includes('coupon')) {
+        setCouponError(error.message)
+      }
       setLoading(false)
     }
+  }
+
+  const handleApplyCoupon = async () => {
+    const result = await applyCoupon({
+      productType,
+      size: selectedSize,
+      quantity: productType === 'digital' ? 1 : quantity
+    })
+
+    if (result) {
+      const finalPrice = (result.finalUnitPriceCents / 100).toFixed(2)
+      const savings = result.totalDiscountCents > 0 ? (result.totalDiscountCents / 100).toFixed(2) : null
+      setCouponSuccessMessage(
+        savings
+          ? `Coupon applied! Checkout price: $${finalPrice} (saved $${savings}).`
+          : `Coupon applied! Checkout price: $${finalPrice}.`
+      )
+    } else {
+      setCouponSuccessMessage(null)
+    }
+  }
+
+  const handleCouponInputChange = (value: string) => {
+    setCouponCode(value.toUpperCase())
+    resetCoupon()
+    setCouponSuccessMessage(null)
+    setCouponError(null)
   }
 
   const handleUpsell = () => {
@@ -630,7 +678,36 @@ export default function ProductPurchaseModal({
                   <p className="text-sm text-red-600 font-geist">{error}</p>
                 </div>
               )}
-              
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-600" htmlFor="purchase-modal-coupon">Coupon Code</label>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    id="purchase-modal-coupon"
+                    type="text"
+                    value={couponCode}
+                    onChange={(event) => handleCouponInputChange(event.target.value)}
+                    className="input input-bordered flex-1 uppercase"
+                    placeholder="ENTER CODE"
+                    aria-label="Coupon code"
+                  />
+                  <button
+                    onClick={handleApplyCoupon}
+                    disabled={isApplyingCoupon || (!couponCode.trim() && !appliedCoupon)}
+                    className={`btn btn-outline ${isApplyingCoupon ? 'loading' : ''}`}
+                    type="button"
+                  >
+                    {appliedCoupon ? 'Reapply' : 'Apply'}
+                  </button>
+                </div>
+                {couponError && <p className="text-sm text-red-500">{couponError}</p>}
+                {couponSuccessMessage && !couponError && (
+                  <p className="text-sm text-green-600" data-testid="coupon-success-message">
+                    {couponSuccessMessage}
+                  </p>
+                )}
+              </div>
+
               <button
                 onClick={handlePurchase}
                 disabled={loading}

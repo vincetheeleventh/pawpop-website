@@ -15,12 +15,14 @@ vi.mock('@/lib/printify-products', () => ({
   ProductType: {
     DIGITAL: 'DIGITAL',
     ART_PRINT: 'ART_PRINT',
-    FRAMED_CANVAS: 'FRAMED_CANVAS'
+    CANVAS_STRETCHED: 'CANVAS_STRETCHED',
+    CANVAS_FRAMED: 'CANVAS_FRAMED'
   },
   getProductPricing: vi.fn((type, size) => {
     if (type === 'DIGITAL') return 999; // $9.99
     if (type === 'ART_PRINT') return 2999; // $29.99
-    if (type === 'FRAMED_CANVAS') return 7999; // $79.99
+    if (type === 'CANVAS_STRETCHED') return 6499; // $64.99
+    if (type === 'CANVAS_FRAMED') return 7999; // $79.99
     return 0;
   })
 }));
@@ -100,7 +102,7 @@ describe('PurchaseModalDigitalFirst', () => {
     fireEvent.click(screen.getByText('View Print Options'));
 
     await waitFor(() => {
-      expect(screen.getByText('Premium Art Print')).toBeInTheDocument();
+      expect(screen.getByText('Fine Art Print')).toBeInTheDocument();
       expect(screen.getByText('Framed Canvas')).toBeInTheDocument();
       expect(screen.getByText('← Back to Digital Download')).toBeInTheDocument();
     });
@@ -140,20 +142,26 @@ describe('PurchaseModalDigitalFirst', () => {
     fireEvent.click(screen.getByText('Download Now'));
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/checkout/artwork', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          artworkId: 'test-artwork-123',
-          productType: 'DIGITAL',
-          size: 'digital',
-          customerEmail: 'sarah@example.com',
-          customerName: 'Sarah',
-          petName: 'Bella',
-          imageUrl: '/test-image.jpg',
-          variant: 'digital-first'
-        })
-      });
+      expect(global.fetch).toHaveBeenCalled();
+    });
+
+    const digitalArgs = (global.fetch as any).mock.calls.at(-1);
+    expect(digitalArgs?.[0]).toBe('/api/checkout/artwork');
+    const digitalInit = digitalArgs?.[1];
+    expect(digitalInit).toMatchObject({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const digitalBody = JSON.parse(digitalInit.body);
+    expect(digitalBody).toMatchObject({
+      artworkId: 'test-artwork-123',
+      productType: 'DIGITAL',
+      size: 'digital',
+      customerEmail: 'sarah@example.com',
+      customerName: 'Sarah',
+      petName: 'Bella',
+      imageUrl: '/test-image.jpg',
+      variant: 'digital-first'
     });
   });
 
@@ -170,11 +178,11 @@ describe('PurchaseModalDigitalFirst', () => {
     fireEvent.click(screen.getByText('View Print Options'));
     
     await waitFor(() => {
-      expect(screen.getByText('Premium Art Print')).toBeInTheDocument();
+      expect(screen.getByText('Fine Art Print')).toBeInTheDocument();
     });
 
     // Select art print
-    fireEvent.click(screen.getByText('Premium Art Print').closest('div')!);
+    fireEvent.click(screen.getByText('Fine Art Print').closest('div')!);
     
     await waitFor(() => {
       expect(screen.getByText('Order Physical Print')).toBeInTheDocument();
@@ -184,14 +192,20 @@ describe('PurchaseModalDigitalFirst', () => {
     fireEvent.click(screen.getByText('Order Physical Print'));
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/checkout/artwork', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: expect.objectContaining({
-          productType: 'ART_PRINT',
-          variant: 'digital-first'
-        })
-      });
+      expect(global.fetch).toHaveBeenCalled();
+    });
+
+    const fetchArgs = (global.fetch as any).mock.calls.at(-1);
+    expect(fetchArgs?.[0]).toBe('/api/checkout/artwork');
+    const requestInit = fetchArgs?.[1];
+    expect(requestInit).toMatchObject({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const parsedBody = JSON.parse(requestInit.body);
+    expect(parsedBody).toMatchObject({
+      productType: 'ART_PRINT',
+      variant: 'digital-first'
     });
   });
 
