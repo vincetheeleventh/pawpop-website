@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export interface CouponValidationRequest {
   code: string;
   orderAmount: number;
@@ -42,6 +37,20 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Check if Supabase is configured
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return NextResponse.json(
+        { error: 'Coupon system not configured' },
+        { status: 503 }
+      );
+    }
+
+    // Create Supabase client at runtime
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
 
     // Call the database function to validate coupon
     const { data, error } = await supabase.rpc('validate_coupon_code', {
@@ -102,9 +111,11 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Create a new request with the parsed parameters
+  const mockRequest = {
+    json: async () => ({ code, orderAmount })
+  } as NextRequest;
+
   // Reuse POST logic
-  return POST(new NextRequest(request.url, {
-    method: 'POST',
-    body: JSON.stringify({ code, orderAmount })
-  }));
+  return POST(mockRequest);
 }
