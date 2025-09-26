@@ -9,6 +9,6 @@ if (!stripeSecretKey) {
 }
 
 export const stripe = stripeSecretKey ? new Stripe(stripeSecretKey, {
-  apiVersion: '2025-07-30.basil',
+  // Rely on your Stripe account's default API version to avoid type mismatches.
   typescript: true,
 }) : null;

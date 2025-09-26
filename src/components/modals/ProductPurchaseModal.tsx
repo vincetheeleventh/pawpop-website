@@ -278,7 +278,8 @@ export default function ProductPurchaseModal({
           imageUrl: artworkImageUrl,
           frameUpgrade: false,
           quantity: productType === 'digital' ? 1 : quantity,
-          shippingMethodId: productType === 'digital' ? null : selectedShipping
+          shippingMethodId: productType === 'digital' ? null : selectedShipping,
+          testMode: process.env.NODE_ENV === 'development' // Enable test mode in development
         }),
       })
 
@@ -304,7 +305,17 @@ export default function ProductPurchaseModal({
       })
 
       if (stripeError) {
-        throw stripeError
+        console.error('Stripe redirect error:', stripeError);
+
+        // Handle specific Stripe mode mismatch error
+        if (stripeError.message?.includes('test mode') && stripeError.message?.includes('live mode')) {
+          setError('Payment system configuration error. Please try again or contact support.');
+        } else {
+          setError(stripeError.message || 'Payment failed. Please try again.');
+        }
+
+        setLoading(false);
+        return;
       }
     } catch (err) {
       const error = err instanceof Error ? err : new Error('An error occurred during checkout')
