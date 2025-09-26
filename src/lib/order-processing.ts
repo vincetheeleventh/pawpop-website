@@ -32,6 +32,12 @@ export interface OrderMetadata {
   frameUpgrade?: boolean;
   shippingMethodId?: number;
   quantity?: number;
+  artworkId?: string;
+  couponCode?: string;
+  couponId?: string;
+  originalAmount?: string;
+  discountAmount?: string;
+  finalAmount?: string;
 }
 
 export interface ProcessOrderParams {

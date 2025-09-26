@@ -164,6 +164,13 @@ export function usePlausibleTracking() {
       feature_name: featureName,
       path: pathname,
       ...details
+    }),
+    
+    // Coupon usage
+    couponApplied: (couponCode: string, discountAmount: number) => trackEvent('Coupon Applied', {
+      coupon_code: couponCode,
+      discount_amount: discountAmount,
+      path: pathname
     })
   }), [pathname]);
 

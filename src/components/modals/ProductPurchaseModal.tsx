@@ -1,10 +1,19 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Minus, Plus, Truck, Star } from 'lucide-react'
+import { X, Minus, Plus, Truck, Star, Tag, Check } from 'lucide-react'
 import { loadStripe } from '@stripe/stripe-js'
 import { getDynamicPricing } from '@/lib/copy'
 import usePlausibleTracking from '@/hooks/usePlausibleTracking'
+import { 
+  validateCouponCode, 
+  calculateCouponPricing, 
+  formatDiscountText, 
+  formatSavingsText,
+  isValidCouponFormat,
+  initialCouponState,
+  type CouponState 
+} from '@/lib/coupons'
 
 interface Mockup {
   type: string
@@ -93,6 +102,8 @@ export default function ProductPurchaseModal({
   const [selectedShipping, setSelectedShipping] = useState<number | null>(null)
   const [loadingShipping, setLoadingShipping] = useState(false)
   const [showTooltip, setShowTooltip] = useState(false)
+  const [coupon, setCoupon] = useState<CouponState>(initialCouponState)
+  const [showCouponInput, setShowCouponInput] = useState(false)
 
   // Plausible tracking and dynamic pricing
   const { trackFunnel, trackInteraction, trackPriceExposure, getPriceConfig } = usePlausibleTracking()
@@ -248,6 +259,79 @@ export default function ProductPurchaseModal({
 
   const pricing = getAllSizesPricing()
   const currentPrice = getCurrentPrice()
+  
+  // Calculate final pricing with coupon applied
+  const baseAmount = currentPrice * quantity
+  const finalPricing = coupon.isValid 
+    ? calculateCouponPricing(baseAmount, {
+        isValid: coupon.isValid,
+        discountAmount: coupon.discountAmount,
+        finalAmount: coupon.finalAmount
+      })
+    : {
+        originalAmount: baseAmount,
+        discountAmount: 0,
+        finalAmount: baseAmount,
+        savings: 0,
+        discountPercentage: 0
+      }
+
+  // Coupon validation function with debouncing
+  const validateCoupon = async (code: string) => {
+    if (!code.trim()) {
+      setCoupon(initialCouponState)
+      return
+    }
+
+    if (!isValidCouponFormat(code)) {
+      setCoupon({
+        ...initialCouponState,
+        code,
+        errorMessage: 'Invalid coupon format'
+      })
+      return
+    }
+
+    setCoupon(prev => ({ ...prev, code, isValidating: true, errorMessage: undefined }))
+
+    try {
+      const result = await validateCouponCode(code, baseAmount, productType)
+      
+      setCoupon({
+        code,
+        isValid: result.isValid,
+        isValidating: false,
+        discountAmount: result.discountAmount || 0,
+        finalAmount: result.finalAmount || baseAmount,
+        errorMessage: result.errorMessage,
+        savings: result.savings,
+        discountType: result.discountType,
+        discountValue: result.discountValue
+      })
+
+      // Track coupon usage
+      if (result.isValid) {
+        trackInteraction.couponApplied(code, result.discountAmount || 0)
+      }
+    } catch (error) {
+      setCoupon({
+        ...initialCouponState,
+        code,
+        errorMessage: 'Failed to validate coupon'
+      })
+    }
+  }
+
+  // Debounced coupon validation
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (coupon.code) {
+        validateCoupon(coupon.code)
+      }
+    }, 500)
+
+    return () => clearTimeout(timeoutId)
+  }, [coupon.code, baseAmount])
 
   const handlePurchase = async () => {
     setLoading(true)
@@ -278,7 +362,11 @@ export default function ProductPurchaseModal({
           imageUrl: artworkImageUrl,
           frameUpgrade: false,
           quantity: productType === 'digital' ? 1 : quantity,
-          shippingMethodId: productType === 'digital' ? null : selectedShipping
+          shippingMethodId: productType === 'digital' ? null : selectedShipping,
+          couponCode: coupon.isValid ? coupon.code : undefined,
+          originalAmount: baseAmount,
+          discountAmount: coupon.isValid ? coupon.discountAmount : 0,
+          finalAmount: finalPricing.finalAmount
         }),
       })
 
@@ -558,6 +646,91 @@ export default function ProductPurchaseModal({
               </div>
               )}
 
+              {/* Coupon Code Section */}
+              <div className="py-3 border-t border-gray-100">
+                {!showCouponInput ? (
+                  <button
+                    onClick={() => setShowCouponInput(true)}
+                    className="flex items-center text-sm text-cyclamen hover:text-cyclamen/80 font-geist font-medium transition-colors"
+                  >
+                    <Tag className="w-4 h-4 mr-2" />
+                    Have a coupon code?
+                  </button>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 relative">
+                        <input
+                          type="text"
+                          placeholder="Enter coupon code"
+                          value={coupon.code}
+                          onChange={(e) => setCoupon(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg font-geist text-sm focus:outline-none focus:ring-2 focus:ring-cyclamen/20 focus:border-cyclamen"
+                          disabled={coupon.isValidating}
+                        />
+                        {coupon.isValidating && (
+                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-cyclamen"></div>
+                          </div>
+                        )}
+                        {coupon.isValid && (
+                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                            <Check className="w-4 h-4 text-green-500" />
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => {
+                          setShowCouponInput(false)
+                          setCoupon(initialCouponState)
+                        }}
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    
+                    {/* Coupon Status Messages */}
+                    {coupon.errorMessage && (
+                      <p className="text-sm text-red-600 font-geist">{coupon.errorMessage}</p>
+                    )}
+                    
+                    {coupon.isValid && coupon.savings && coupon.savings > 0 && (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-geist font-medium text-green-800">
+                              Coupon Applied: {coupon.code}
+                            </p>
+                            <p className="text-xs text-green-600 font-geist">
+                              {formatDiscountText({
+                                isValid: coupon.isValid,
+                                discountType: coupon.discountType,
+                                discountValue: coupon.discountValue
+                              })} • {formatSavingsText(coupon.savings)}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-geist font-bold text-green-800">
+                              -${coupon.discountAmount.toFixed(2)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Test Coupon Hint for Development */}
+                    {process.env.NODE_ENV === 'development' && !coupon.code && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-2">
+                        <p className="text-xs text-blue-600 font-geist">
+                          💡 Try: <code className="bg-blue-100 px-1 rounded">TEST99</code> (99% off), <code className="bg-blue-100 px-1 rounded">DOLLAR1</code> ($1 price), or <code className="bg-blue-100 px-1 rounded">SAVE44</code> ($44 off)
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               {/* Shipping Selection */}
               {productType !== 'digital' && (
                 <div className="py-3 border-t border-gray-100">
@@ -631,6 +804,24 @@ export default function ProductPurchaseModal({
                 </div>
               )}
               
+              {/* Price Summary */}
+              {coupon.isValid && coupon.savings && coupon.savings > 0 && (
+                <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                  <div className="flex justify-between text-sm font-geist">
+                    <span className="text-gray-600">Subtotal:</span>
+                    <span className="text-gray-600">${baseAmount.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-geist">
+                    <span className="text-green-600">Discount ({coupon.code}):</span>
+                    <span className="text-green-600">-${coupon.discountAmount.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-lg font-arvo font-bold border-t border-gray-200 pt-2">
+                    <span className="text-text-primary">Total:</span>
+                    <span className="text-cyclamen">${finalPricing.finalAmount.toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
+              
               <button
                 onClick={handlePurchase}
                 disabled={loading}
@@ -640,8 +831,8 @@ export default function ProductPurchaseModal({
               >
                 {loading ? 'Processing...' : 
                  productType === 'digital' 
-                   ? `Download Now - $${currentPrice}`
-                   : `Buy Now - $${(currentPrice * quantity).toFixed(0)}`}
+                   ? `Download Now - $${finalPricing.finalAmount.toFixed(2)}`
+                   : `Buy Now - $${finalPricing.finalAmount.toFixed(2)}`}
               </button>
               
               <div className="text-center text-sm text-gray-500 space-y-1 font-geist">

@@ -59,6 +59,37 @@ export async function POST(req: Request) {
         await processOrder({ session, metadata });
         console.log('Order processed successfully:', session.id);
 
+        // Process coupon usage if applicable
+        if (metadata.couponCode && metadata.couponId) {
+          try {
+            const { createClient } = await import('@supabase/supabase-js');
+            const supabase = createClient(
+              process.env.SUPABASE_URL!,
+              process.env.SUPABASE_SERVICE_ROLE_KEY!
+            );
+
+            const { error: couponError } = await supabase.rpc('apply_coupon_code', {
+              p_coupon_id: metadata.couponId,
+              p_order_id: session.id,
+              p_artwork_id: metadata.artworkId,
+              p_original_amount: parseFloat(metadata.originalAmount || '0'),
+              p_discount_amount: parseFloat(metadata.discountAmount || '0'),
+              p_final_amount: parseFloat(metadata.finalAmount || '0'),
+              p_user_email: session.customer_details?.email || null,
+              p_ip_address: null, // Not available in webhook
+              p_user_agent: null // Not available in webhook
+            });
+
+            if (couponError) {
+              console.error('❌ Failed to record coupon usage:', couponError);
+            } else {
+              console.log('✅ Coupon usage recorded:', metadata.couponCode);
+            }
+          } catch (couponProcessingError) {
+            console.error('❌ Error processing coupon usage:', couponProcessingError);
+          }
+        }
+
         // Track purchase conversion for Google Ads (server-side)
         try {
           const { trackServerSideConversion } = await import('@/lib/google-ads-server');

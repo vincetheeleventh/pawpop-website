@@ -28,6 +28,8 @@
     "test:monitoring": "tsx scripts/test-monitoring-system.ts",
     "test:faceswap": "vitest run tests/api/faceswap.test.ts tests/lib/viewcomfy.test.ts",
     "test:admin-review": "tsx scripts/test-admin-review-system.ts",
+    "test:coupons": "vitest run tests/lib/coupons.test.ts tests/api/coupons.test.ts",
+    "test:coupons-e2e": "node scripts/test-coupon-system.js",
     "test:admin-review-unit": "vitest run tests/lib/admin-review-simple.test.ts tests/api/admin-reviews-simple.test.ts",
     "test:admin-review-e2e": "playwright test tests/e2e/admin-review-system.spec.ts tests/e2e/admin-review-order-flow.spec.ts tests/e2e/admin-review-email-flow.spec.ts",
     "test:admin-review-quick": "vitest run tests/lib/admin-review-simple.test.ts --reporter=verbose",

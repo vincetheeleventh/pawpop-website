@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { ProductType, getProductPricing } from '@/lib/printify-products';
 import { createOrder } from '@/lib/supabase-orders';
+import { createClient } from '@supabase/supabase-js';
 
 export async function POST(req: Request) {
   let requestData: any = {};
@@ -20,7 +21,11 @@ export async function POST(req: Request) {
       frameUpgrade = false,
       quantity = 1,
       shippingMethodId,
-      testMode = false
+      testMode = false,
+      couponCode,
+      originalAmount,
+      discountAmount = 0,
+      finalAmount
     } = body;
 
     // Store request data for error logging
@@ -64,9 +69,52 @@ export async function POST(req: Request) {
       shippingMethodId
     });
 
-    // Get pricing (including frame upgrade if applicable)
-    const priceInCents = getProductPricing(productType as ProductType, size, 'US', frameUpgrade);
-    console.log('💰 Calculated price:', priceInCents);
+    // Get base pricing (including frame upgrade if applicable)
+    const basePriceInCents = getProductPricing(productType as ProductType, size, 'US', frameUpgrade);
+    console.log('💰 Base price:', basePriceInCents);
+    
+    // Handle coupon validation and pricing
+    let finalPriceInCents = basePriceInCents * quantity;
+    let appliedCouponId: string | null = null;
+    
+    if (couponCode && finalAmount !== undefined) {
+      // Validate coupon one more time server-side
+      const supabase = createClient(
+        process.env.SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+      
+      const { data: couponValidation, error: couponError } = await supabase.rpc('validate_coupon_code', {
+        p_code: couponCode.toUpperCase().trim(),
+        p_order_amount: originalAmount || (basePriceInCents * quantity / 100),
+        p_product_type: productType
+      });
+      
+      if (couponError) {
+        console.error('❌ Coupon validation error:', couponError);
+        return new NextResponse('Invalid coupon code', { status: 400 });
+      }
+      
+      if (!couponValidation || couponValidation.length === 0 || !couponValidation[0].is_valid) {
+        console.error('❌ Invalid coupon:', couponCode);
+        return new NextResponse('Invalid or expired coupon code', { status: 400 });
+      }
+      
+      // Use validated pricing from database
+      const validatedCoupon = couponValidation[0];
+      finalPriceInCents = Math.round(validatedCoupon.final_amount * 100);
+      appliedCouponId = validatedCoupon.coupon_id;
+      
+      console.log('✅ Coupon applied:', {
+        code: couponCode,
+        originalAmount: originalAmount,
+        discountAmount: validatedCoupon.discount_amount,
+        finalAmount: validatedCoupon.final_amount,
+        finalPriceInCents
+      });
+    }
+    
+    console.log('💰 Final price (with coupon):', finalPriceInCents);
     
     // Create order in database first
     console.log('📝 Creating order in database...');
@@ -77,7 +125,7 @@ export async function POST(req: Request) {
         stripe_session_id: '', // Will be updated after session creation
         product_type: productType as ProductType,
         product_size: size,
-        price_cents: priceInCents,
+        price_cents: finalPriceInCents,
         customer_email: customerEmail,
         customer_name: customerName
       });
@@ -91,7 +139,7 @@ export async function POST(req: Request) {
         stripe_session_id: '',
         product_type: productType as ProductType,
         product_size: size,
-        price_cents: priceInCents,
+        price_cents: finalPriceInCents,
         customer_email: customerEmail,
         customer_name: customerName,
         order_status: 'pending',
@@ -123,7 +171,7 @@ export async function POST(req: Request) {
             description: `Custom artwork featuring ${customerName}${petName ? ` & ${petName}` : ''} in the style of the Mona Lisa${frameUpgrade ? ' with professional framing' : ''}`,
             images: [imageUrl]
           },
-          unit_amount: priceInCents
+          unit_amount: Math.round(finalPriceInCents / quantity)
         },
         quantity: quantity
       }],
@@ -141,7 +189,12 @@ export async function POST(req: Request) {
         frameUpgrade: frameUpgrade.toString(),
         quantity: quantity.toString(),
         shippingMethodId: shippingMethodId?.toString() || '1',
-        orderId: order.id
+        orderId: order.id,
+        couponCode: couponCode || '',
+        couponId: appliedCouponId || '',
+        originalAmount: originalAmount?.toString() || '',
+        discountAmount: discountAmount?.toString() || '0',
+        finalAmount: finalAmount?.toString() || ''
       },
       // Collect shipping address for physical products
       shipping_address_collection: productType !== 'digital' ? {
