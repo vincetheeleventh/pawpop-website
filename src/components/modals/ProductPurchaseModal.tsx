@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { X, Minus, Plus, Truck, Star, Tag, Check } from 'lucide-react'
 import { loadStripe } from '@stripe/stripe-js'
 import { getDynamicPricing } from '@/lib/copy'
@@ -289,8 +289,10 @@ export default function ProductPurchaseModal({
   const pricing = getAllSizesPricing()
   const currentPrice = getCurrentPrice()
   
-  // Calculate final pricing with coupon applied
-  const baseAmount = currentPrice * quantity
+  // Memoize base amount calculation to prevent unnecessary re-renders
+  const baseAmount = useMemo(() => {
+    return currentPrice * quantity
+  }, [currentPrice, quantity])
   const finalPricing = coupon.isValid 
     ? calculateCouponPricing(baseAmount, {
         isValid: coupon.isValid,
@@ -306,7 +308,7 @@ export default function ProductPurchaseModal({
       }
 
   // Coupon validation function with debouncing
-  const validateCoupon = async (code: string) => {
+  const validateCoupon = useCallback(async (code: string) => {
     if (!code.trim()) {
       setCoupon(initialCouponState)
       return
@@ -349,7 +351,7 @@ export default function ProductPurchaseModal({
         errorMessage: 'Failed to validate coupon'
       })
     }
-  }
+  }, [baseAmount, productType, trackInteraction])
 
   // Debounced coupon validation
   useEffect(() => {
@@ -360,7 +362,7 @@ export default function ProductPurchaseModal({
     }, 500)
 
     return () => clearTimeout(timeoutId)
-  }, [coupon.code, baseAmount])
+  }, [coupon.code, validateCoupon])
 
   const handlePurchase = async () => {
     setLoading(true)

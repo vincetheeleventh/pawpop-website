@@ -19,7 +19,10 @@ export default function PlausibleScript({
   useEffect(() => {
     // Initialize price variant on component mount
     const variant = plausible.getPriceVariant();
-    console.log('[PlausibleScript] Initialized with price variant:', variant);
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[PlausibleScript] Initialized with price variant:', variant);
+    }
     
     // Track initial page load with variant
     plausible.trackPageview(window.location.pathname, {
@@ -42,15 +45,25 @@ export default function PlausibleScript({
         src={src}
         strategy="afterInteractive"
         onLoad={() => {
-          console.log('[PlausibleScript] Enhanced Plausible script loaded successfully');
-          
-          // Verify plausible is available
-          if (typeof window !== 'undefined' && window.plausible) {
-            console.log('[PlausibleScript] Plausible tracking active with enhanced features');
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[PlausibleScript] Enhanced Plausible script loaded successfully');
+            
+            // Verify plausible is available
+            if (typeof window !== 'undefined' && window.plausible) {
+              console.log('[PlausibleScript] Plausible tracking active with enhanced features');
+            }
           }
         }}
         onError={(error) => {
-          console.error('[PlausibleScript] Failed to load Plausible script:', error);
+          console.warn('[PlausibleScript] Plausible blocked by ad blocker - analytics will use fallback mode');
+          
+          // Set up fallback tracking when Plausible is blocked
+          if (typeof window !== 'undefined') {
+            window.plausible = window.plausible || function() {
+              // Silent fallback - don't spam console with errors
+              return;
+            };
+          }
         }}
       />
       

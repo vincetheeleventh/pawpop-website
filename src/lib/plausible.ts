@@ -163,8 +163,19 @@ class PlausibleAnalytics {
    * Track custom event
    */
   trackEvent(eventName: string, props?: Record<string, string | number | boolean>): void {
-    if (!this.isEnabled || typeof window === 'undefined' || !window.plausible) {
-      console.log(`[Plausible] Event: ${eventName}`, props);
+    if (!this.isEnabled || typeof window === 'undefined') {
+      // Only log in development mode to reduce noise
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[Plausible] Event (disabled): ${eventName}`, props);
+      }
+      return;
+    }
+
+    if (!window.plausible) {
+      // Plausible is likely blocked by ad blocker - fail silently in production
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[Plausible] Event (blocked): ${eventName}`, props);
+      }
       return;
     }
 
@@ -177,9 +188,16 @@ class PlausibleAnalytics {
       };
 
       window.plausible(eventName, { props: eventProps });
-      console.log(`[Plausible] Tracked event: ${eventName}`, eventProps);
+      
+      // Only log successful events in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[Plausible] Tracked event: ${eventName}`, eventProps);
+      }
     } catch (error) {
-      console.error('[Plausible] Error tracking event:', error);
+      // Only log errors in development to avoid console spam
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[Plausible] Error tracking event (likely blocked):', error);
+      }
     }
   }
 
@@ -188,7 +206,9 @@ class PlausibleAnalytics {
    */
   trackRevenue(eventName: string, amount: number, currency: string = 'USD', props?: Record<string, string | number | boolean>): void {
     if (!this.isEnabled || typeof window === 'undefined' || !window.plausible) {
-      console.log(`[Plausible] Revenue Event: ${eventName}`, { amount, currency, props });
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[Plausible] Revenue Event (blocked/disabled): ${eventName}`, { amount, currency, props });
+      }
       return;
     }
 

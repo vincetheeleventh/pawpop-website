@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/Footer';
 import { Providers } from './providers';
 import { GoogleAdsTracking } from '@/components/analytics/GoogleAdsTracking';
 import PlausibleScript from '@/components/analytics/PlausibleScript';
+import AdBlockerNotice from '@/components/common/AdBlockerNotice';
 
 // PawPop Brand Fonts
 const arvo = Arvo({ 
@@ -73,6 +74,7 @@ export default function RootLayout({
           <Header />
           <main>{children}</main>
           <Footer />
+          <AdBlockerNotice />
         </Providers>
       </body>
     </html>
