@@ -37,20 +37,77 @@ export async function POST(req: NextRequest) {
       console.log(`📁 Portrait file: ${portraitFile.name} (${portraitFile.type})`);
       console.log(`📁 Pet file: ${petFile.name} (${petFile.type})`);
       
-      // For now, let's try uploading with forced JPEG MIME type for AVIF files
-      const forceJpegMimeType = (file: File): File => {
-        if (file.type === 'image/avif') {
-          console.log(`🔄 Forcing MIME type change: ${file.type} → image/jpeg`);
-          return new File([file], file.name.replace(/\.avif$/i, '.jpg'), {
+      // Server-side image format conversion for fal.ai compatibility
+      const convertToJpegIfNeeded = async (file: File): Promise<File> => {
+        const problematicFormats = ['image/avif', 'image/heic', 'image/heif'];
+        const isHeicByName = file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif');
+        
+        if (problematicFormats.includes(file.type) || isHeicByName) {
+          console.log(`🔄 Server-side conversion needed: ${file.name} (${file.type})`);
+          
+          // For HEIC/HEIF files, attempt server-side conversion using Sharp
+          if (file.type === 'image/heic' || file.type === 'image/heif' || isHeicByName) {
+            try {
+              console.log('🔄 Attempting server-side HEIC conversion with Sharp...');
+              
+              // Dynamic import to avoid bundling issues
+              const sharp = await import('sharp');
+              
+              // Convert File to Buffer
+              const arrayBuffer = await file.arrayBuffer();
+              const buffer = Buffer.from(arrayBuffer);
+              
+              // Convert HEIC to JPEG using Sharp
+              const jpegBuffer = await sharp.default(buffer)
+                .jpeg({ quality: 85 })
+                .toBuffer();
+              
+              // Create new File object
+              const newFileName = file.name.replace(/\.(heic|heif)$/i, '.jpg');
+              const convertedFile = new File([jpegBuffer], newFileName, {
+                type: 'image/jpeg',
+                lastModified: file.lastModified
+              });
+              
+              console.log('✅ Server-side HEIC conversion successful:', {
+                originalSize: Math.round(file.size / 1024),
+                convertedSize: Math.round(convertedFile.size / 1024),
+                originalName: file.name,
+                convertedName: convertedFile.name
+              });
+              
+              return convertedFile;
+              
+            } catch (sharpError) {
+              console.warn('⚠️ Server-side HEIC conversion failed, trying MIME type fallback:', sharpError);
+              
+              // Fallback: just change MIME type and hope for the best
+              const newName = file.name.replace(/\.(heic|heif)$/i, '.jpg');
+              return new File([file], newName, {
+                type: 'image/jpeg',
+                lastModified: file.lastModified
+              });
+            }
+          }
+          
+          // For AVIF and other formats, just change MIME type
+          let newName = file.name;
+          if (file.type === 'image/avif') {
+            newName = file.name.replace(/\.avif$/i, '.jpg');
+          }
+          
+          console.log(`🔄 MIME type change: ${file.type} → image/jpeg`);
+          return new File([file], newName, {
             type: 'image/jpeg',
             lastModified: file.lastModified
           });
         }
+        
         return file;
       };
       
-      const processedPortrait = forceJpegMimeType(portraitFile);
-      const processedPet = forceJpegMimeType(petFile);
+      const processedPortrait = await convertToJpegIfNeeded(portraitFile);
+      const processedPet = await convertToJpegIfNeeded(petFile);
       
       portraitUrl = await fal.storage.upload(processedPortrait);
       petUrl = await fal.storage.upload(processedPet);
@@ -176,10 +233,30 @@ export async function POST(req: NextRequest) {
     // Log detailed fal.ai validation errors
     if (error && typeof error === 'object' && 'body' in error) {
       console.error("🔍 Detailed fal.ai error:", JSON.stringify(error.body, null, 2));
+      
+      // Check for specific validation errors
+      const errorBody = error.body as any;
+      if (errorBody?.detail && Array.isArray(errorBody.detail)) {
+        console.error("🔍 Validation details:", errorBody.detail.map((detail: any) => ({
+          field: detail.loc?.join('.'),
+          message: detail.msg,
+          type: detail.type,
+          input: detail.input
+        })));
+      }
+    }
+    
+    // Provide more specific error messages for common issues
+    let errorMessage = 'Pet integration failed';
+    let errorDetails = error instanceof Error ? error.message : 'Unknown error';
+    
+    if (error && typeof error === 'object' && 'status' in error && error.status === 422) {
+      errorMessage = 'Image format validation failed';
+      errorDetails = 'The uploaded images may not be in a supported format. Please try using JPEG or PNG images instead.';
     }
     
     return NextResponse.json(
-      { error: 'Pet integration failed', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: errorMessage, details: errorDetails },
       { status: 500 }
     );
   }

@@ -104,9 +104,82 @@ export async function POST(req: NextRequest) {
         }, { status: 413 });
       }
 
-      console.log("☁️ Uploading user photo to fal storage...");
+      console.log("☁️ Processing and uploading user photo to fal storage...");
+      
+      // Server-side image format conversion for fal.ai compatibility
+      const convertToJpegIfNeeded = async (file: File): Promise<File> => {
+        const problematicFormats = ['image/avif', 'image/heic', 'image/heif'];
+        const isHeicByName = file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif');
+        
+        if (problematicFormats.includes(file.type) || isHeicByName) {
+          console.log(`🔄 Server-side conversion needed: ${file.name} (${file.type})`);
+          
+          // For HEIC/HEIF files, attempt server-side conversion using Sharp
+          if (file.type === 'image/heic' || file.type === 'image/heif' || isHeicByName) {
+            try {
+              console.log('🔄 Attempting server-side HEIC conversion with Sharp...');
+              
+              // Dynamic import to avoid bundling issues
+              const sharp = await import('sharp');
+              
+              // Convert File to Buffer
+              const arrayBuffer = await file.arrayBuffer();
+              const buffer = Buffer.from(arrayBuffer);
+              
+              // Convert HEIC to JPEG using Sharp
+              const jpegBuffer = await sharp.default(buffer)
+                .jpeg({ quality: 85 })
+                .toBuffer();
+              
+              // Create new File object
+              const newFileName = file.name.replace(/\.(heic|heif)$/i, '.jpg');
+              const convertedFile = new File([jpegBuffer], newFileName, {
+                type: 'image/jpeg',
+                lastModified: file.lastModified
+              });
+              
+              console.log('✅ Server-side HEIC conversion successful:', {
+                originalSize: Math.round(file.size / 1024),
+                convertedSize: Math.round(convertedFile.size / 1024),
+                originalName: file.name,
+                convertedName: convertedFile.name
+              });
+              
+              return convertedFile;
+              
+            } catch (sharpError) {
+              console.warn('⚠️ Server-side HEIC conversion failed, trying MIME type fallback:', sharpError);
+              
+              // Fallback: just change MIME type and hope for the best
+              const newName = file.name.replace(/\.(heic|heif)$/i, '.jpg');
+              return new File([file], newName, {
+                type: 'image/jpeg',
+                lastModified: file.lastModified
+              });
+            }
+          }
+          
+          // For AVIF and other formats, just change MIME type
+          let newName = file.name;
+          if (file.type === 'image/avif') {
+            newName = file.name.replace(/\.avif$/i, '.jpg');
+          }
+          
+          console.log(`🔄 MIME type change: ${file.type} → image/jpeg`);
+          return new File([file], newName, {
+            type: 'image/jpeg',
+            lastModified: file.lastModified
+          });
+        }
+        
+        return file;
+      };
+      
+      // Convert image if needed before uploading to fal.ai
+      const processedImageFile = await convertToJpegIfNeeded(imageFile);
+      
       try {
-        const uploadResult = await fal.storage.upload(imageFile);
+        const uploadResult = await fal.storage.upload(processedImageFile);
         console.log("📦 Upload result type:", typeof uploadResult);
         console.log("📦 Upload result keys:", uploadResult && typeof uploadResult === 'object' ? Object.keys(uploadResult) : 'N/A');
         console.log("📦 Upload result (truncated):", JSON.stringify(uploadResult).substring(0, 200) + '...');

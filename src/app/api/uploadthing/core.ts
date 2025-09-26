@@ -11,7 +11,9 @@ export const ourFileRouter = {
   petPhotoUploader: f({ 
     "image/jpeg": { maxFileSize: "8MB", maxFileCount: 1 },
     "image/png": { maxFileSize: "8MB", maxFileCount: 1 },
-    "image/webp": { maxFileSize: "8MB", maxFileCount: 1 }
+    "image/webp": { maxFileSize: "8MB", maxFileCount: 1 },
+    "image/heic": { maxFileSize: "8MB", maxFileCount: 1 },
+    "image/heif": { maxFileSize: "8MB", maxFileCount: 1 }
   })
     .input(z.object({
       petName: z.string().optional(),
@@ -48,7 +50,9 @@ export const ourFileRouter = {
   petMomUploader: f({ 
     "image/jpeg": { maxFileSize: "8MB", maxFileCount: 1 },
     "image/png": { maxFileSize: "8MB", maxFileCount: 1 },
-    "image/webp": { maxFileSize: "8MB", maxFileCount: 1 }
+    "image/webp": { maxFileSize: "8MB", maxFileCount: 1 },
+    "image/heic": { maxFileSize: "8MB", maxFileCount: 1 },
+    "image/heif": { maxFileSize: "8MB", maxFileCount: 1 }
   })
     .input(z.object({
       artworkId: z.string().uuid()

@@ -93,11 +93,33 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
   const handleFileUpload = async (file: File, type: 'petMom' | 'pet') => {
     let processedFile = file;
     
+    // Enhanced logging for iPhone camera uploads
+    console.log('📱 File upload details:', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      lastModified: file.lastModified,
+      isHeicByName: file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif'),
+      isHeicByType: file.type === 'image/heic' || file.type === 'image/heif',
+      uploadType: type
+    });
+    
     // Check if file is HEIC/HEIF and convert to JPEG
-    if (file.type === 'image/heic' || file.type === 'image/heif' || 
-        file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
-      
-      console.log('🔄 Converting HEIC file to JPEG:', file.name);
+    // Also handle cases where iPhone camera uploads have generic MIME types
+    const needsHeicConversion = file.type === 'image/heic' || file.type === 'image/heif' || 
+        file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif') ||
+        (file.type === '' && file.name.toLowerCase().includes('img_')); // iPhone camera pattern
+    
+    if (needsHeicConversion) {
+      console.log('🔄 Converting HEIC/iPhone camera file to JPEG:', {
+        originalName: file.name,
+        originalType: file.type,
+        detectionReason: file.type === 'image/heic' ? 'MIME type' : 
+                        file.type === 'image/heif' ? 'MIME type' :
+                        file.name.toLowerCase().endsWith('.heic') ? 'file extension .heic' :
+                        file.name.toLowerCase().endsWith('.heif') ? 'file extension .heif' :
+                        'iPhone camera pattern'
+      });
       
       try {
         // Dynamic import to avoid SSR issues
@@ -110,17 +132,29 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
         }) as Blob;
         
         // Create new File object with JPEG type
+        const newFileName = file.name.replace(/\.(heic|heif)$/i, '.jpg').replace(/^IMG_/, 'photo_');
         processedFile = new File(
           [convertedBlob], 
-          file.name.replace(/\.(heic|heif)$/i, '.jpg'),
+          newFileName,
           { type: 'image/jpeg' }
         );
         
-        console.log('✅ HEIC conversion successful:', processedFile.name);
+        console.log('✅ HEIC conversion successful:', {
+          originalSize: Math.round(file.size / 1024),
+          convertedSize: Math.round(processedFile.size / 1024),
+          originalName: file.name,
+          convertedName: processedFile.name,
+          convertedType: processedFile.type
+        });
         
       } catch (conversionError) {
-        console.error('❌ HEIC conversion failed:', conversionError);
-        setError('Failed to process HEIC image. Please try a different photo or convert to JPG first.');
+        console.error('❌ HEIC conversion failed:', {
+          error: conversionError,
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size
+        });
+        setError('Failed to process iPhone photo. Please try taking the photo again or select from your photo library instead.');
         return;
       }
     }
