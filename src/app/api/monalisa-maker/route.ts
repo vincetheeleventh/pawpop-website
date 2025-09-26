@@ -18,6 +18,57 @@ export async function POST(req: NextRequest) {
     let artworkId = `temp_${Date.now()}`;
     const contentType = req.headers.get('content-type');
 
+    const extractUrlFromUploadResult = (uploadResult: unknown): string | undefined => {
+      if (!uploadResult) {
+        return undefined;
+      }
+
+      if (typeof uploadResult === 'string') {
+        return uploadResult;
+      }
+
+      const visited = new Set<unknown>();
+      const stack: unknown[] = [uploadResult];
+
+      while (stack.length > 0) {
+        const current = stack.pop();
+
+        if (!current || typeof current !== 'object' || visited.has(current)) {
+          continue;
+        }
+
+        visited.add(current);
+
+        if (Array.isArray(current)) {
+          for (const item of current) {
+            if (typeof item === 'string' && item.startsWith('http')) {
+              return item;
+            }
+            stack.push(item);
+          }
+          continue;
+        }
+
+        for (const value of Object.values(current)) {
+          if (typeof value === 'string' && value.startsWith('http')) {
+            return value;
+          }
+
+          // Handle nested { url: { href: '...' } } style responses
+          if (value && typeof value === 'object') {
+            const nestedUrlLike = (value as Record<string, unknown>).url;
+            if (typeof nestedUrlLike === 'string' && nestedUrlLike.startsWith('http')) {
+              return nestedUrlLike;
+            }
+
+            stack.push(value);
+          }
+        }
+      }
+
+      return undefined;
+    };
+
     if (contentType?.includes('multipart/form-data')) {
       // Handle file upload
       const formData = await req.formData();
@@ -58,49 +109,17 @@ export async function POST(req: NextRequest) {
         console.log("📦 Upload result type:", typeof uploadResult);
         console.log("📦 Upload result keys:", uploadResult && typeof uploadResult === 'object' ? Object.keys(uploadResult) : 'N/A');
         console.log("📦 Upload result (truncated):", JSON.stringify(uploadResult).substring(0, 200) + '...');
-        
+
         // Handle multiple possible response formats from fal.ai
-        let extractedUrl: string | undefined;
-        
-        if (typeof uploadResult === 'string') {
-          // Direct string URL
-          extractedUrl = uploadResult;
-        } else if (uploadResult && typeof uploadResult === 'object') {
-          // Try common property names for URLs
-          const possibleUrlProps = ['url', 'file_url', 'download_url', 'public_url', 'data_url', 'href', 'link'];
-          
-          for (const prop of possibleUrlProps) {
-            if (prop in uploadResult && typeof (uploadResult as any)[prop] === 'string') {
-              extractedUrl = (uploadResult as any)[prop];
-              console.log(`✅ Found URL in property '${prop}':`, extractedUrl);
-              break;
-            }
-          }
-          
-          // If no direct URL property, check nested data object
-          if (!extractedUrl && 'data' in uploadResult && (uploadResult as any).data && typeof (uploadResult as any).data === 'object') {
-            const dataObj = (uploadResult as any).data;
-            for (const prop of possibleUrlProps) {
-              if (prop in dataObj && typeof dataObj[prop] === 'string') {
-                extractedUrl = dataObj[prop];
-                console.log(`✅ Found URL in data.${prop}:`, extractedUrl);
-                break;
-              }
-            }
-          }
-          
-          // If still no URL found, log the full object for debugging
-          if (!extractedUrl) {
-            console.error("❌ Could not extract URL from upload result:", JSON.stringify(uploadResult, null, 2));
-            console.error("❌ Upload result type:", typeof uploadResult);
-            console.error("❌ Upload result constructor:", (uploadResult as any)?.constructor?.name);
-            throw new Error(`No valid URL found in upload response. Available properties: ${Object.keys(uploadResult).join(', ')}`);
-          }
-        } else {
-          console.error("❌ Unexpected upload result format:", uploadResult);
-          throw new Error(`Unexpected upload result format: ${typeof uploadResult}`);
+        const extractedUrl = extractUrlFromUploadResult(uploadResult);
+
+        if (!extractedUrl) {
+          console.error("❌ Could not extract URL from upload result:", JSON.stringify(uploadResult, null, 2));
+          console.error("❌ Upload result type:", typeof uploadResult);
+          console.error("❌ Upload result constructor:", (uploadResult as any)?.constructor?.name);
+          throw new Error(`No valid URL found in upload response. Available properties: ${JSON.stringify(uploadResult)}`);
         }
-        
+
         imageUrl = extractedUrl;
         console.log("✅ Image uploaded, extracted URL:", imageUrl);
         
