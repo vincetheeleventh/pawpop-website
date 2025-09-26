@@ -626,13 +626,27 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
       setIsSubmitting(false);
       
       // Start generation process with progress tracking
-      generateArtwork().then(() => {
+      generateArtwork().then(async () => {
         console.log('✅ Generation completed successfully');
-        // Wait a bit longer before redirecting to show completion
-        setTimeout(() => {
-          onClose();
-          router.push(`/artwork/${access_token}`);
-        }, 3000);
+        
+        // Check if human review is enabled
+        const { isHumanReviewEnabled } = await import('@/lib/admin-review');
+        
+        if (isHumanReviewEnabled()) {
+          // Human review is enabled - don't redirect, just show completion message
+          console.log('Human review enabled - artwork pending admin approval');
+          setTimeout(() => {
+            onClose();
+            // Don't redirect - user will get email with link after admin approval
+          }, 3000);
+        } else {
+          // Human review disabled - redirect to artwork page as before
+          console.log('Human review disabled - redirecting to artwork page');
+          setTimeout(() => {
+            onClose();
+            router.push(`/artwork/${access_token}`);
+          }, 3000);
+        }
       }).catch((error) => {
         console.error('❌ Generation failed:', error);
         setError('Generation failed: ' + (error.message || 'Unknown error'));

@@ -26,6 +26,19 @@ export async function POST(req: Request) {
     // Store request data for error logging
     requestData = { artworkId, productType, size, customerEmail, customerName, petName };
 
+    // Enhanced environment validation
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY || process.env.STRIPE_API_KEY;
+    const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+
+    console.log('🔍 Environment Check:', {
+      hasStripeSecret: !!stripeSecretKey,
+      hasStripePublishable: !!stripePublishableKey,
+      hasBaseUrl: !!baseUrl,
+      secretKeyType: stripeSecretKey ? (stripeSecretKey.startsWith('sk_live_') ? 'LIVE' : 'TEST') : 'MISSING',
+      publishableKeyType: stripePublishableKey ? (stripePublishableKey.startsWith('pk_live_') ? 'LIVE' : 'TEST') : 'MISSING'
+    });
+
     // Test mode - return mock response without hitting Stripe/Printify
     if (testMode) {
       console.log('🧪 TEST MODE: Checkout API called with:', {
@@ -51,20 +64,52 @@ export async function POST(req: Request) {
       });
     }
 
-    // Check Stripe configuration first - if invalid key, use test mode
+    // Enhanced Stripe configuration validation
     if (!stripe) {
-      console.log('⚠️ Stripe not configured - falling back to test mode');
-      return NextResponse.json({
-        sessionId: `fallback_session_${Date.now()}`,
-        testMode: true,
-        message: 'Stripe not configured - test mode fallback',
-        productDetails: {
-          type: productType,
-          size,
-          estimatedPrice: getProductPricing(productType as ProductType, size, 'US', frameUpgrade),
-          frameUpgrade
+      const errorDetails = {
+        hasStripeSecret: !!stripeSecretKey,
+        hasStripePublishable: !!stripePublishableKey,
+        secretKeyPrefix: stripeSecretKey?.substring(0, 8) || 'missing',
+        publishableKeyPrefix: stripePublishableKey?.substring(0, 8) || 'missing'
+      };
+      
+      console.error('❌ Stripe Configuration Error:', errorDetails);
+      
+      return new NextResponse(
+        JSON.stringify({
+          error: 'Payment system not configured',
+          details: 'Stripe keys are missing or invalid',
+          debug: errorDetails
+        }),
+        { 
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
         }
-      });
+      );
+    }
+
+    // Validate key matching (both should be live or both test)
+    if (stripeSecretKey && stripePublishableKey) {
+      const secretIsLive = stripeSecretKey.startsWith('sk_live_');
+      const publishableIsLive = stripePublishableKey.startsWith('pk_live_');
+      
+      if (secretIsLive !== publishableIsLive) {
+        console.error('❌ Stripe Key Mismatch:', {
+          secretType: secretIsLive ? 'LIVE' : 'TEST',
+          publishableType: publishableIsLive ? 'LIVE' : 'TEST'
+        });
+        
+        return new NextResponse(
+          JSON.stringify({
+            error: 'Payment system configuration error',
+            details: 'Stripe key environment mismatch'
+          }),
+          { 
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+      }
     }
 
     // Validate required fields
@@ -167,10 +212,41 @@ export async function POST(req: Request) {
     console.error('Checkout error details:', {
       error: error instanceof Error ? error.message : error,
       stack: error instanceof Error ? error.stack : undefined,
+      requestData
     });
 
-    // Return more specific error information
+    // Return more specific error information with debugging context
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    return new NextResponse(`Checkout failed: ${errorMessage}`, { status: 500 });
+    
+    // Check if it's a Stripe-specific error
+    if (errorMessage.includes('No such price') || errorMessage.includes('Invalid API key')) {
+      return new NextResponse(
+        JSON.stringify({
+          error: 'Payment configuration error',
+          details: 'Please check your Stripe configuration',
+          message: errorMessage
+        }),
+        { 
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    return new NextResponse(
+      JSON.stringify({
+        error: 'Checkout failed',
+        details: errorMessage,
+        requestData: {
+          artworkId: requestData.artworkId,
+          productType: requestData.productType,
+          size: requestData.size
+        }
+      }),
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   }
 }
