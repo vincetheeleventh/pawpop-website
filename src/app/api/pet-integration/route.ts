@@ -250,9 +250,23 @@ export async function POST(req: NextRequest) {
     let errorMessage = 'Pet integration failed';
     let errorDetails = error instanceof Error ? error.message : 'Unknown error';
     
-    if (error && typeof error === 'object' && 'status' in error && error.status === 422) {
-      errorMessage = 'Image format validation failed';
-      errorDetails = 'The uploaded images may not be in a supported format. Please try using JPEG or PNG images instead.';
+    if (error && typeof error === 'object' && 'status' in error) {
+      if (error.status === 422) {
+        const errorBody = (error as any).body;
+        if (errorBody?.detail && Array.isArray(errorBody.detail)) {
+          const imageLoadErrors = errorBody.detail.filter((detail: any) => detail.type === 'image_load_error');
+          if (imageLoadErrors.length > 0) {
+            errorMessage = 'fal.ai image loading failed';
+            errorDetails = 'fal.ai is having trouble loading images from their storage. This is a temporary infrastructure issue that should resolve automatically. Please try again in a few minutes.';
+          } else {
+            errorMessage = 'Image format validation failed';
+            errorDetails = 'The uploaded images may not be in a supported format. Please try using JPEG or PNG images instead.';
+          }
+        }
+      } else if (error.status === 503) {
+        errorMessage = 'fal.ai service temporarily unavailable';
+        errorDetails = 'The AI service is temporarily unavailable. Please try again in a few minutes.';
+      }
     }
     
     return NextResponse.json(
