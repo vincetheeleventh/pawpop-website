@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
               
               // Create new File object
               const newFileName = file.name.replace(/\.(heic|heif)$/i, '.jpg');
-              const convertedFile = new File([jpegBuffer], newFileName, {
+              const convertedFile = new File([new Uint8Array(jpegBuffer)], newFileName, {
                 type: 'image/jpeg',
                 lastModified: file.lastModified
               });
