@@ -132,15 +132,15 @@ export async function sendMasterpieceCreatingEmail(data: MasterpieceCreatingEmai
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Your masterpiece is being created</title>
       <style>
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8f9fa; }
-        .container { max-width: 600px; margin: 0 auto; background-color: white; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 30px; text-align: center; }
-        .header h1 { margin: 0; font-size: 28px; font-weight: 300; }
-        .content { padding: 40px 30px; }
-        .content h2 { color: #667eea; margin-top: 0; }
-        .cta-button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 0; }
-        .footer { background-color: #f8f9fa; padding: 30px; text-align: center; color: #6c757d; font-size: 14px; }
-        .divider { height: 1px; background: linear-gradient(to right, transparent, #e9ecef, transparent); margin: 30px 0; }
+        body { font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #2C2C2C; margin: 0; padding: 0; background-color: #F5EED7; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .header { background: #FF9770; color: #FFFFFF; padding: 40px 30px; text-align: center; }
+        .header h1 { margin: 0; font-size: 28px; font-weight: 700; font-family: 'Arvo', serif; }
+        .content { padding: 40px 30px; background-color: #FFFFFF; }
+        .content h2 { color: #2C2C2C; margin-top: 0; font-family: 'Arvo', serif; font-weight: 700; }
+        .cta-button { display: inline-block; background: #FF9770 !important; color: #FFFFFF !important; padding: 15px 30px; text-decoration: none; border-radius: 12px; font-weight: 600; margin: 20px 0; border: none; font-family: 'Fredoka One', cursive; }
+        .footer { background-color: #F5EED7; padding: 30px; text-align: center; color: #2C2C2C; font-size: 14px; }
+        .divider { height: 1px; background: #FFD670; margin: 30px 0; }
       </style>
     </head>
     <body>
@@ -165,7 +165,7 @@ export async function sendMasterpieceCreatingEmail(data: MasterpieceCreatingEmai
           <div class="divider"></div>
           
           <p>You can check the status of your artwork anytime:</p>
-          <a href="${data.artworkUrl}" class="cta-button">View Your Artwork Status</a>
+          <a href="${data.artworkUrl}" class="cta-button" style="display: inline-block; background: #FF9770 !important; color: #FFFFFF !important; padding: 15px 30px; text-decoration: none; border-radius: 12px; font-weight: 600; margin: 20px 0; border: none; font-family: 'Fredoka One', cursive;">View Your Artwork Status</a>
           
           <p>We're excited to show you the incredible transformation!</p>
           
@@ -205,18 +205,18 @@ export async function sendMasterpieceReadyEmail(data: MasterpieceReadyEmailData)
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Your masterpiece is ready!</title>
       <style>
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8f9fa; }
-        .container { max-width: 600px; margin: 0 auto; background-color: white; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 30px; text-align: center; }
-        .header h1 { margin: 0; font-size: 28px; font-weight: 300; }
-        .content { padding: 40px 30px; }
-        .content h2 { color: #667eea; margin-top: 0; }
+        body { font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #2C2C2C; margin: 0; padding: 0; background-color: #F5EED7; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .header { background: #FF70A6; color: #FFFFFF; padding: 40px 30px; text-align: center; }
+        .header h1 { margin: 0; font-size: 28px; font-weight: 700; font-family: 'Arvo', serif; }
+        .content { padding: 40px 30px; background-color: #FFFFFF; }
+        .content h2 { color: #2C2C2C; margin-top: 0; font-family: 'Arvo', serif; font-weight: 700; }
         .artwork-preview { text-align: center; margin: 30px 0; }
-        .artwork-preview img { max-width: 100%; height: auto; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
-        .cta-button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 10px; }
-        .secondary-button { display: inline-block; border: 2px solid #667eea; color: #667eea; padding: 13px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 10px; }
-        .footer { background-color: #f8f9fa; padding: 30px; text-align: center; color: #6c757d; font-size: 14px; }
-        .divider { height: 1px; background: linear-gradient(to right, transparent, #e9ecef, transparent); margin: 30px 0; }
+        .artwork-preview img { max-width: 100%; height: auto; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); border: 4px solid #FFD670; }
+        .cta-button { display: inline-block; background: #FF9770 !important; color: #FFFFFF !important; padding: 15px 30px; text-decoration: none; border-radius: 12px; font-weight: 600; margin: 20px 10px; border: none; font-family: 'Fredoka One', cursive; }
+        .secondary-button { display: inline-block; border: 2px solid #FF70A6; color: #FF70A6 !important; background: #FFFFFF !important; padding: 13px 28px; text-decoration: none; border-radius: 12px; font-weight: 600; margin: 20px 10px; }
+        .footer { background-color: #F5EED7; padding: 30px; text-align: center; color: #2C2C2C; font-size: 14px; }
+        .divider { height: 1px; background: #FFD670; margin: 30px 0; }
         .buttons-container { text-align: center; }
       </style>
     </head>
@@ -239,7 +239,7 @@ export async function sendMasterpieceReadyEmail(data: MasterpieceReadyEmailData)
           <p>We've created a special page just for you where you can see your artwork in full detail and decide how to make it real.</p>
           
           <div class="buttons-container">
-            <a href="${data.artworkUrl}" class="cta-button">View Your Masterpiece</a>
+            <a href="${data.artworkUrl}" class="cta-button" style="display: inline-block; background: #FF9770 !important; color: #FFFFFF !important; padding: 15px 30px; text-decoration: none; border-radius: 12px; font-weight: 600; margin: 20px 10px; border: none; font-family: 'Fredoka One', cursive;">View Your Masterpiece</a>
           </div>
           
           <div class="divider"></div>
@@ -292,18 +292,18 @@ export async function sendOrderConfirmationEmail(data: OrderConfirmationEmailDat
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Order Confirmation - PawPop</title>
       <style>
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8f9fa; }
-        .container { max-width: 600px; margin: 0 auto; background-color: white; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 30px; text-align: center; }
-        .header h1 { margin: 0; font-size: 28px; font-weight: 300; }
-        .content { padding: 40px 30px; }
-        .content h2 { color: #667eea; margin-top: 0; }
-        .order-details { background-color: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; }
+        body { font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #2C2C2C; margin: 0; padding: 0; background-color: #F5EED7; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .header { background: #70D6FF; color: #FFFFFF; padding: 40px 30px; text-align: center; }
+        .header h1 { margin: 0; font-size: 28px; font-weight: 700; font-family: 'Arvo', serif; }
+        .content { padding: 40px 30px; background-color: #FFFFFF; }
+        .content h2 { color: #2C2C2C; margin-top: 0; font-family: 'Arvo', serif; font-weight: 700; }
+        .order-details { background-color: #F5EED7; padding: 25px; border-radius: 12px; margin: 25px 0; border: 2px solid #FFD670; }
         .order-row { display: flex; justify-content: space-between; margin: 10px 0; }
         .order-row strong { font-weight: 600; }
-        .total-row { border-top: 2px solid #e9ecef; padding-top: 15px; margin-top: 15px; font-size: 18px; font-weight: 600; }
-        .footer { background-color: #f8f9fa; padding: 30px; text-align: center; color: #6c757d; font-size: 14px; }
-        .divider { height: 1px; background: linear-gradient(to right, transparent, #e9ecef, transparent); margin: 30px 0; }
+        .total-row { border-top: 2px solid #FFD670; padding-top: 15px; margin-top: 15px; font-size: 18px; font-weight: 600; }
+        .footer { background-color: #F5EED7; padding: 30px; text-align: center; color: #2C2C2C; font-size: 14px; }
+        .divider { height: 1px; background: #FFD670; margin: 30px 0; }
       </style>
     </head>
     <body>
@@ -390,15 +390,15 @@ export async function sendShippingNotificationEmail(data: ShippingNotificationEm
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Your PawPop order has shipped!</title>
       <style>
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8f9fa; }
-        .container { max-width: 600px; margin: 0 auto; background-color: white; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 30px; text-align: center; }
-        .header h1 { margin: 0; font-size: 28px; font-weight: 300; }
-        .content { padding: 40px 30px; }
-        .content h2 { color: #667eea; margin-top: 0; }
-        .tracking-info { background-color: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; }
-        .footer { background-color: #f8f9fa; padding: 30px; text-align: center; color: #6c757d; font-size: 14px; }
-        .divider { height: 1px; background: linear-gradient(to right, transparent, #e9ecef, transparent); margin: 30px 0; }
+        body { font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #2C2C2C; margin: 0; padding: 0; background-color: #F5EED7; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .header { background: #E9FF70; color: #2C2C2C; padding: 40px 30px; text-align: center; }
+        .header h1 { margin: 0; font-size: 28px; font-weight: 700; font-family: 'Arvo', serif; }
+        .content { padding: 40px 30px; background-color: #FFFFFF; }
+        .content h2 { color: #2C2C2C; margin-top: 0; font-family: 'Arvo', serif; font-weight: 700; }
+        .tracking-info { background-color: #F5EED7; padding: 25px; border-radius: 12px; margin: 25px 0; border: 2px solid #FFD670; }
+        .footer { background-color: #F5EED7; padding: 30px; text-align: center; color: #2C2C2C; font-size: 14px; }
+        .divider { height: 1px; background: #FFD670; margin: 30px 0; }
       </style>
     </head>
     <body>
@@ -582,12 +582,12 @@ export async function sendAdminReviewNotification(data: AdminReviewNotificationD
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>ADMIN: ${reviewTypeDisplay} Review Required</title>
     </head>
-    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <div style="background: #fff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden;">
+    <body style="font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #2C2C2C; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #F5EED7;">
+      <div style="background: #FFFFFF; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden;">
         
         <!-- Header -->
-        <div style="background: linear-gradient(135deg, #ff6b6b, #ff8e8e); color: white; padding: 30px; text-align: center;">
-          <h1 style="margin: 0; font-size: 28px; font-weight: bold;">🔍 ADMIN REVIEW REQUIRED</h1>
+        <div style="background: #FF70A6; color: #FFFFFF; padding: 30px; text-align: center;">
+          <h1 style="margin: 0; font-size: 28px; font-weight: 700; font-family: 'Arvo', serif;">🔍 ADMIN REVIEW REQUIRED</h1>
           <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">${reviewTypeDisplay} needs your approval</p>
         </div>
         
@@ -595,8 +595,8 @@ export async function sendAdminReviewNotification(data: AdminReviewNotificationD
         <div style="padding: 30px;">
           
           <!-- Customer Info -->
-          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
-            <h3 style="color: #333; margin: 0 0 15px 0;">Customer Information</h3>
+          <div style="background: #F5EED7; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 2px solid #FFD670;">
+            <h3 style="color: #2C2C2C; margin: 0 0 15px 0; font-family: 'Arvo', serif; font-weight: 700;">Customer Information</h3>
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
                 <td style="padding: 8px 0; font-weight: bold; width: 30%;">Customer:</td>
@@ -621,9 +621,9 @@ export async function sendAdminReviewNotification(data: AdminReviewNotificationD
           
           <!-- Image Preview -->
           <div style="text-align: center; margin-bottom: 25px;">
-            <h3 style="color: #333; margin-bottom: 15px;">Image for Review</h3>
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; display: inline-block;">
-              <img src="${data.imageUrl}" alt="Artwork for review" style="max-width: 400px; max-height: 400px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <h3 style="color: #2C2C2C; margin-bottom: 15px; font-family: 'Arvo', serif; font-weight: 700;">Image for Review</h3>
+            <div style="background: #F5EED7; padding: 20px; border-radius: 12px; display: inline-block; border: 2px solid #FFD670;">
+              <img src="${data.imageUrl}" alt="Artwork for review" style="max-width: 400px; max-height: 400px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
             </div>
           </div>
           
@@ -639,10 +639,10 @@ export async function sendAdminReviewNotification(data: AdminReviewNotificationD
           
           <!-- Action Buttons -->
           <div style="text-align: center; margin-bottom: 25px;">
-            <h3 style="color: #333; margin-bottom: 20px;">Review Actions</h3>
+            <h3 style="color: #2C2C2C; margin-bottom: 20px; font-family: 'Arvo', serif; font-weight: 700;">Review Actions</h3>
             <div style="display: inline-block;">
               <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/admin/reviews/${data.reviewId}" 
-                 style="display: inline-block; background: #4caf50; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 0 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                 style="display: inline-block; background: #FF9770 !important; color: #FFFFFF !important; padding: 15px 30px; text-decoration: none; border-radius: 12px; font-weight: bold; margin: 0 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border: none; font-family: 'Fredoka One', cursive;">
                 📋 Review in Dashboard
               </a>
             </div>
@@ -663,8 +663,8 @@ export async function sendAdminReviewNotification(data: AdminReviewNotificationD
         </div>
         
         <!-- Footer -->
-        <div style="background: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #e9ecef;">
-          <p style="color: #666; font-size: 14px; margin: 0;">
+        <div style="background: #F5EED7; padding: 20px; text-align: center; border-top: 1px solid #FFD670;">
+          <p style="color: #2C2C2C; font-size: 14px; margin: 0;">
             This is an automated admin notification from PawPop Quality Control System.<br>
             Review ID: ${data.reviewId} | Generated at ${new Date().toISOString()}
           </p>
