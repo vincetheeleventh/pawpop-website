@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { X, Minus, Plus, Truck, Star } from 'lucide-react'
-import { loadStripe } from '@stripe/stripe-js'
+import { loadStripe, Stripe } from '@stripe/stripe-js'
 import { getDynamicPricing } from '@/lib/copy'
 import usePlausibleTracking from '@/hooks/usePlausibleTracking'
 
@@ -65,17 +65,13 @@ const createFallbackMockups = (productType: string, artworkUrl: string): Mockup[
   }))
 }
 
-// Initialize Stripe with explicit mode handling
-let stripePromise: any;
+// Initialize Stripe with standard singleton pattern
+let stripePromise: Promise<Stripe | null> | null = null;
 const getStripe = () => {
   if (!stripePromise) {
     const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
     if (publishableKey) {
-      // Force reinitialize Stripe to clear any cached instances
-      stripePromise = null;
-      stripePromise = loadStripe(publishableKey, {
-        stripeAccount: undefined, // Clear any account override
-      });
+      stripePromise = loadStripe(publishableKey);
     }
   }
   return stripePromise;
@@ -316,8 +312,7 @@ export default function ProductPurchaseModal({
 
       console.log('🎫 Session ID received:', data.sessionId);
 
-      // Force fresh Stripe instance for each checkout
-      stripePromise = null;
+      // Get Stripe instance
       const stripe = await getStripe()
       if (!stripe) {
         console.error('❌ Failed to load Stripe client');

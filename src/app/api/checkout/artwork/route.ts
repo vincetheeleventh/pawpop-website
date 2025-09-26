@@ -147,19 +147,19 @@ export async function POST(req: Request) {
       }
     })();
 
-    // Build product data with conditional image inclusion
+    // Build minimal product data to avoid base64 encoding issues
     const productData: any = {
       name: `PawPop ${productType === 'digital' ? 'Digital Download' : 
              productType === 'art_print' ? 'Art Print' :
-             productType === 'canvas_stretched' ? `Canvas (Stretched)${frameUpgrade ? ' + Frame' : ''}` :
+             productType === 'canvas_stretched' ? 'Canvas (Stretched)' :
              'Canvas (Framed)'} - ${size}`,
-      description: `Custom artwork featuring ${customerName}${petName ? ` & ${petName}` : ''} in the style of the Mona Lisa${frameUpgrade ? ' with professional framing' : ''}`,
+      description: `Custom pet portrait in Mona Lisa style`,
     };
     
-    // Only add images if URL is valid to prevent Stripe validation errors
-    if (isValidImage) {
-      productData.images = [imageUrl];
-    }
+    // Skip images for now to avoid potential base64 encoding issues
+    // if (isValidImage) {
+    //   productData.images = [imageUrl];
+    // }
 
     let session;
     try {
@@ -184,12 +184,10 @@ export async function POST(req: Request) {
           artworkId,
           productType,
           size,
-          customerName,
-          petName: petName || '',
-          imageUrl,
+          customerName: customerName.substring(0, 50), // Limit length
+          petName: (petName || '').substring(0, 50), // Limit length
           frameUpgrade: frameUpgrade.toString(),
-          quantity: quantity.toString(),
-          shippingMethodId: shippingMethodId?.toString() || '1'
+          quantity: quantity.toString()
         },
         // Collect shipping address for physical products
         shipping_address_collection: productType !== 'digital' ? {
