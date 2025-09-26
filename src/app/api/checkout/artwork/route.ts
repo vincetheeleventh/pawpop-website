@@ -133,13 +133,34 @@ export async function POST(req: Request) {
     if (!stripe) {
       throw new Error('Stripe is not configured - missing STRIPE_SECRET_KEY');
     }
-
-    // Force live mode for production
-    const isLiveMode = true;
-    
-    // Create Stripe checkout session first
-    console.log('💳 Creating Stripe checkout session in LIVE MODE');
+    // Create Stripe checkout session
+    console.log('💳 Creating Stripe checkout session...');
     console.log('🔑 Using Stripe key type:', process.env.STRIPE_SECRET_KEY?.substring(0, 10) + '...');
+    
+    // Validate image URL (Stripe images must be valid URLs; otherwise omit)
+    const isValidImage = (() => {
+      try {
+        const u = new URL(imageUrl);
+        return u.protocol === 'http:' || u.protocol === 'https:';
+      } catch {
+        return false;
+      }
+    })();
+
+    // Build product data with conditional image inclusion
+    const productData: any = {
+      name: `PawPop ${productType === 'digital' ? 'Digital Download' : 
+             productType === 'art_print' ? 'Art Print' :
+             productType === 'canvas_stretched' ? `Canvas (Stretched)${frameUpgrade ? ' + Frame' : ''}` :
+             'Canvas (Framed)'} - ${size}`,
+      description: `Custom artwork featuring ${customerName}${petName ? ` & ${petName}` : ''} in the style of the Mona Lisa${frameUpgrade ? ' with professional framing' : ''}`,
+    };
+    
+    // Only add images if URL is valid to prevent Stripe validation errors
+    if (isValidImage) {
+      productData.images = [imageUrl];
+    }
+
     let session;
     try {
       session = await stripe.checkout.sessions.create({
@@ -147,21 +168,17 @@ export async function POST(req: Request) {
         line_items: [{
           price_data: {
             currency: 'cad',
-            product_data: {
-              name: `PawPop ${productType === 'digital' ? 'Digital Download' :
-                     productType === 'art_print' ? 'Art Print' :
-                     productType === 'canvas_stretched' ? `Canvas (Stretched)${frameUpgrade ? ' + Frame' : ''}` :
-                     'Canvas (Framed)'} - ${size}`,
-              description: `Custom artwork featuring ${customerName}${petName ? ` & ${petName}` : ''} in the style of the Mona Lisa${frameUpgrade ? ' with professional framing' : ''}`,
-              images: [imageUrl]
-            },
+            product_data: productData,
             unit_amount: priceInCents
           },
           quantity: quantity
         }],
         mode: 'payment',
-        success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/artwork/${artworkId}?cancelled=true`,
+        automatic_tax: {
+          enabled: false,
+        },
+        success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
         customer_email: customerEmail,
         metadata: {
           artworkId,
