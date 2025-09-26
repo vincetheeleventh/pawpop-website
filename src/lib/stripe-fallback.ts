@@ -8,10 +8,30 @@ let fallbackMode = false;
 // Detect if Stripe resources are being blocked
 async function detectStripeBlocking(): Promise<boolean> {
   try {
-    // Test if we can reach Stripe's API endpoints
+    // Check for common ad blocker indicators
+    const adBlockerIndicators = [
+      // Check if common ad blocker extensions are present
+      typeof window !== 'undefined' && (window as any).uBlock,
+      typeof window !== 'undefined' && (window as any).adblockplus,
+      typeof window !== 'undefined' && (window as any).AdBlocker,
+      // Check if tracking protection is enabled (Safari)
+      typeof navigator !== 'undefined' && navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome'),
+      // Check if requests to tracking domains fail
+      typeof window !== 'undefined' && window.location.hostname.includes('localhost') === false
+    ];
+    
+    // If any indicators suggest blocking, use fallback
+    const hasBlockingIndicators = adBlockerIndicators.some(indicator => indicator);
+    
+    if (hasBlockingIndicators) {
+      console.log('🚫 Ad blocking detected, enabling direct redirect mode');
+      return true;
+    }
+    
+    // Test if we can reach Stripe's tracking endpoints
     const testUrls = [
-      'https://js.stripe.com/v3/',
-      'https://r.stripe.com/b'
+      'https://r.stripe.com/b',
+      'https://js.stripe.com/v3/'
     ];
     
     const results = await Promise.allSettled(
@@ -25,8 +45,14 @@ async function detectStripeBlocking(): Promise<boolean> {
     );
     
     // If any requests fail, assume blocking
-    return results.some(result => result.status === 'rejected');
+    const isBlocked = results.some(result => result.status === 'rejected');
+    if (isBlocked) {
+      console.log('🚫 Stripe endpoints blocked, enabling fallback mode');
+    }
+    
+    return isBlocked;
   } catch {
+    console.log('🚫 Blocking detection failed, assuming blocked');
     return true; // Assume blocking if detection fails
   }
 }
@@ -57,45 +83,55 @@ export async function getStripe(): Promise<Stripe | null> {
   return stripePromise;
 }
 
-// Enhanced checkout with fallback handling
+// Enhanced checkout with aggressive fallback handling
 export async function redirectToCheckout(sessionId: string): Promise<{ error?: any }> {
   try {
+    // Check for blocking before attempting any Stripe.js operations
+    const isBlocked = await detectStripeBlocking();
+    
+    if (isBlocked || fallbackMode) {
+      console.log('🔄 Ad blocking detected - using direct redirect to bypass Stripe.js');
+      
+      // Direct redirect to Stripe checkout URL (bypasses all Stripe.js)
+      const checkoutUrl = `https://checkout.stripe.com/c/pay/${sessionId}`;
+      
+      try {
+        // Use direct window redirect to avoid any Stripe.js interference
+        window.location.href = checkoutUrl;
+        return {}; // Success - redirect initiated
+      } catch (redirectError) {
+        console.error('Direct redirect failed:', redirectError);
+        return { 
+          error: { 
+            message: 'Unable to redirect to checkout. Please try a different browser or disable privacy extensions.',
+            type: 'redirect_error'
+          }
+        };
+      }
+    }
+
+    // Only use Stripe.js if no blocking detected
+    console.log('💳 No blocking detected - using standard Stripe.js redirect');
     const stripe = await getStripe();
     
     if (!stripe) {
-      throw new Error('Failed to load Stripe');
-    }
-
-    // If in fallback mode, try direct redirect first
-    if (fallbackMode) {
-      console.log('🔄 Using fallback checkout method');
-      
-      // Direct redirect to Stripe checkout URL
+      // Fallback to direct redirect if Stripe.js fails to load
+      console.log('🔄 Stripe.js failed to load - falling back to direct redirect');
       const checkoutUrl = `https://checkout.stripe.com/c/pay/${sessionId}`;
-      
-      // Try to open in same window first
-      try {
-        window.location.href = checkoutUrl;
-        return {}; // Success
-      } catch (redirectError) {
-        console.warn('Direct redirect failed, trying Stripe.js method');
-      }
+      window.location.href = checkoutUrl;
+      return {};
     }
 
-    // Standard Stripe.js redirect
-    console.log('💳 Using standard Stripe.js redirect');
     const result = await stripe.redirectToCheckout({ sessionId });
     
     if (result.error) {
-      console.error('Stripe redirect error:', result.error);
+      console.error('Stripe.js redirect error:', result.error);
       
-      // If Stripe.js fails, try direct redirect as fallback
-      if (!fallbackMode) {
-        console.log('🔄 Stripe.js failed, trying direct redirect fallback');
-        const checkoutUrl = `https://checkout.stripe.com/c/pay/${sessionId}`;
-        window.location.href = checkoutUrl;
-        return {}; // Assume success for direct redirect
-      }
+      // Immediate fallback to direct redirect
+      console.log('🔄 Stripe.js redirect failed - using direct redirect fallback');
+      const checkoutUrl = `https://checkout.stripe.com/c/pay/${sessionId}`;
+      window.location.href = checkoutUrl;
+      return {}; // Assume success for direct redirect
     }
     
     return result;
@@ -104,16 +140,17 @@ export async function redirectToCheckout(sessionId: string): Promise<{ error?: a
     console.error('Checkout error:', error);
     
     // Ultimate fallback: direct redirect
-    console.log('🚨 All methods failed, using direct URL redirect');
+    console.log('🚨 All methods failed - using ultimate direct redirect fallback');
     const checkoutUrl = `https://checkout.stripe.com/c/pay/${sessionId}`;
     
     try {
       window.location.href = checkoutUrl;
       return {}; // Assume success
     } catch (finalError) {
+      console.error('Ultimate fallback failed:', finalError);
       return { 
         error: { 
-          message: 'Unable to redirect to checkout. Please try disabling ad blockers or try a different browser.',
+          message: 'Unable to redirect to checkout. Please copy this URL and open it manually: ' + checkoutUrl,
           type: 'redirect_error'
         }
       };
