@@ -74,16 +74,27 @@ const createFallbackMockups = (productType: string, artworkUrl: string): Mockup[
   }))
 }
 
-// Initialize Stripe
+// Initialize Stripe with error handling
 let stripePromise: any;
-const getStripe = () => {
+const getStripe = async () => {
   if (!stripePromise) {
     const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
     if (publishableKey) {
-      stripePromise = loadStripe(publishableKey);
+      try {
+        stripePromise = loadStripe(publishableKey);
+      } catch (error) {
+        console.error('Failed to load Stripe:', error);
+        return null;
+      }
     }
   }
-  return stripePromise;
+  
+  try {
+    return await stripePromise;
+  } catch (error) {
+    console.error('Stripe blocked by ad blocker or network issue:', error);
+    return null;
+  }
 };
 
 export default function ProductPurchaseModal({ 
@@ -104,6 +115,7 @@ export default function ProductPurchaseModal({
   const [showTooltip, setShowTooltip] = useState(false)
   const [coupon, setCoupon] = useState<CouponState>(initialCouponState)
   const [showCouponInput, setShowCouponInput] = useState(false)
+  const [stripeBlocked, setStripeBlocked] = useState(false)
 
   // Plausible tracking and dynamic pricing
   const { trackFunnel, trackInteraction, trackPriceExposure, getPriceConfig } = usePlausibleTracking()
@@ -119,6 +131,23 @@ export default function ProductPurchaseModal({
       // Track price variant exposure
       const currentPrice = getCurrentPrice()
       trackPriceExposure('Purchase Modal', productType, currentPrice)
+      
+      // Test Stripe availability when modal opens
+      const testStripe = async () => {
+        try {
+          const stripe = await getStripe()
+          if (!stripe) {
+            setStripeBlocked(true)
+          } else {
+            setStripeBlocked(false)
+          }
+        } catch (error) {
+          console.warn('Stripe availability test failed:', error)
+          setStripeBlocked(true)
+        }
+      }
+      
+      testStripe()
     }
   }, [isOpen, productType, trackFunnel, trackInteraction, trackPriceExposure])
 
@@ -384,7 +413,8 @@ export default function ProductPurchaseModal({
       // Redirect to Stripe Checkout
       const stripe = await getStripe()
       if (!stripe) {
-        throw new Error('Failed to load Stripe')
+        setStripeBlocked(true)
+        throw new Error('Stripe is blocked by your ad blocker. Please disable your ad blocker and try again, or contact support for alternative payment options.')
       }
 
       const { error: stripeError } = await stripe.redirectToCheckout({
@@ -392,6 +422,10 @@ export default function ProductPurchaseModal({
       })
 
       if (stripeError) {
+        if (stripeError.message?.includes('blocked') || stripeError.message?.includes('network')) {
+          setStripeBlocked(true)
+          throw new Error('Payment processing is blocked. Please disable your ad blocker or try a different browser.')
+        }
         throw stripeError
       }
     } catch (err) {
@@ -430,6 +464,23 @@ export default function ProductPurchaseModal({
             <X size={24} />
           </button>
         </div>
+
+        {/* Stripe Blocked Warning */}
+        {stripeBlocked && (
+          <div className="bg-yellow-50 border-b border-yellow-200 px-6 py-3">
+            <div className="flex items-start space-x-2">
+              <span className="text-yellow-600 mt-0.5">⚠️</span>
+              <div className="flex-1">
+                <p className="text-sm font-geist font-semibold text-yellow-800">
+                  Payment system blocked by ad blocker
+                </p>
+                <p className="text-xs text-yellow-700 font-geist mt-1">
+                  Please disable your ad blocker to complete your purchase
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 min-h-[500px]">
           {/* Left: Image Display */}
@@ -799,8 +850,24 @@ export default function ProductPurchaseModal({
             {/* Bottom: Purchase Section */}
             <div className="space-y-4 border-t border-gray-100 pt-6">
               {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                  <p className="text-sm text-red-600 font-geist">{error}</p>
+                <div className={`border rounded-lg p-3 ${stripeBlocked ? 'bg-yellow-50 border-yellow-200' : 'bg-red-50 border-red-200'}`}>
+                  <p className={`text-sm font-geist ${stripeBlocked ? 'text-yellow-800' : 'text-red-600'}`}>
+                    {stripeBlocked && (
+                      <span className="font-semibold">⚠️ Payment Blocked: </span>
+                    )}
+                    {error}
+                  </p>
+                  {stripeBlocked && (
+                    <div className="mt-2 text-xs text-yellow-700 font-geist">
+                      <p className="font-semibold">Quick fixes:</p>
+                      <ul className="list-disc list-inside mt-1 space-y-1">
+                        <li>Disable ad blocker (uBlock Origin, AdBlock Plus, etc.)</li>
+                        <li>Try a different browser (Chrome, Firefox, Safari)</li>
+                        <li>Disable browser extensions temporarily</li>
+                        <li>Contact support if issues persist</li>
+                      </ul>
+                    </div>
+                  )}
                 </div>
               )}
               
