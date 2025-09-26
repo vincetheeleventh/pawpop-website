@@ -1,22 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { loadStripe, Stripe } from '@stripe/stripe-js';
+import { redirectToCheckout, isFallbackMode } from '@/lib/stripe-fallback';
 
-// Initialize Stripe with standard singleton pattern
-let stripePromise: Promise<Stripe | null> | null = null;
-
-const getStripe = () => {
-  if (!stripePromise) {
-    const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-    if (!publishableKey) {
-      console.error('Stripe publishable key is not configured');
-      return null;
-    }
-    stripePromise = loadStripe(publishableKey);
-  }
-  return stripePromise;
-};
+// Using enhanced Stripe integration with ad-blocker fallback
 interface CheckoutButtonProps {
   priceId: string;
   itemName: string;
@@ -80,19 +67,16 @@ export default function CheckoutButton({
       }
       
       console.log('Initializing Stripe redirect with session ID:', data.sessionId);
-      const stripe = await getStripe();
       
-      if (!stripe) {
-        throw new Error('Failed to load Stripe');
+      if (isFallbackMode()) {
+        console.log('🔄 Ad-blocker detected, using fallback checkout method');
       }
-
-      const { error: stripeError } = await stripe.redirectToCheckout({
-        sessionId: data.sessionId,
-      });
+      
+      const { error: stripeError } = await redirectToCheckout(data.sessionId);
 
       if (stripeError) {
         console.error('Stripe redirect error:', stripeError);
-        throw stripeError;
+        throw new Error(stripeError.message || 'Checkout failed');
       }
     } catch (err) {
       const error = err instanceof Error ? err : new Error('An error occurred during checkout');

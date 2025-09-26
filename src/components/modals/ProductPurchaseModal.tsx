@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { X, Minus, Plus, Truck, Star } from 'lucide-react'
-import { loadStripe, Stripe } from '@stripe/stripe-js'
+import { redirectToCheckout, isFallbackMode } from '@/lib/stripe-fallback'
 import { getDynamicPricing } from '@/lib/copy'
 import usePlausibleTracking from '@/hooks/usePlausibleTracking'
 
@@ -65,17 +65,7 @@ const createFallbackMockups = (productType: string, artworkUrl: string): Mockup[
   }))
 }
 
-// Initialize Stripe with standard singleton pattern
-let stripePromise: Promise<Stripe | null> | null = null;
-const getStripe = () => {
-  if (!stripePromise) {
-    const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-    if (publishableKey) {
-      stripePromise = loadStripe(publishableKey);
-    }
-  }
-  return stripePromise;
-};
+// Using enhanced Stripe integration with ad-blocker fallback
 
 export default function ProductPurchaseModal({ 
   isOpen, 
@@ -312,22 +302,22 @@ export default function ProductPurchaseModal({
 
       console.log('🎫 Session ID received:', data.sessionId);
 
-      // Get Stripe instance
-      const stripe = await getStripe()
-      if (!stripe) {
-        console.error('❌ Failed to load Stripe client');
-        throw new Error('Failed to load Stripe')
+      // Use enhanced checkout with ad-blocker fallback
+      console.log('💳 Redirecting to checkout with fallback support...');
+      
+      if (isFallbackMode()) {
+        console.log('🔄 Ad-blocker detected, using fallback checkout method');
       }
-
-      console.log('💳 Stripe client loaded, redirecting to checkout...');
-      const { error: stripeError } = await stripe.redirectToCheckout({
-        sessionId: data.sessionId,
-      })
+      
+      const { error: stripeError } = await redirectToCheckout(data.sessionId);
 
       if (stripeError) {
         console.error('❌ Stripe redirect error:', stripeError);
-        // Handle specific Stripe mode mismatch error
-        if (stripeError.message?.includes('test mode') && stripeError.message?.includes('live mode')) {
+        
+        // Handle specific error types
+        if (stripeError.type === 'redirect_error') {
+          setError('Unable to open checkout. Please disable ad blockers or try a different browser.');
+        } else if (stripeError.message?.includes('test mode') && stripeError.message?.includes('live mode')) {
           setError('Payment system configuration error. Please try again or contact support.');
         } else {
           setError(stripeError.message || 'Payment failed. Please try again.');
