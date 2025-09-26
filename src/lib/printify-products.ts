@@ -127,6 +127,10 @@ function getProductTypeDisplayName(productType: ProductType): string {
 
 // Get pricing for a product type and size using A/B test variants
 export function getProductPricing(productType: ProductType, size: string, countryCode: string, frameUpgrade: boolean = false): number {
+  // TEMP: Force all prices to $1 (100 cents) for live Stripe/Printify testing.
+  // TODO(vince): Remove this override to restore normal pricing.
+  return 100;
+
   // Import here to avoid circular dependency
   const { getPriceConfig } = require('./plausible');
   
@@ -194,16 +198,19 @@ export function getProductPricing(productType: ProductType, size: string, countr
       throw new Error(`No product configuration found for ${productType} in ${countryCode}`);
     }
 
-    const variant = productConfig.variants.find(v => v.size === size);
+    const variant = productConfig!.variants.find((v: any) => v.size === size);
     if (!variant) {
       throw new Error(`No variant found for size ${size}`);
     }
 
-    let price = variant.price;
+    let price = variant!.price;
     
     // Add frame upgrade cost for stretched canvas
-    if (productType === ProductType.CANVAS_STRETCHED && frameUpgrade && productConfig.frame_upgrade_price) {
-      price += productConfig.frame_upgrade_price;
+    if (productType === ProductType.CANVAS_STRETCHED && frameUpgrade) {
+      const frameUpgradePrice = productConfig!.frame_upgrade_price ?? 0;
+      if (frameUpgradePrice > 0) {
+        price += frameUpgradePrice;
+      }
     }
 
     return price;
