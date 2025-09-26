@@ -268,12 +268,6 @@ export default function ProductPurchaseModal({
       }
 
       console.log('🔍 About to create Stripe checkout session...');
-      console.log('📋 Request data:', {
-        artworkId: artwork.id,
-        productType,
-        size: selectedSize,
-        customerEmail: artwork.customer_email
-      });
 
       const response = await fetch('/api/checkout/artwork', {
         method: 'POST',
@@ -295,29 +289,48 @@ export default function ProductPurchaseModal({
         }),
       })
 
+      console.log('📡 Response status:', response.status);
+      console.log('📡 Response ok:', response.ok);
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
+        const errorText = await response.text();
+        console.error('❌ Response not ok:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
 
       const data = await response.json()
+      console.log('✅ Checkout API response:', data);
+
+      // Handle test mode responses
+      if (data.testMode) {
+        console.log('🧪 Test mode response received:', data.message);
+        setError('Demo mode: ' + (data.message || 'Payment system in test mode'));
+        setLoading(false);
+        return;
+      }
 
       if (!data.sessionId) {
+        console.error('❌ No session ID in response:', data);
         throw new Error('Invalid response from server: missing sessionId')
       }
+
+      console.log('🎫 Session ID received:', data.sessionId);
 
       // Force fresh Stripe instance for each checkout
       stripePromise = null;
       const stripe = await getStripe()
       if (!stripe) {
+        console.error('❌ Failed to load Stripe client');
         throw new Error('Failed to load Stripe')
       }
 
+      console.log('💳 Stripe client loaded, redirecting to checkout...');
       const { error: stripeError } = await stripe.redirectToCheckout({
         sessionId: data.sessionId,
       })
 
       if (stripeError) {
+        console.error('❌ Stripe redirect error:', stripeError);
         // Handle specific Stripe mode mismatch error
         if (stripeError.message?.includes('test mode') && stripeError.message?.includes('live mode')) {
           setError('Payment system configuration error. Please try again or contact support.');
@@ -328,6 +341,9 @@ export default function ProductPurchaseModal({
         setLoading(false);
         return;
       }
+
+      // If we get here, the redirect should have happened
+      console.log('🚀 Redirect initiated successfully');
     } catch (err) {
       const error = err instanceof Error ? err : new Error('An error occurred during checkout')
       console.error('Checkout error:', error)

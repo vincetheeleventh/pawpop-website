@@ -51,7 +51,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // Check Stripe configuration first
+    // Check Stripe configuration first - if invalid key, use test mode
     if (!stripe) {
       console.log('⚠️ Stripe not configured - falling back to test mode');
       return NextResponse.json({
@@ -84,39 +84,6 @@ export async function POST(req: Request) {
     const priceInCents = getProductPricing(productType as ProductType, size, 'US', frameUpgrade);
     console.log('💰 Calculated price:', priceInCents);
 
-    // Create order in database first
-    console.log('📝 Creating order in database...');
-    let order;
-    try {
-      order = await createOrder({
-        artwork_id: artworkId,
-        stripe_session_id: '', // Will be updated after session creation
-        product_type: productType as ProductType,
-        product_size: size,
-        price_cents: priceInCents,
-        customer_email: customerEmail,
-        customer_name: customerName
-      });
-      console.log('✅ Order created:', order.id);
-    } catch (dbError) {
-      console.error('❌ Database error creating order:', dbError);
-      // For now, create a mock order to allow checkout to proceed
-      order = {
-        id: `mock_order_${Date.now()}`,
-        artwork_id: artworkId,
-        stripe_session_id: '',
-        product_type: productType as ProductType,
-        product_size: size,
-        price_cents: priceInCents,
-        customer_email: customerEmail,
-        customer_name: customerName,
-        order_status: 'pending',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      console.log('⚠️ Using mock order due to DB error:', order.id);
-    }
-
     // Check Stripe configuration
     if (!stripe) {
       throw new Error('Stripe is not configured - missing STRIPE_SECRET_KEY');
@@ -125,7 +92,7 @@ export async function POST(req: Request) {
     // Force live mode for production
     const isLiveMode = true;
     
-    // Create Stripe checkout session in live mode
+    // Create Stripe checkout session first
     console.log('💳 Creating Stripe checkout session in LIVE MODE');
     console.log('🔑 Using Stripe key type:', process.env.STRIPE_SECRET_KEY?.substring(0, 10) + '...');
     let session;
@@ -160,8 +127,7 @@ export async function POST(req: Request) {
           imageUrl,
           frameUpgrade: frameUpgrade.toString(),
           quantity: quantity.toString(),
-          shippingMethodId: shippingMethodId?.toString() || '1',
-          orderId: order.id
+          shippingMethodId: shippingMethodId?.toString() || '1'
         },
         // Collect shipping address for physical products
         shipping_address_collection: productType !== 'digital' ? {
@@ -170,17 +136,29 @@ export async function POST(req: Request) {
       });
       console.log('✅ Stripe session created:', session.id);
 
-      // Update order with session ID
-      await stripe.checkout.sessions.update(session.id, {
-        metadata: {
-          ...session.metadata,
-          stripe_session_id: session.id
-        }
-      });
-
     } catch (stripeError) {
       console.error('❌ Stripe error:', stripeError);
       throw new Error(`Stripe session creation failed: ${stripeError instanceof Error ? stripeError.message : 'Unknown Stripe error'}`);
+    }
+
+    // Create order in database with the actual session ID
+    console.log('📝 Creating order in database...');
+    let order;
+    try {
+      order = await createOrder({
+        artwork_id: artworkId,
+        stripe_session_id: session.id, // Use the actual session ID
+        product_type: productType as ProductType,
+        product_size: size,
+        price_cents: priceInCents,
+        customer_email: customerEmail,
+        customer_name: customerName
+      });
+      console.log('✅ Order created:', order.id);
+    } catch (dbError) {
+      console.error('❌ Database error creating order:', dbError);
+      // Continue with checkout even if DB fails - order will be created via webhook
+      console.log('⚠️ Continuing with checkout - order will be created via webhook');
     }
 
     return NextResponse.json({ sessionId: session.id });
