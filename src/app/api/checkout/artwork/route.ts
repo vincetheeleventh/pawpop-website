@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     requestData = { artworkId, productType, size, customerEmail, customerName, petName };
 
     // Test mode - return mock response without hitting Stripe/Printify
-    if (testMode || !stripe) {
+    if (testMode) {
       console.log('🧪 TEST MODE: Checkout API called with:', {
         artworkId,
         productType,
@@ -42,6 +42,22 @@ export async function POST(req: Request) {
         sessionId: `test_session_${Date.now()}`,
         testMode: true,
         message: 'Test mode - no actual payment processed',
+        productDetails: {
+          type: productType,
+          size,
+          estimatedPrice: getProductPricing(productType as ProductType, size, 'US', frameUpgrade),
+          frameUpgrade
+        }
+      });
+    }
+
+    // Check Stripe configuration first
+    if (!stripe) {
+      console.log('⚠️ Stripe not configured - falling back to test mode');
+      return NextResponse.json({
+        sessionId: `fallback_session_${Date.now()}`,
+        testMode: true,
+        message: 'Stripe not configured - test mode fallback',
         productDetails: {
           type: productType,
           size,
@@ -106,11 +122,12 @@ export async function POST(req: Request) {
       throw new Error('Stripe is not configured - missing STRIPE_SECRET_KEY');
     }
 
-    // Determine if we're in test mode based on the Stripe secret key
-    const isTestMode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_') || process.env.NODE_ENV === 'development';
-
-    // Create Stripe checkout session
-    console.log('💳 Creating Stripe checkout session...', isTestMode ? '(TEST MODE)' : '(LIVE MODE)');
+    // Force live mode for production
+    const isLiveMode = true;
+    
+    // Create Stripe checkout session in live mode
+    console.log('💳 Creating Stripe checkout session in LIVE MODE');
+    console.log('🔑 Using Stripe key type:', process.env.STRIPE_SECRET_KEY?.substring(0, 10) + '...');
     let session;
     try {
       session = await stripe.checkout.sessions.create({

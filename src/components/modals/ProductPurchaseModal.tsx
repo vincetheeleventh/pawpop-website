@@ -65,13 +65,17 @@ const createFallbackMockups = (productType: string, artworkUrl: string): Mockup[
   }))
 }
 
-// Initialize Stripe
+// Initialize Stripe with explicit mode handling
 let stripePromise: any;
 const getStripe = () => {
   if (!stripePromise) {
     const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
     if (publishableKey) {
-      stripePromise = loadStripe(publishableKey);
+      // Force reinitialize Stripe to clear any cached instances
+      stripePromise = null;
+      stripePromise = loadStripe(publishableKey, {
+        stripeAccount: undefined, // Clear any account override
+      });
     }
   }
   return stripePromise;
@@ -263,6 +267,14 @@ export default function ProductPurchaseModal({
         throw new Error('Customer email is required for checkout')
       }
 
+      console.log('🔍 About to create Stripe checkout session...');
+      console.log('📋 Request data:', {
+        artworkId: artwork.id,
+        productType,
+        size: selectedSize,
+        customerEmail: artwork.customer_email
+      });
+
       const response = await fetch('/api/checkout/artwork', {
         method: 'POST',
         headers: {
@@ -279,7 +291,7 @@ export default function ProductPurchaseModal({
           frameUpgrade: false,
           quantity: productType === 'digital' ? 1 : quantity,
           shippingMethodId: productType === 'digital' ? null : selectedShipping,
-          testMode: process.env.NODE_ENV === 'development' // Enable test mode in development
+          testMode: false // Always use live mode
         }),
       })
 
@@ -294,7 +306,8 @@ export default function ProductPurchaseModal({
         throw new Error('Invalid response from server: missing sessionId')
       }
 
-      // Redirect to Stripe Checkout
+      // Force fresh Stripe instance for each checkout
+      stripePromise = null;
       const stripe = await getStripe()
       if (!stripe) {
         throw new Error('Failed to load Stripe')
@@ -305,8 +318,6 @@ export default function ProductPurchaseModal({
       })
 
       if (stripeError) {
-        console.error('Stripe redirect error:', stripeError);
-
         // Handle specific Stripe mode mismatch error
         if (stripeError.message?.includes('test mode') && stripeError.message?.includes('live mode')) {
           setError('Payment system configuration error. Please try again or contact support.');
