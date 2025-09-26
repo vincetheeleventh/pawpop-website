@@ -1,5 +1,6 @@
 // src/lib/supabase-orders.ts
 import { supabaseAdmin, type Order, type OrderWithArtwork, type OrderStatusHistory, type Artwork } from './supabase';
+import { incrementCouponRedemption } from './supabase-coupons';
 import { ProductType } from './printify';
 import crypto from 'crypto';
 
@@ -73,6 +74,10 @@ export async function createOrder(data: {
   product_type: ProductType;
   product_size: string;
   price_cents: number;
+  original_price_cents?: number;
+  discount_cents?: number;
+  coupon_id?: string;
+  coupon_code?: string;
   customer_email: string;
   customer_name: string;
 }): Promise<Order> {
@@ -80,6 +85,8 @@ export async function createOrder(data: {
     .from('orders')
     .insert({
       ...data,
+      original_price_cents: data.original_price_cents ?? data.price_cents,
+      discount_cents: data.discount_cents ?? 0,
       order_status: 'pending'
     })
     .select()
@@ -99,7 +106,7 @@ export async function updateOrderAfterPayment(
   paymentIntentId: string,
   shippingAddress?: any
 ): Promise<void> {
-  const { error } = await ensureSupabaseAdmin()
+  const { data, error } = await ensureSupabaseAdmin()
     .from('orders')
     .update({
       order_status: 'paid',
@@ -107,11 +114,22 @@ export async function updateOrderAfterPayment(
       shipping_address: shippingAddress,
       updated_at: new Date().toISOString()
     })
-    .eq('stripe_session_id', stripeSessionId);
+    .eq('stripe_session_id', stripeSessionId)
+    .select('id, coupon_id')
+    .single();
 
   if (error) {
     console.error('Error updating order after payment:', error);
     throw new Error(`Failed to update order: ${error.message}`);
+  }
+
+  const couponId = data?.coupon_id;
+  if (couponId) {
+    try {
+      await incrementCouponRedemption(couponId);
+    } catch (couponError) {
+      console.error('Failed to increment coupon redemption:', couponError);
+    }
   }
 }
 

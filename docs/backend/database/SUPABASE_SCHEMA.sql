@@ -44,6 +44,10 @@ CREATE TABLE orders (
   product_type TEXT NOT NULL CHECK (product_type IN ('digital', 'art_print', 'framed_canvas')),
   product_size TEXT NOT NULL,
   price_cents INTEGER NOT NULL,
+  original_price_cents INTEGER NOT NULL,
+  discount_cents INTEGER NOT NULL DEFAULT 0,
+  coupon_id UUID REFERENCES coupon_codes(id),
+  coupon_code TEXT,
   customer_email TEXT NOT NULL,
   customer_name TEXT NOT NULL,
   shipping_address JSONB,
@@ -52,6 +56,23 @@ CREATE TABLE orders (
   printify_status TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Coupon codes table
+CREATE TABLE coupon_codes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  code TEXT NOT NULL UNIQUE,
+  description TEXT,
+  discount_type TEXT NOT NULL CHECK (discount_type IN ('set_price', 'amount_off', 'percent_off')),
+  discount_value INTEGER NOT NULL,
+  max_redemptions INTEGER,
+  redemption_count INTEGER NOT NULL DEFAULT 0,
+  valid_from TIMESTAMP WITH TIME ZONE,
+  valid_until TIMESTAMP WITH TIME ZONE,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 -- Order status history
@@ -67,12 +88,16 @@ CREATE TABLE order_status_history (
 CREATE INDEX idx_orders_stripe_session ON orders(stripe_session_id);
 CREATE INDEX idx_orders_status ON orders(order_status);
 CREATE INDEX idx_orders_printify ON orders(printify_order_id);
+CREATE INDEX idx_orders_coupon_id ON orders(coupon_id);
+CREATE INDEX idx_orders_coupon_code ON orders(coupon_code);
 CREATE INDEX idx_artworks_user ON artworks(user_id);
 CREATE INDEX idx_artworks_status ON artworks(generation_status);
 CREATE INDEX idx_artworks_upscale_status ON artworks(upscale_status);
 CREATE INDEX idx_artworks_token ON artworks(access_token);
 CREATE INDEX idx_artworks_email ON artworks(customer_email);
 CREATE INDEX idx_order_history_order ON order_status_history(order_id);
+CREATE INDEX idx_coupon_codes_code ON coupon_codes(code);
+CREATE INDEX idx_coupon_codes_active ON coupon_codes(is_active);
 
 -- Triggers for updated_at timestamps
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -88,11 +113,24 @@ CREATE TRIGGER update_artworks_updated_at BEFORE UPDATE ON artworks
 
 CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON orders
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_coupon_codes_updated_at BEFORE UPDATE ON coupon_codes
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE OR REPLACE FUNCTION increment_coupon_redemption(target_coupon_id UUID)
+RETURNS VOID AS $$
+BEGIN
+    UPDATE coupon_codes
+    SET redemption_count = redemption_count + 1,
+        updated_at = NOW()
+    WHERE id = target_coupon_id;
+END;
+$$ LANGUAGE plpgsql;
 
 -- Row Level Security (RLS) policies
 ALTER TABLE artworks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE order_status_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE coupon_codes ENABLE ROW LEVEL SECURITY;
 
 -- Policies for artworks
 CREATE POLICY "Users can view their own artworks" ON artworks
@@ -122,6 +160,9 @@ CREATE POLICY "Service role can access all orders" ON orders
     FOR ALL USING (auth.jwt() ->> 'role' = 'service_role');
 
 CREATE POLICY "Service role can access all order history" ON order_status_history
+    FOR ALL USING (auth.jwt() ->> 'role' = 'service_role');
+
+CREATE POLICY "Service role can access all coupon codes" ON coupon_codes
     FOR ALL USING (auth.jwt() ->> 'role' = 'service_role');
 
 -- Functions for common operations

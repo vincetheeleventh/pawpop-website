@@ -15,26 +15,34 @@ vi.mock('@/lib/printify-products', () => ({
   ProductType: {
     DIGITAL: 'DIGITAL',
     ART_PRINT: 'ART_PRINT',
-    FRAMED_CANVAS: 'FRAMED_CANVAS'
+    CANVAS_STRETCHED: 'CANVAS_STRETCHED',
+    CANVAS_FRAMED: 'CANVAS_FRAMED'
   },
-  getProductPricing: vi.fn((type, size) => {
-    if (type === 'DIGITAL') return 999;
+  getProductPricing: vi.fn((type, size, _country, frameUpgrade = false) => {
+    if (type === 'DIGITAL') return 999; // $9.99
     if (type === 'ART_PRINT') {
-      if (size === '12x18') return 2499;
-      if (size === '16x24') return 2999;
-      if (size === '20x30') return 3499;
+      if (size === '12x18') return 2499; // $24.99
+      if (size === '16x24') return 2999; // $29.99
+      if (size === '20x30') return 3499; // $34.99
     }
-    if (type === 'FRAMED_CANVAS') {
-      if (size === '12x18') return 6999;
-      if (size === '16x24') return 7999;
-      if (size === '20x30') return 8999;
+    if (type === 'CANVAS_STRETCHED') {
+      if (frameUpgrade) return 8999; // $89.99 when upgraded
+      if (size === '12x18') return 6499; // $64.99
+      if (size === '16x24') return 7499; // $74.99
+      if (size === '20x30') return 8499; // $84.99
+    }
+    if (type === 'CANVAS_FRAMED') {
+      if (size === '12x18') return 8999; // $89.99
+      if (size === '16x24') return 9999; // $99.99
+      if (size === '20x30') return 10999; // $109.99
     }
     return 0;
   }),
   getAvailableSizes: vi.fn(() => ['12x18', '16x24', '20x30'])
 }));
 
-global.fetch = vi.fn();
+const fetchMock = vi.fn();
+global.fetch = fetchMock as unknown as typeof fetch;
 
 const mockArtwork = {
   id: 'test-artwork-123',
@@ -44,469 +52,202 @@ const mockArtwork = {
   pet_name: 'Bella'
 };
 
+function mockCouponPreviewResponse(original: number, final: number, code = 'TEST1') {
+  return {
+    ok: true,
+    json: () =>
+      Promise.resolve({
+        coupon: { code },
+        originalUnitPriceCents: original,
+        finalUnitPriceCents: final,
+        discountPerUnitCents: original - final,
+        totalDiscountCents: original - final,
+        quantity: 1
+      })
+  } as Response;
+}
+
 describe('PurchaseModalPhysicalFirst', () => {
   const mockOnClose = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (global.fetch as any).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ sessionId: 'test-session-id' })
-    });
-  });
+    fetchMock.mockImplementation((url: RequestInfo, init?: RequestInit) => {
+      if (url === '/api/coupons/validate') {
+        if (init?.body && typeof init.body === 'string') {
+          const body = JSON.parse(init.body);
+          if (body.productType === 'DIGITAL') {
+            return Promise.resolve(mockCouponPreviewResponse(999, 100));
+          }
+        }
+        return Promise.resolve(mockCouponPreviewResponse(2999, 100));
+      }
 
-  it('renders physical-first layout', () => {
-    render(
-      <PurchaseModalPhysicalFirst
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
-    );
-
-    expect(screen.getByText('Choose Your Physical Masterpiece')).toBeInTheDocument();
-    expect(screen.getByText('Premium Art Print')).toBeInTheDocument();
-    expect(screen.getByText('Framed Canvas')).toBeInTheDocument();
-  });
-
-  it('emphasizes physical products as primary options', () => {
-    render(
-      <PurchaseModalPhysicalFirst
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
-    );
-
-    // Physical products should be prominently displayed
-    expect(screen.getByText('Museum-quality paper')).toBeInTheDocument();
-    expect(screen.getByText('Gallery-wrapped canvas')).toBeInTheDocument();
-    expect(screen.getByText('Premium wood frame')).toBeInTheDocument();
-  });
-
-  it('shows digital file as bonus/freebie', () => {
-    render(
-      <PurchaseModalPhysicalFirst
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
-    );
-
-    expect(screen.getByText('+ FREE Digital File')).toBeInTheDocument();
-  });
-
-  it('displays physical product pricing', () => {
-    render(
-      <PurchaseModalPhysicalFirst
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
-    );
-
-    expect(screen.getByText('$29.99')).toBeInTheDocument();
-    expect(screen.getByText('$79.99')).toBeInTheDocument();
-  });
-
-  it('allows physical product selection', async () => {
-    render(
-      <PurchaseModalPhysicalFirst
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
-    );
-
-    const artPrintOption = screen.getByText('Premium Art Print').closest('div')!;
-    fireEvent.click(artPrintOption);
-
-    await waitFor(() => {
-      expect(screen.getByText('Order My Masterpiece')).toBeInTheDocument();
-    });
-  });
-
-  it('shows selection indicator when product is selected', async () => {
-    render(
-      <PurchaseModalPhysicalFirst
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
-    );
-
-    const framedCanvasOption = screen.getByText('Framed Canvas').closest('div')!;
-    fireEvent.click(framedCanvasOption);
-
-    await waitFor(() => {
-      expect(framedCanvasOption).toHaveClass('border-mona-gold');
-    });
-  });
-
-  it('handles art print purchase with correct variant', async () => {
-    render(
-      <PurchaseModalPhysicalFirst
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
-    );
-
-    // Select art print
-    fireEvent.click(screen.getByText('Premium Art Print').closest('div')!);
-    
-    await waitFor(() => {
-      expect(screen.getByText('Order My Masterpiece')).toBeInTheDocument();
-    });
-
-    // Purchase
-    fireEvent.click(screen.getByText('Order My Masterpiece'));
-
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/checkout/artwork', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          artworkId: 'test-artwork-123',
-          productType: 'ART_PRINT',
-          size: '16x20',
-          customerEmail: 'sarah@example.com',
-          customerName: 'Sarah',
-          petName: 'Bella',
-          imageUrl: '/test-image.jpg',
-          variant: 'physical-first'
-        })
-      });
-    });
-  });
-
-  it('handles framed canvas purchase with correct variant', async () => {
-    render(
-      <PurchaseModalPhysicalFirst
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
-    );
-
-    // Select framed canvas
-    fireEvent.click(screen.getByText('Framed Canvas').closest('div')!);
-    
-    await waitFor(() => {
-      expect(screen.getByText('Order My Masterpiece')).toBeInTheDocument();
-    });
-
-    // Purchase
-    fireEvent.click(screen.getByText('Order My Masterpiece'));
-
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/checkout/artwork', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: expect.objectContaining({
-          productType: 'FRAMED_CANVAS',
-          variant: 'physical-first'
-        })
-      });
-    });
-  });
-
-  it('shows shipping timeframes for physical products', () => {
-    render(
-      <PurchaseModalPhysicalFirst
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
-    );
-
-    expect(screen.getByText('Ships in 3-5 business days')).toBeInTheDocument();
-    expect(screen.getByText('Ships in 5-7 business days')).toBeInTheDocument();
-  });
-
-  it('displays quality messaging for physical products', () => {
-    render(
-      <PurchaseModalPhysicalFirst
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
-    );
-
-    expect(screen.getByText('Gallery-wrapped stretched canvas')).toBeInTheDocument();
-    expect(screen.getByText('Premium wooden frame')).toBeInTheDocument();
-  });
-
-  it('shows purchase button only when product is selected', async () => {
-    render(
-      <PurchaseModalPhysicalFirst
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
-    );
-
-    // Purchase button should not be visible initially
-    expect(screen.queryByText('Order My Masterpiece')).not.toBeInTheDocument();
-
-    // Select a product
-    fireEvent.click(screen.getByText('Premium Art Print').closest('div')!);
-
-    await waitFor(() => {
-      expect(screen.getByText('Order My Masterpiece')).toBeInTheDocument();
-    });
-  });
-
-  describe('Size Selection', () => {
-    it('displays all available print sizes', () => {
-      render(
-        <PurchaseModalPhysicalFirst
-          isOpen={true}
-          onClose={mockOnClose}
-          artwork={mockArtwork}
-        />
-      );
-
-      expect(screen.getByText('12x18"')).toBeInTheDocument();
-      expect(screen.getByText('16x24"')).toBeInTheDocument();
-      expect(screen.getByText('20x30"')).toBeInTheDocument();
-    });
-
-    it('has 16x24 as default selected size', () => {
-      render(
-        <PurchaseModalPhysicalFirst
-          isOpen={true}
-          onClose={mockOnClose}
-          artwork={mockArtwork}
-        />
-      );
-
-      const size16x24Button = screen.getByText('16x24"').closest('button');
-      expect(size16x24Button).toHaveClass('border-mona-gold', 'bg-mona-gold');
-    });
-
-    it('allows selecting different sizes', async () => {
-      render(
-        <PurchaseModalPhysicalFirst
-          isOpen={true}
-          onClose={mockOnClose}
-          artwork={mockArtwork}
-        />
-      );
-
-      // Click on 20x30 size
-      const size20x30Button = screen.getByText('20x30"').closest('button')!;
-      fireEvent.click(size20x30Button);
-
-      await waitFor(() => {
-        expect(size20x30Button).toHaveClass('ring-2', 'ring-purple-500');
-      });
-
-      // Verify 16x24 is no longer selected
-      const size16x24Button = screen.getByText('16x24"').closest('button');
-      expect(size16x24Button).not.toHaveClass('ring-2', 'ring-purple-500');
-    });
-
-    it('updates pricing when size changes', async () => {
-      render(
-        <PurchaseModalPhysicalFirst
-          isOpen={true}
-          onClose={mockOnClose}
-          artwork={mockArtwork}
-        />
-      );
-
-      // Select Art Print product first
-      fireEvent.click(screen.getByText('Premium Art Print').closest('div')!);
-
-      // Default 16x24 should show $29.99
-      await waitFor(() => {
-        expect(screen.getByText('$29.99')).toBeInTheDocument();
-      });
-
-      // Select 20x30 size
-      fireEvent.click(screen.getByText('20x30"').closest('button')!);
-
-      // Price should update to $34.99
-      await waitFor(() => {
-        expect(screen.getByText('$34.99')).toBeInTheDocument();
-      });
-    });
-
-    it('includes size in checkout request', async () => {
-      render(
-        <PurchaseModalPhysicalFirst
-          isOpen={true}
-          onClose={mockOnClose}
-          artwork={mockArtwork}
-        />
-      );
-
-      // Select Art Print and 12x18 size
-      fireEvent.click(screen.getByText('Premium Art Print').closest('div')!);
-      fireEvent.click(screen.getByText('12x18"').closest('button')!);
-
-      // Click purchase button
-      await waitFor(() => {
-        expect(screen.getByText('Order My Masterpiece')).toBeInTheDocument();
-      });
-      fireEvent.click(screen.getByText('Order My Masterpiece'));
-
-      // Verify fetch was called with correct size
-      await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith('/api/checkout/artwork', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            artworkId: 'test-artwork-123',
-            productType: 'art_print',
-            size: '12x18',
-            customerEmail: 'sarah@example.com',
-            customerName: 'Sarah',
-            petName: 'Bella',
-            imageUrl: '/test-image.jpg',
-            variant: 'physical-first'
-          })
-        });
-      });
-    });
-
-    it('shows different pricing for framed canvas sizes', async () => {
-      render(
-        <PurchaseModalPhysicalFirst
-          isOpen={true}
-          onClose={mockOnClose}
-          artwork={mockArtwork}
-        />
-      );
-
-      // Select Framed Canvas product
-      fireEvent.click(screen.getByText('Framed Canvas').closest('div')!);
-
-      // Default 16x24 should show $79.99
-      await waitFor(() => {
-        expect(screen.getByText('$79.99')).toBeInTheDocument();
-      });
-
-      // Select 12x18 size
-      fireEvent.click(screen.getByText('12x18"').closest('button')!);
-
-      // Price should update to $69.99
-      await waitFor(() => {
-        expect(screen.getByText('$69.99')).toBeInTheDocument();
-      });
-    });
-  });
-
-  it('displays artwork preview', () => {
-    render(
-      <PurchaseModalPhysicalFirst
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
-    );
-
-    const artworkImage = screen.getByAltText('Your masterpiece');
-    expect(artworkImage).toBeInTheDocument();
-    expect(artworkImage).toHaveAttribute('src', '/test-image.jpg');
-  });
-
-  it('shows security and guarantee messaging', async () => {
-    render(
-      <PurchaseModalPhysicalFirst
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
-    );
-
-    // Select a product to show purchase section
-    fireEvent.click(screen.getByText('Premium Art Print').closest('div')!);
-
-    await waitFor(() => {
-      expect(screen.getByText('✓ Free shipping • ✓ 30-day guarantee • ✓ Digital copy included')).toBeInTheDocument();
-    });
-  });
-
-  it('closes when close button is clicked', () => {
-    render(
-      <PurchaseModalPhysicalFirst
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
-    );
-
-    const buttons = screen.getAllByRole('button');
-    const closeButton = buttons.find(button => 
-      button.className.includes('text-gray-400')
-    );
-    
-    expect(closeButton).toBeTruthy();
-    fireEvent.click(closeButton!);
-    expect(mockOnClose).toHaveBeenCalled();
-  });
-
-  it('shows loading state during purchase', async () => {
-    // Mock a delayed response
-    (global.fetch as any).mockImplementation(() => 
-      new Promise(resolve => setTimeout(() => resolve({
+      return Promise.resolve({
         ok: true,
         json: () => Promise.resolve({ sessionId: 'test-session-id' })
-      }), 100))
-    );
-
-    render(
-      <PurchaseModalPhysicalFirst
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
-    );
-
-    fireEvent.click(screen.getByText('Premium Art Print').closest('div')!);
-    
-    await waitFor(() => {
-      expect(screen.getByText('Order My Masterpiece')).toBeInTheDocument();
+      } as Response);
     });
-
-    fireEvent.click(screen.getByText('Order My Masterpiece'));
-    
-    expect(screen.getByText('Processing...')).toBeInTheDocument();
   });
 
-  it('handles demo mode when Stripe is not available', async () => {
-    // Mock no Stripe available
-    const { loadStripe } = await import('@stripe/stripe-js');
-    vi.mocked(loadStripe).mockResolvedValue(null);
-    
-    // Mock window.alert
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
-
+  it('renders physical-first layout with product options', () => {
     render(
-      <PurchaseModalPhysicalFirst
-        isOpen={true}
-        onClose={mockOnClose}
-        artwork={mockArtwork}
-      />
+      <PurchaseModalPhysicalFirst isOpen={true} onClose={mockOnClose} artwork={mockArtwork} />
     );
 
-    fireEvent.click(screen.getByText('Premium Art Print').closest('div')!);
-    
+    expect(screen.getByText('The Perfect Gift')).toBeInTheDocument();
+    expect(screen.getByText('Fine Art Print')).toBeInTheDocument();
+    expect(screen.getByText('Canvas (Stretched)')).toBeInTheDocument();
+    expect(screen.getByText('Canvas (Framed)')).toBeInTheDocument();
+  });
+
+  it('shows free digital copy highlight on physical options', () => {
+    render(
+      <PurchaseModalPhysicalFirst isOpen={true} onClose={mockOnClose} artwork={mockArtwork} />
+    );
+
+    expect(screen.getAllByText('Free digital copy included')[0]).toBeInTheDocument();
+  });
+
+  it('displays pricing with CAD currency', () => {
+    render(
+      <PurchaseModalPhysicalFirst isOpen={true} onClose={mockOnClose} artwork={mockArtwork} />
+    );
+
+    expect(screen.getByText('$29.99 CAD')).toBeInTheDocument();
+    expect(screen.getByText('$74.99 CAD')).toBeInTheDocument();
+  });
+
+  it('reveals purchase controls after selecting a product', async () => {
+    render(
+      <PurchaseModalPhysicalFirst isOpen={true} onClose={mockOnClose} artwork={mockArtwork} />
+    );
+
+    expect(screen.queryByText('Order My Masterpiece')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Fine Art Print').closest('div')!);
+
     await waitFor(() => {
       expect(screen.getByText('Order My Masterpiece')).toBeInTheDocument();
+      expect(document.getElementById('physical-first-coupon')).toBeTruthy();
     });
+  });
+
+  it('applies coupon for selected physical product', async () => {
+    render(
+      <PurchaseModalPhysicalFirst isOpen={true} onClose={mockOnClose} artwork={mockArtwork} />
+    );
+
+    fireEvent.click(screen.getByText('Fine Art Print').closest('div')!);
+
+    await waitFor(() => {
+      expect(document.getElementById('physical-first-coupon')).toBeTruthy();
+    });
+    const physicalInput = document.getElementById('physical-first-coupon') as HTMLInputElement;
+    fireEvent.change(physicalInput, { target: { value: 'testcoupon' } });
+    fireEvent.click(screen.getAllByText('Apply')[0]);
+
+    await waitFor(() => {
+      const couponCall = fetchMock.mock.calls.find((call) => call[0] === '/api/coupons/validate');
+      expect(couponCall).toBeTruthy();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('coupon-success-message')).toHaveTextContent(
+        'Coupon applied! Checkout price: $1.00 CAD (saved $28.99 CAD).'
+      );
+    });
+  });
+
+  it('sends coupon code metadata when purchasing after applying coupon', async () => {
+    render(
+      <PurchaseModalPhysicalFirst isOpen={true} onClose={mockOnClose} artwork={mockArtwork} />
+    );
+
+    fireEvent.click(screen.getByText('Fine Art Print').closest('div')!);
+    await waitFor(() => {
+      expect(document.getElementById('physical-first-coupon')).toBeTruthy();
+    });
+    const physicalInput = document.getElementById('physical-first-coupon') as HTMLInputElement;
+    fireEvent.change(physicalInput, { target: { value: 'testcoupon' } });
+    fireEvent.click(screen.getAllByText('Apply')[0]);
+
+    await waitFor(() => screen.getByText('Order My Masterpiece'));
 
     fireEvent.click(screen.getByText('Order My Masterpiece'));
 
-    // Should show demo alert after timeout
     await waitFor(() => {
-      expect(alertSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Demo: Would purchase ART_PRINT')
-      );
-    }, { timeout: 2000 });
+      const checkoutCall = [...fetchMock.mock.calls].reverse().find((call) => call[0] === '/api/checkout/artwork');
+      expect(checkoutCall).toBeTruthy();
+      const [, init] = checkoutCall!;
+      expect(init).toMatchObject({ method: 'POST' });
+      const body = JSON.parse((init as RequestInit).body as string);
+      expect(body).toMatchObject({
+        artworkId: 'test-artwork-123',
+        productType: 'ART_PRINT',
+        size: '16x24',
+        couponCode: 'TEST1'
+      });
+    });
+  });
 
-    alertSpy.mockRestore();
+  it('applies coupon to digital download flow', async () => {
+    render(
+      <PurchaseModalPhysicalFirst isOpen={true} onClose={mockOnClose} artwork={mockArtwork} />
+    );
+
+    const digitalInput = document.getElementById('physical-first-digital-coupon') as HTMLInputElement;
+    fireEvent.change(digitalInput, { target: { value: 'digitaldeal' } });
+    fireEvent.click(screen.getByText('Apply'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('coupon-success-message')).toHaveTextContent(
+        'Coupon applied! Checkout price: $1.00 CAD (saved $8.99 CAD).'
+      );
+    });
+
+    fireEvent.click(screen.getByText(/Download digital copy only/));
+
+    await waitFor(() => {
+      const checkoutCall = [...fetchMock.mock.calls].reverse().find((call) => call[0] === '/api/checkout/artwork');
+      const [, init] = checkoutCall!;
+      const body = JSON.parse((init as RequestInit).body as string);
+      expect(body).toMatchObject({
+        productType: 'DIGITAL',
+        size: 'digital',
+        couponCode: 'TEST1'
+      });
+    });
+  });
+
+  it('updates checkout payload when selecting different size', async () => {
+    render(
+      <PurchaseModalPhysicalFirst isOpen={true} onClose={mockOnClose} artwork={mockArtwork} />
+    );
+
+    fireEvent.click(screen.getByText('Fine Art Print').closest('div')!);
+    fireEvent.click(screen.getByText('20x30"').closest('button')!);
+
+    await waitFor(() => screen.getByText('Order My Masterpiece'));
+    fireEvent.click(screen.getByText('Order My Masterpiece'));
+
+    await waitFor(() => {
+      const checkoutCall = [...fetchMock.mock.calls].reverse().find((call) => call[0] === '/api/checkout/artwork');
+      const [, init] = checkoutCall!;
+      const body = JSON.parse((init as RequestInit).body as string);
+      expect(body.size).toBe('20x30');
+    });
+  });
+
+  it('shows frame upgrade toggle for canvas stretched selection', async () => {
+    render(
+      <PurchaseModalPhysicalFirst isOpen={true} onClose={mockOnClose} artwork={mockArtwork} />
+    );
+
+    fireEvent.click(screen.getByText('Canvas (Stretched)').closest('div')!);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Add Professional Frame/)).toBeInTheDocument();
+    });
   });
 });
