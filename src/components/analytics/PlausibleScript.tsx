@@ -13,20 +13,17 @@ interface PlausibleScriptProps {
 
 export default function PlausibleScript({ 
   domain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN || 'pawpopart.com',
-  src = process.env.NEXT_PUBLIC_PLAUSIBLE_SRC || 'https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js'
+  src = process.env.NEXT_PUBLIC_PLAUSIBLE_SRC || 'https://plausible.io/js/script.js'
 }: PlausibleScriptProps) {
   
   useEffect(() => {
-    // Initialize price variant on component mount
-    const variant = plausible.getPriceVariant();
-    console.log('[PlausibleScript] Initialized with price variant:', variant);
-    
-    // Track initial page load with variant
-    plausible.trackPageview(window.location.pathname, {
-      initial_load: true,
-      user_agent: navigator.userAgent.includes('Mobile') ? 'mobile' : 'desktop'
-    });
-  }, []);
+    // Only initialize once when component mounts
+    if (typeof window !== 'undefined' && domain) {
+      // Initialize price variant on component mount (no tracking here to avoid loops)
+      const variant = plausible.getPriceVariant();
+      console.log('[PlausibleScript] Initialized with price variant:', variant);
+    }
+  }, []); // Empty dependency array to run only once
 
   if (!domain) {
     console.warn('[PlausibleScript] No domain configured, Plausible tracking disabled');
@@ -35,18 +32,28 @@ export default function PlausibleScript({
 
   return (
     <>
-      {/* Enhanced Plausible script with file downloads, hash routing, outbound links, pageview props, and tagged events */}
+      {/* Standard Plausible script */}
       <Script
         defer
         data-domain={domain}
         src={src}
         strategy="afterInteractive"
         onLoad={() => {
-          console.log('[PlausibleScript] Enhanced Plausible script loaded successfully');
+          console.log('[PlausibleScript] Plausible script loaded successfully');
           
-          // Verify plausible is available
+          // Verify plausible is available and track initial load once
           if (typeof window !== 'undefined' && window.plausible) {
-            console.log('[PlausibleScript] Plausible tracking active with enhanced features');
+            console.log('[PlausibleScript] Plausible tracking active');
+            
+            // Track initial page load with variant (only once on script load)
+            const variant = plausible.getPriceVariant();
+            window.plausible('pageview', { 
+              props: { 
+                price_variant: variant,
+                initial_load: true,
+                user_agent: navigator.userAgent.includes('Mobile') ? 'mobile' : 'desktop'
+              } 
+            });
           }
         }}
         onError={(error) => {
@@ -57,7 +64,7 @@ export default function PlausibleScript({
       {/* Plausible queue initialization script */}
       <Script
         id="plausible-init"
-        strategy="afterInteractive"
+        strategy="beforeInteractive"
         dangerouslySetInnerHTML={{
           __html: `window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }`
         }}

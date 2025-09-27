@@ -68,13 +68,13 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
     };
   }, [formData.petMomPhoto, formData.petPhoto]);
 
-  // Track modal opening
+  // Track modal opening (only track once when modal opens)
   useEffect(() => {
     if (isOpen) {
       trackFunnel.uploadModalOpened();
       trackInteraction.modalOpen('Upload Modal');
     }
-  }, [isOpen, trackFunnel, trackInteraction]);
+  }, [isOpen]); // Remove trackFunnel and trackInteraction from deps to prevent infinite loops
 
   if (!isOpen) return null;
 

@@ -103,6 +103,19 @@ class PlausibleAnalytics {
   }
 
   /**
+   * Ensure plausible is initialized and available
+   */
+  private ensurePlausible(): void {
+    if (typeof window !== 'undefined' && !window.plausible) {
+      const plausibleFn = function() { 
+        (plausibleFn.q = plausibleFn.q || []).push(arguments) 
+      } as any;
+      plausibleFn.q = [];
+      window.plausible = plausibleFn;
+    }
+  }
+
+  /**
    * Initialize or retrieve persistent price variant assignment
    */
   private initializePriceVariant(): void {
@@ -163,7 +176,7 @@ class PlausibleAnalytics {
    * Track custom event
    */
   trackEvent(eventName: string, props?: Record<string, string | number | boolean>): void {
-    if (!this.isEnabled || typeof window === 'undefined' || !window.plausible) {
+    if (!this.isEnabled || typeof window === 'undefined') {
       console.log(`[Plausible] Event: ${eventName}`, props);
       return;
     }
@@ -176,8 +189,12 @@ class PlausibleAnalytics {
         variant_label: PRICE_VARIANTS[this.getPriceVariant()].label
       };
 
-      window.plausible(eventName, { props: eventProps });
-      console.log(`[Plausible] Tracked event: ${eventName}`, eventProps);
+      // Ensure plausible is available
+      this.ensurePlausible();
+      
+      // Track the event (will be queued if script not loaded yet)
+      window.plausible!(eventName, { props: eventProps });
+      console.log(`[Plausible] Event tracked: ${eventName}`, eventProps);
     } catch (error) {
       console.error('[Plausible] Error tracking event:', error);
     }
@@ -187,7 +204,7 @@ class PlausibleAnalytics {
    * Track revenue event
    */
   trackRevenue(eventName: string, amount: number, currency: string = 'USD', props?: Record<string, string | number | boolean>): void {
-    if (!this.isEnabled || typeof window === 'undefined' || !window.plausible) {
+    if (!this.isEnabled || typeof window === 'undefined') {
       console.log(`[Plausible] Revenue Event: ${eventName}`, { amount, currency, props });
       return;
     }
@@ -201,12 +218,15 @@ class PlausibleAnalytics {
         currency
       };
 
-      window.plausible(eventName, {
+      // Ensure plausible is available
+      this.ensurePlausible();
+
+      window.plausible!(eventName, {
         props: eventProps,
         revenue: { currency, amount }
       });
       
-      console.log(`[Plausible] Tracked revenue: ${eventName}`, eventProps);
+      console.log(`[Plausible] Revenue tracked: ${eventName}`, eventProps);
     } catch (error) {
       console.error('[Plausible] Error tracking revenue:', error);
     }
@@ -216,7 +236,7 @@ class PlausibleAnalytics {
    * Track pageview with custom properties
    */
   trackPageview(url?: string, props?: Record<string, string | number | boolean>): void {
-    if (!this.isEnabled || typeof window === 'undefined' || !window.plausible) {
+    if (!this.isEnabled || typeof window === 'undefined') {
       console.log(`[Plausible] Pageview: ${url || 'current page'}`, props);
       return;
     }
@@ -228,9 +248,12 @@ class PlausibleAnalytics {
         variant_label: PRICE_VARIANTS[this.getPriceVariant()].label
       };
 
+      // Ensure plausible is available
+      this.ensurePlausible();
+
       // Plausible automatically tracks pageviews, but we can send custom props
-      window.plausible('pageview', { props: eventProps });
-      console.log(`[Plausible] Tracked pageview with props:`, eventProps);
+      window.plausible!('pageview', { props: eventProps });
+      console.log(`[Plausible] Pageview tracked with props:`, eventProps);
     } catch (error) {
       console.error('[Plausible] Error tracking pageview:', error);
     }
@@ -309,7 +332,7 @@ class PlausibleAnalytics {
    * Track tagged events with custom properties (enhanced script feature)
    */
   trackTaggedEvent(eventName: string, props?: Record<string, string | number | boolean>): void {
-    if (!this.isEnabled || typeof window === 'undefined' || !window.plausible) {
+    if (!this.isEnabled || typeof window === 'undefined') {
       console.log(`[Plausible] Tagged Event: ${eventName}`, props);
       return;
     }
@@ -322,7 +345,10 @@ class PlausibleAnalytics {
         variant_label: PRICE_VARIANTS[this.getPriceVariant()].label
       };
 
-      window.plausible(eventName, { props: eventProps });
+      // Ensure plausible is available
+      this.ensurePlausible();
+
+      window.plausible!(eventName, { props: eventProps });
       console.log(`[Plausible] Tagged Event: ${eventName}`, eventProps);
     } catch (error) {
       console.error('[Plausible] Error tracking tagged event:', error);

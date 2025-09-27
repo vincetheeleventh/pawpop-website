@@ -362,7 +362,7 @@ export async function sendOrderConfirmationEmail(data: OrderConfirmationEmailDat
 
   const result = await sendEmail({
     to: data.customerEmail,
-    subject: `Order Confirmation #${data.orderNumber} - PawPop`,
+    subject: `Order Confirmed: Your PawPop Masterpiece`,
     html
   })
 
