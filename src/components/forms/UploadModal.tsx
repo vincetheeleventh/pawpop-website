@@ -823,17 +823,24 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
         
         // Check if human review is enabled
         const { isHumanReviewEnabled } = await import('@/lib/admin-review');
+        const humanReviewEnabled = isHumanReviewEnabled();
         
-        if (isHumanReviewEnabled()) {
+        console.log('🔍 Manual approval check:', {
+          humanReviewEnabled,
+          envVar: typeof window !== 'undefined' ? 'client-side' : process.env.ENABLE_HUMAN_REVIEW,
+          accessToken: access_token
+        });
+        
+        if (humanReviewEnabled) {
           // Human review is enabled - don't redirect, just show completion message
-          console.log('Human review enabled - artwork pending admin approval');
+          console.log('✅ Human review enabled - artwork pending admin approval, NO REDIRECT');
           setTimeout(() => {
             onClose();
             // Don't redirect - user will get email with link after admin approval
           }, 3000);
         } else {
           // Human review disabled - redirect to artwork page as before
-          console.log('Human review disabled - redirecting to artwork page');
+          console.log('➡️ Human review disabled - redirecting to artwork page');
           setTimeout(() => {
             onClose();
             router.push(`/artwork/${access_token}`);
