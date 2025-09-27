@@ -122,35 +122,65 @@ class PlausibleAnalytics {
     if (typeof window === 'undefined') return;
 
     try {
+      // Check if localStorage is available (can fail in private browsing, etc.)
+      if (!this.isLocalStorageAvailable()) {
+        console.warn('[Plausible] localStorage not available, using session-based variant');
+        this.currentVariant = Math.random() < 0.5 ? 'A' : 'B';
+        return;
+      }
+
       const storedVariant = localStorage.getItem(VARIANT_STORAGE_KEY);
       const storedExpiry = localStorage.getItem(VARIANT_EXPIRY_KEY);
       const now = Date.now();
 
       // Check if stored variant is still valid
       if (storedVariant && storedExpiry && now < parseInt(storedExpiry)) {
-        this.currentVariant = storedVariant as PriceVariant;
-        console.log(`[Plausible] Using stored price variant: ${this.currentVariant}`);
-        return;
+        // Validate stored variant is a valid option
+        if (storedVariant === 'A' || storedVariant === 'B') {
+          this.currentVariant = storedVariant as PriceVariant;
+          console.log(`[Plausible] Using stored price variant: ${this.currentVariant}`);
+          return;
+        }
       }
 
       // Assign new variant (50/50 split)
       this.currentVariant = Math.random() < 0.5 ? 'A' : 'B';
       
-      // Store variant with expiry
-      localStorage.setItem(VARIANT_STORAGE_KEY, this.currentVariant);
-      localStorage.setItem(VARIANT_EXPIRY_KEY, (now + VARIANT_DURATION).toString());
+      // Store variant with expiry (with error handling)
+      try {
+        localStorage.setItem(VARIANT_STORAGE_KEY, this.currentVariant);
+        localStorage.setItem(VARIANT_EXPIRY_KEY, (now + VARIANT_DURATION).toString());
+      } catch (storageError) {
+        console.warn('[Plausible] Failed to store variant in localStorage:', storageError);
+      }
       
       console.log(`[Plausible] Assigned new price variant: ${this.currentVariant}`);
       
-      // Track variant assignment
-      this.trackEvent('Price Variant Assigned', {
-        variant: this.currentVariant,
-        label: PRICE_VARIANTS[this.currentVariant].label
-      });
+      // Track variant assignment (with delay to ensure plausible is ready)
+      setTimeout(() => {
+        this.trackEvent('Price Variant Assigned', {
+          variant: this.currentVariant!,
+          label: PRICE_VARIANTS[this.currentVariant!].label
+        });
+      }, 100);
       
     } catch (error) {
       console.error('[Plausible] Error initializing price variant:', error);
       this.currentVariant = 'A'; // Fallback to variant A
+    }
+  }
+
+  /**
+   * Check if localStorage is available
+   */
+  private isLocalStorageAvailable(): boolean {
+    try {
+      const test = '__localStorage_test__';
+      localStorage.setItem(test, test);
+      localStorage.removeItem(test);
+      return true;
+    } catch {
+      return false;
     }
   }
 
@@ -362,17 +392,17 @@ class PlausibleAnalytics {
     if (typeof window === 'undefined') return;
     
     this.currentVariant = variant;
-    localStorage.setItem(VARIANT_STORAGE_KEY, variant);
-    localStorage.setItem(VARIANT_EXPIRY_KEY, (Date.now() + VARIANT_DURATION).toString());
-  }
-
-  /**
-   * Initialize for testing environment
-   */
-  initializeForTesting(domain: string = 'pawpopart.com'): void {
-    this.isEnabled = true;
-    this.domain = domain;
-    this.initializePriceVariant();
+    
+    try {
+      if (this.isLocalStorageAvailable()) {
+        localStorage.setItem(VARIANT_STORAGE_KEY, variant);
+        localStorage.setItem(VARIANT_EXPIRY_KEY, (Date.now() + VARIANT_DURATION).toString());
+      } else {
+        console.warn('[Plausible] LocalStorage is not available, cannot store forced variant');
+      }
+    } catch (error) {
+      console.warn('[Plausible] Failed to store forced variant:', error);
+    }
   }
 
   /**
@@ -381,11 +411,18 @@ class PlausibleAnalytics {
   clearVariant(): void {
     if (typeof window === 'undefined') return;
     
-    localStorage.removeItem(VARIANT_STORAGE_KEY);
-    localStorage.removeItem(VARIANT_EXPIRY_KEY);
     this.currentVariant = null;
     
-    console.log('[Plausible] Cleared price variant assignment');
+    try {
+      if (this.isLocalStorageAvailable()) {
+        localStorage.removeItem(VARIANT_STORAGE_KEY);
+        localStorage.removeItem(VARIANT_EXPIRY_KEY);
+      } else {
+        console.warn('[Plausible] LocalStorage is not available, cannot clear variant');
+      }
+    } catch (error) {
+      console.warn('[Plausible] Failed to clear variant:', error);
+    }
   }
 
   /**
@@ -403,6 +440,15 @@ class PlausibleAnalytics {
       currentVariant: this.currentVariant,
       priceConfig: this.getPriceConfig()
     };
+  }
+
+  /**
+   * Initialize for testing
+   */
+  initializeForTesting(domain?: string): void {
+    this.isEnabled = true;
+    this.domain = domain || 'test.com';
+    this.currentVariant = null;
   }
 }
 

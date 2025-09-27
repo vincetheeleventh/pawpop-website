@@ -96,9 +96,16 @@ describe('Plausible Analytics', () => {
       const config = plausible.getPriceConfig();
       expect(config).toEqual({
         variant: 'A',
-        digital: 29,
-        print: 79,
-        canvas: 129,
+        digital: 15,
+        print: 39,
+        printMid: 49,
+        printLarge: 59,
+        canvas: 59,
+        canvasMid: 79,
+        canvasLarge: 99,
+        canvasFramed: 99,
+        canvasFramedMid: 119,
+        canvasFramedLarge: 149,
         label: 'Standard Pricing'
       });
     });
@@ -109,9 +116,16 @@ describe('Plausible Analytics', () => {
       const config = plausible.getPriceConfig();
       expect(config).toEqual({
         variant: 'B',
-        digital: 39,
-        print: 89,
-        canvas: 149,
+        digital: 45,
+        print: 79,
+        printMid: 95,
+        printLarge: 115,
+        canvas: 95,
+        canvasMid: 135,
+        canvasLarge: 175,
+        canvasFramed: 145,
+        canvasFramedMid: 185,
+        canvasFramedLarge: 225,
         label: 'Premium Pricing'
       });
     });
@@ -152,20 +166,19 @@ describe('Plausible Analytics', () => {
       });
     });
 
-    it('should track conversions with price context', () => {
       plausible.trackConversion('Purchase', 129, { product_type: 'canvas' });
 
       expect(mockPlausible).toHaveBeenCalledWith('Conversion: Purchase', {
         props: {
           conversion_type: 'Purchase',
-          digital_price: 29,
-          print_price: 79,
-          canvas_price: 129,
+          amount: 129,
+          currency: 'USD',
           product_type: 'canvas',
           price_variant: 'A',
           variant_label: 'Standard Pricing',
-          amount: 129,
-          currency: 'USD'
+          digital_price: 15,
+          print_price: 39,
+          canvas_price: 59
         },
         revenue: {
           currency: 'USD',
@@ -196,7 +209,8 @@ describe('Plausible Analytics', () => {
           element: 'Purchase Button',
           product_type: 'digital',
           price_variant: 'A',
-          variant_label: 'Standard Pricing'
+          variant_label: 'Standard Pricing',
+          variant: 'A'
         }
       });
     });
@@ -212,12 +226,17 @@ describe('Plausible Analytics', () => {
     });
 
     it('should handle localStorage errors', () => {
+      // Mock Math.random to return 0.6 (should assign variant B)
+      const mockMathRandom = vi.spyOn(Math, 'random').mockReturnValue(0.6);
+      
       mockLocalStorage.getItem.mockImplementation(() => {
         throw new Error('localStorage error');
       });
 
       const variant = plausible.getPriceVariant();
-      expect(variant).toBe('A'); // Should fallback to variant A
+      expect(variant).toBe('A'); // Should fallback to variant A on error
+      
+      mockMathRandom.mockRestore();
     });
 
     it('should work without environment variables', () => {
@@ -264,9 +283,9 @@ describe('Plausible Analytics', () => {
         priceConfig: {
           variant: 'A',
           digital: 15,
-          print: 29,
-          printMid: 39,
-          printLarge: 48,
+          print: 39,
+          printMid: 49,
+          printLarge: 59,
           canvas: 59,
           canvasMid: 79,
           canvasLarge: 99,
@@ -284,9 +303,9 @@ describe('Plausible Analytics', () => {
       expect(PRICE_VARIANTS.A).toEqual({
         variant: 'A',
         digital: 15,
-        print: 29,
-        printMid: 39,
-        printLarge: 48,
+        print: 39,
+        printMid: 49,
+        printLarge: 59,
         canvas: 59,
         canvasMid: 79,
         canvasLarge: 99,

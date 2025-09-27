@@ -47,7 +47,9 @@
     "test:plausible-e2e-headed": "playwright test tests/e2e/plausible-ab-testing.spec.ts tests/e2e/plausible-purchase-flow.spec.ts tests/e2e/plausible-performance.spec.ts --headed",
     "test:plausible-all": "npm run test:plausible && npm run test:plausible-e2e",
     "test:plausible-full": "node scripts/test-plausible-e2e.js",
-    "test:plausible-full-headed": "node scripts/test-plausible-e2e.js --headed"
+    "test:plausible-full-headed": "node scripts/test-plausible-e2e.js --headed",
+    "test:plausible-integration": "node scripts/test-plausible-integration.js",
+    "test:plausible-validate": "node scripts/validate-plausible-production.js"
   },
   "dependencies": {
     "@fal-ai/client": "^1.6.2",
