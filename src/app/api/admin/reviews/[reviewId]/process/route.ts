@@ -45,10 +45,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       )
     }
 
-    // If approved and it's an artwork_proof review, send completion email to customer
+    // Handle approval actions based on review type
     if (status === 'approved' && supabaseAdmin) {
       try {
-        // Get review details to determine if we should send completion email
+        // Get review details to determine what actions to take
         const { data: review } = await supabaseAdmin
           .from('admin_reviews')
           .select(`
@@ -62,15 +62,15 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           .eq('id', reviewId)
           .single()
 
-        if (review && review.review_type === 'artwork_proof' && review.artworks) {
-          console.log('🎉 Artwork approved! Sending completion email to customer...')
+        if (review && review.artworks) {
+          console.log(`🎉 ${review.review_type} approved! Processing actions...`)
           console.log('📋 Review artworks data:', JSON.stringify(review.artworks, null, 2))
           
           // Handle both array and object cases
           const artwork = Array.isArray(review.artworks) ? review.artworks[0] : review.artworks
           
-          if (artwork && artwork.access_token) {
-            // Send completion email
+          if (review.review_type === 'artwork_proof' && artwork?.access_token) {
+            // For artwork proof approval: Send completion email
             const emailResult = await sendMasterpieceReadyEmail({
               customerName: review.customer_name,
               customerEmail: review.customer_email,
@@ -83,13 +83,41 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
             } else {
               console.warn('⚠️ Failed to send completion email:', emailResult.error)
             }
-          } else {
-            console.warn('⚠️ No artwork access token found, cannot send completion email')
+          } else if (review.review_type === 'highres_file') {
+            // For high-res file approval: Trigger Printify order creation
+            console.log('🎯 High-res file approved! Triggering Printify order creation...')
+            
+            try {
+              // Find the associated order by artwork_id
+              const { data: orders } = await supabaseAdmin
+                .from('orders')
+                .select('stripe_session_id')
+                .eq('artwork_id', review.artwork_id)
+                .eq('order_status', 'pending_review')
+                .order('created_at', { ascending: false })
+                .limit(1)
+
+              if (orders && orders.length > 0) {
+                const stripeSessionId = orders[0].stripe_session_id
+                console.log(`📦 Found pending order for session: ${stripeSessionId}`)
+                
+                // Import and call the Printify order creation function
+                const { createPrintifyOrderAfterApproval } = await import('@/lib/order-processing')
+                await createPrintifyOrderAfterApproval(stripeSessionId, review.image_url)
+                
+                console.log('✅ Printify order creation triggered successfully!')
+              } else {
+                console.warn('⚠️ No pending order found for high-res file approval')
+              }
+            } catch (printifyError) {
+              console.error('❌ Failed to create Printify order after approval:', printifyError)
+              // Don't fail the approval process if Printify order creation fails
+            }
           }
         }
-      } catch (emailError) {
-        console.error('❌ Error sending completion email:', emailError)
-        // Don't fail the approval process if email fails
+      } catch (error) {
+        console.error('❌ Error processing approval actions:', error)
+        // Don't fail the approval process if post-approval actions fail
       }
     }
 

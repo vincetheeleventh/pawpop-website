@@ -55,8 +55,23 @@ export async function POST(req: Request) {
           break;
         }
 
+        // Retrieve full session with shipping details for physical products
+        let fullSession = session;
+        if (metadata.productType !== 'digital') {
+          try {
+            console.log('🚚 Retrieving full session with shipping details for physical product');
+            fullSession = await stripe.checkout.sessions.retrieve(session.id, {
+              expand: ['shipping_details']
+            });
+            console.log('✅ Full session retrieved with shipping details');
+          } catch (retrieveError) {
+            console.error('❌ Failed to retrieve full session with shipping details:', retrieveError);
+            // Continue with original session - shipping details will be null but order can still process
+          }
+        }
+
         // Process the order (create Printify order for physical products)
-        await processOrder({ session, metadata });
+        await processOrder({ session: fullSession, metadata });
         console.log('Order processed successfully:', session.id);
 
         // Track purchase conversion for Google Ads (server-side)
@@ -177,6 +192,64 @@ export async function POST(req: Request) {
           status: 'failed',
           processingTime: Date.now() - startTime,
           errorMessage: error instanceof Error ? error.message : 'Error processing payment_intent.payment_failed'
+        });
+      }
+      break;
+
+    case 'checkout.session.expired':
+      try {
+        const expiredSession = event.data.object;
+        console.log('Checkout session expired:', expiredSession.id);
+        
+        // Update order status to cancelled for expired sessions
+        const { updateOrderStatus } = await import('@/lib/supabase-orders');
+        await updateOrderStatus(expiredSession.id, 'cancelled');
+        console.log('✅ Order marked as cancelled due to session expiration');
+        
+        // Track expired session
+        await trackStripeWebhook({
+          eventId: event.id,
+          eventType: event.type,
+          status: 'success',
+          processingTime: Date.now() - startTime
+        });
+      } catch (error) {
+        console.error('Error processing expired session:', error);
+        await trackStripeWebhook({
+          eventId: event.id,
+          eventType: event.type,
+          status: 'failed',
+          processingTime: Date.now() - startTime,
+          errorMessage: error instanceof Error ? error.message : 'Error processing checkout.session.expired'
+        });
+      }
+      break;
+
+    case 'checkout.session.async_payment_failed':
+      try {
+        const failedSession = event.data.object;
+        console.log('Checkout session async payment failed:', failedSession.id);
+        
+        // Update order status to cancelled for failed async payments
+        const { updateOrderStatus } = await import('@/lib/supabase-orders');
+        await updateOrderStatus(failedSession.id, 'cancelled');
+        console.log('✅ Order marked as cancelled due to async payment failure');
+        
+        // Track failed async payment
+        await trackStripeWebhook({
+          eventId: event.id,
+          eventType: event.type,
+          status: 'success',
+          processingTime: Date.now() - startTime
+        });
+      } catch (error) {
+        console.error('Error processing async payment failure:', error);
+        await trackStripeWebhook({
+          eventId: event.id,
+          eventType: event.type,
+          status: 'failed',
+          processingTime: Date.now() - startTime,
+          errorMessage: error instanceof Error ? error.message : 'Error processing checkout.session.async_payment_failed'
         });
       }
       break;

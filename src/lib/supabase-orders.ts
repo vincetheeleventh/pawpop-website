@@ -99,6 +99,15 @@ export async function updateOrderAfterPayment(
   paymentIntentId: string,
   shippingAddress?: any
 ): Promise<void> {
+  // Debug logging for shipping address
+  console.log('🔍 updateOrderAfterPayment - Shipping address data:', {
+    sessionId: stripeSessionId,
+    hasShippingAddress: !!shippingAddress,
+    shippingAddressType: typeof shippingAddress,
+    shippingAddressKeys: shippingAddress ? Object.keys(shippingAddress) : null,
+    shippingAddress: shippingAddress ? JSON.stringify(shippingAddress, null, 2) : null
+  });
+
   const { error } = await ensureSupabaseAdmin()
     .from('orders')
     .update({
@@ -112,6 +121,25 @@ export async function updateOrderAfterPayment(
   if (error) {
     console.error('Error updating order after payment:', error);
     throw new Error(`Failed to update order: ${error.message}`);
+  }
+}
+
+// Update order status
+export async function updateOrderStatus(
+  stripeSessionId: string,
+  status: string
+): Promise<void> {
+  const { error } = await ensureSupabaseAdmin()
+    .from('orders')
+    .update({
+      order_status: status,
+      updated_at: new Date().toISOString()
+    })
+    .eq('stripe_session_id', stripeSessionId);
+
+  if (error) {
+    console.error('Error updating order status:', error);
+    throw new Error(`Failed to update order status: ${error.message}`);
   }
 }
 
@@ -298,6 +326,107 @@ export async function checkDatabaseConnection(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+// Cleanup stale pending orders (older than specified hours)
+export async function cleanupStalePendingOrders(hoursOld: number = 24): Promise<{
+  cleaned: number;
+  errors: string[];
+}> {
+  const cutoffTime = new Date(Date.now() - hoursOld * 60 * 60 * 1000).toISOString();
+  const errors: string[] = [];
+  
+  try {
+    console.log(`🧹 Cleaning up pending orders older than ${hoursOld} hours (before ${cutoffTime})`);
+    
+    // First, get the orders that will be cleaned up for logging
+    const { data: stalePendingOrders, error: selectError } = await ensureSupabaseAdmin()
+      .from('orders')
+      .select('id, stripe_session_id, created_at, customer_email, product_type')
+      .eq('order_status', 'pending')
+      .lt('created_at', cutoffTime);
+
+    if (selectError) {
+      errors.push(`Failed to query stale orders: ${selectError.message}`);
+      return { cleaned: 0, errors };
+    }
+
+    if (!stalePendingOrders || stalePendingOrders.length === 0) {
+      console.log('✅ No stale pending orders found');
+      return { cleaned: 0, errors };
+    }
+
+    console.log(`📋 Found ${stalePendingOrders.length} stale pending orders to clean up:`, 
+      stalePendingOrders.map(o => ({ 
+        id: o.id, 
+        session: o.stripe_session_id, 
+        age: Math.round((Date.now() - new Date(o.created_at).getTime()) / (1000 * 60 * 60)) + 'h',
+        email: o.customer_email,
+        type: o.product_type
+      }))
+    );
+
+    // Update stale pending orders to cancelled
+    const { data: updatedOrders, error: updateError } = await ensureSupabaseAdmin()
+      .from('orders')
+      .update({ 
+        order_status: 'cancelled',
+        updated_at: new Date().toISOString()
+      })
+      .eq('order_status', 'pending')
+      .lt('created_at', cutoffTime)
+      .select('id, stripe_session_id');
+
+    if (updateError) {
+      errors.push(`Failed to update stale orders: ${updateError.message}`);
+      return { cleaned: 0, errors };
+    }
+
+    const cleanedCount = updatedOrders?.length || 0;
+    
+    // Add status history for cleaned orders
+    if (updatedOrders && updatedOrders.length > 0) {
+      for (const order of updatedOrders) {
+        try {
+          await addOrderStatusHistory(
+            order.id, 
+            'cancelled', 
+            `Automatically cancelled - checkout session abandoned for ${hoursOld}+ hours`
+          );
+        } catch (historyError) {
+          errors.push(`Failed to add status history for order ${order.id}: ${historyError}`);
+        }
+      }
+    }
+
+    console.log(`✅ Successfully cleaned up ${cleanedCount} stale pending orders`);
+    return { cleaned: cleanedCount, errors };
+
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error during cleanup';
+    errors.push(`Cleanup operation failed: ${errorMessage}`);
+    console.error('❌ Stale order cleanup failed:', error);
+    return { cleaned: 0, errors };
+  }
+}
+
+// Get stale pending orders for monitoring (without cleaning them up)
+export async function getStalePendingOrders(hoursOld: number = 24): Promise<Order[]> {
+  const cutoffTime = new Date(Date.now() - hoursOld * 60 * 60 * 1000).toISOString();
+  
+  const { data: staleOrders, error } = await ensureSupabaseAdmin()
+    .from('orders')
+    .select('*')
+    .eq('order_status', 'pending')
+    .lt('created_at', cutoffTime)
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    console.error('Error getting stale pending orders:', error);
+    return [];
+  }
+
+  return staleOrders || [];
 }
 
 // Get artwork by secure token for email delivery
