@@ -65,8 +65,16 @@ User completes upload → Redirected to artwork page (pending state)
 #### Generation Pipeline
 1. **MonaLisa Base Generation** (fal.ai Flux Pro)
 2. **Pet Integration** (fal.ai multi-image processing)
-3. **Upscaling** (fal.ai clarity-upscaler, 3x resolution)
-4. **Mockup Generation** (Printify API integration)
+3. **Quality Control Checkpoint** (Manual Approval System)
+   - **When Enabled** (`ENABLE_HUMAN_REVIEW=true`):
+     - Admin review created automatically
+     - Email notification sent to pawpopart@gmail.com
+     - Completion email to customer BLOCKED until approval
+     - Admin reviews artwork via `/admin/reviews` dashboard
+     - On approval: Customer receives completion email
+   - **When Disabled**: Automatic progression to next step
+4. **Upscaling** (fal.ai clarity-upscaler, 3x resolution)
+5. **Mockup Generation** (Printify API integration)
    - Uploads artwork to Printify servers
    - Generates context 1 (front-facing) mockups for all product types
    - Creates real product visualizations with consistent camera angles
@@ -74,11 +82,11 @@ User completes upload → Redirected to artwork page (pending state)
 
 #### User Communication
 - **Email #1:** "Your masterpiece is being created! 🎨" (immediate)
-- **Email #2:** "Your masterpiece is ready! 🎉" (after completion)
+- **Email #2:** "Your masterpiece is ready! 🎉" (after admin approval OR automatic completion)
 
 #### Success Metrics
 - **Primary:** Generation Success Rate (% completed without errors)
-- **Secondary:** Average generation time, error recovery rate
+- **Secondary:** Average generation time, admin approval time, error recovery rate
 - **Conversion Goal:** 95%+ successful generation completion
 
 ---
@@ -185,34 +193,56 @@ User selects product → Configures size/quantity → Stripe checkout → Automa
 
 ---
 
-### Step 7: Post-Purchase Processing (Automated)
+### Step 7: Post-Purchase Processing (Enhanced Pipeline)
 **Duration:** 2-10 minutes  
 **Primary Job:** Process payment, upscale artwork, create physical orders, send confirmations
 
-#### Automated Pipeline Flow
+#### Enhanced Order Processing Pipeline
 1. **Stripe Webhook Processing**
-   - Payment confirmation received
-   - Order status updated to "paid" in database
-   - Customer and order data extracted
+   - Payment confirmation received via `checkout.session.completed`
+   - Enhanced session retrieval with shipping details expansion
+   - Order status updated to "paid" in database with proper shipping address storage
+   - Customer and order data extracted with comprehensive validation
 
-2. **Image Upscaling (Physical Products Only)**
+2. **Order Status Management**
+   - **Success Path**: pending → paid → processing → shipped → delivered
+   - **Failure Handling**: 
+     - `checkout.session.expired` → cancelled
+     - `checkout.session.async_payment_failed` → cancelled
+     - Automatic cleanup of stale pending orders (24h+)
+
+3. **Image Upscaling (Physical Products Only)**
    - fal.ai clarity-upscaler with 3x resolution enhancement
    - Oil painting texture optimization
    - Fallback to original image if upscaling fails
 
-3. **Printify Order Creation**
-   - Product creation with upscaled artwork
-   - Shipping address validation
-   - Order submission to Printify for fulfillment
+4. **High-Resolution Quality Control** (Manual Approval System)
+   - **When Enabled** (`ENABLE_HUMAN_REVIEW=true`):
+     - High-res admin review created after upscaling
+     - Order processing PAUSES until admin approval
+     - Admin reviews via `/admin/reviews` dashboard
+     - On approval: Printify order created with approved image
+   - **When Disabled**: Automatic progression to Printify
 
-4. **Customer Communication**
+5. **Printify Order Creation** (Enhanced with Mirror Sides)
+   - **Product Creation:** Dynamic product creation with correct variant IDs
+     - Framed Canvas (Blueprint 944): 111829 (12x18), 111837 (16x24), 88295 (20x30)
+     - Stretched Canvas (Blueprint 1159): 91644 (12x18), 91647 (16x24), 91650 (20x30)
+   - **Mirror Sides Configuration:** `print_on_side: "mirror"` and `print_on_sides: true`
+   - **Professional Canvas Finish:** Image mirrored on both sides for premium quality
+   - **Shipping Integration:** Address validation and method selection
+   - **Order Submission:** Automated submission to Printify with enhanced error handling
+   - **Real Orders Created:** Successfully tested with orders 68d78232029e3c12650ddf2b, 68d7862be77507206d0ab2fc
+
+6. **Customer Communication**
    - Order confirmation email sent immediately
    - Order details, tracking info, and timeline provided
+   - Status updates throughout fulfillment process
 
 #### Success Metrics
 - **Primary:** Order Processing Success Rate (>95%)
-- **Secondary:** Upscaling success rate, Printify order creation rate
-- **Customer Experience:** Email delivery rate, processing time
+- **Secondary:** Upscaling success rate, admin approval time, Printify order creation rate
+- **Customer Experience:** Email delivery rate, processing time, shipping address accuracy
 
 ---
 
@@ -265,10 +295,12 @@ User selects product → Configures size/quantity → Stripe checkout → Automa
 
 ### End-to-End Timeline
 - **Upload to Generation:** 2-5 minutes
+- **Admin Approval (if enabled):** Variable (minutes to hours)
 - **Generation to Purchase Decision:** Variable (immediate to days)
 - **Purchase Configuration:** 1-3 minutes (size/quantity selection)
 - **Stripe Checkout:** 2-5 minutes (payment + shipping info)
 - **Purchase to Order Processing:** 2-10 minutes (automated)
+- **High-res Admin Approval (if enabled):** Variable (minutes to hours)
 - **Order Processing to Fulfillment:** 3-7 business days
 - **Total Customer Journey:** 3-10 business days from upload to delivery
 
@@ -279,12 +311,58 @@ User selects product → Configures size/quantity → Stripe checkout → Automa
 - **Real-time Pricing:** Updates based on size and quantity selection
 - **Professional UX:** Loading states, error handling, shipping expectations
 
+### Quality Control System (PawPop Admin Approval)
+- **Environment Toggle:** `ENABLE_HUMAN_REVIEW=true/false`
+- **Two Review Checkpoints:**
+  1. **Artwork Proof Review:** After generation, before customer notification
+  2. **High-res File Review:** After upscaling, before Printify order creation
+- **Admin Dashboard:** `/admin/reviews` with comprehensive review interface
+- **Email Notifications:** Automatic alerts to pawpopart@gmail.com
+- **Manual Upload Capability:** Admin can replace images if needed
+- **Audit Trail:** Complete review history and status tracking
+
+### Order Management System
+- **Robust Status Flow:** pending → paid → processing → shipped → delivered
+- **Failure Handling:** Automatic cancellation of expired/failed sessions
+- **Stale Order Cleanup:** Automated cleanup of abandoned orders (24h+)
+- **Shipping Address Storage:** Proper JSONB storage with Stripe integration
+- **Comprehensive Logging:** Full audit trail and error tracking
+- **Monitoring API:** `/api/orders/cleanup` for maintenance and monitoring
+
 ### Critical Success Factors
 1. **Technical Reliability:** >95% uptime across all systems
-2. **Generation Quality:** Consistent artwork output meeting expectations
-3. **Payment Processing:** Seamless Stripe integration with error handling
-4. **Order Fulfillment:** Reliable Printify partnership and shipping
-5. **Customer Communication:** Timely, informative email notifications
+2. **Generation Quality:** Consistent artwork output with optional manual review
+3. **Payment Processing:** Enhanced Stripe integration with proper error handling
+4. **Order Management:** Robust status tracking and cleanup mechanisms
+5. **Quality Control:** Optional human-in-the-loop review system
+6. **Order Fulfillment:** Reliable Printify partnership with mirror sides configuration
+7. **Professional Canvas Printing:** Mirror sides enabled for premium quality finish
+8. **Customer Communication:** Timely, informative email notifications
+9. **System Monitoring:** Comprehensive logging and automated maintenance
+
+---
+
+## 🛠️ SYSTEM ADMINISTRATION
+
+### Manual Approval System
+- **Admin Dashboard:** http://localhost:3000/admin/reviews
+- **Environment Check:** http://localhost:3000/api/test/env-check
+- **Configuration:** Set `ENABLE_HUMAN_REVIEW=true` for quality control
+- **Email Setup:** Admin notifications sent to pawpopart@gmail.com
+
+### Order Management
+- **Cleanup Endpoint:** `POST /api/orders/cleanup` (daily recommended)
+- **Monitoring:** `GET /api/orders/cleanup?hours=24` to check stale orders
+- **Status Tracking:** Complete order history in Supabase database
+- **Error Recovery:** Automatic retry logic and fallback mechanisms
+- **Detailed Documentation:** See `/docs/backend/ORDER_FULFILLMENT_SYSTEM.md`
+
+### Production Deployment
+- **Environment Variables:** All required variables documented in `.env.example`
+- **Database Migrations:** Applied and tested with rollback capabilities
+- **Webhook Configuration:** Enhanced handlers for all Stripe events
+- **Monitoring Setup:** Comprehensive logging and error tracking
+- **Quality Control:** Optional manual approval system ready for activation
 
 ---
 

@@ -58,3 +58,19 @@ yarn-error.log*
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Development and testing files
+scripts/test-*.js
+scripts/debug-*.js
+scripts/check-*.js
+scripts/apply-*.js
+scripts/comprehensive-*.js
+scripts/manual-*.js
+scripts/simulate-*.js
+scripts/get-*.js
+scripts/find-*.js
+analyze-*.js
+debug-*.js
+test-*.js
+final-*.js
+check-*.js
