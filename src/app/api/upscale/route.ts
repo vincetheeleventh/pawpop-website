@@ -66,6 +66,9 @@ export async function POST(req: NextRequest) {
 
     console.log(`✅ Upscaling completed for artwork ${artworkId}`);
 
+    // Update artwork with upscaled image URL and mark as completed
+    await updateArtworkUpscaleStatus(artworkId, 'completed', result.data.image.url);
+
     return NextResponse.json({
       success: true,
       upscaled_image_url: result.data.image.url,

@@ -204,6 +204,10 @@ async function triggerUpscaling(artworkId: string): Promise<string> {
 
 // Process a completed Stripe checkout session
 export async function processOrder({ session, metadata }: ProcessOrderParams): Promise<void> {
+  console.log('🚀 processOrder called for session:', session.id);
+  console.log('📋 Product type:', metadata.productType);
+  console.log('📋 Customer:', metadata.customerName);
+  
   const { productType, imageUrl, size, customerName, petName, frameUpgrade } = metadata;
 
   // Update order status to paid in database
@@ -253,10 +257,21 @@ export async function processOrder({ session, metadata }: ProcessOrderParams): P
       }
 
       // Create admin review for high-res file (if enabled)
+      console.log('🔍 Checking if admin review should be created...');
       try {
         const { createAdminReview, isHumanReviewEnabled } = await import('./admin-review');
         
-        if (isHumanReviewEnabled()) {
+        const reviewEnabled = isHumanReviewEnabled();
+        console.log(`📋 Manual review enabled: ${reviewEnabled}`);
+        console.log(`📋 Admin email configured: ${process.env.ADMIN_EMAIL || 'NOT SET'}`);
+        
+        if (reviewEnabled) {
+          console.log('🎯 Creating admin review for high-res file...');
+          console.log(`📋 Artwork ID: ${order.artwork_id}`);
+          console.log(`📋 Image URL: ${finalImageUrl}`);
+          console.log(`📋 Customer: ${customerName}`);
+          console.log(`📋 Email: ${session.customer_details?.email || 'NOT PROVIDED'}`);
+          
           await createAdminReview({
             artwork_id: order.artwork_id,
             review_type: 'highres_file',
@@ -278,9 +293,12 @@ export async function processOrder({ session, metadata }: ProcessOrderParams): P
           // Printify order will be created when admin approves the high-res file
           console.log('🛑 Order processing paused - waiting for high-res file approval');
           return;
+        } else {
+          console.log('ℹ️  Manual review disabled - continuing with automatic Printify order creation');
         }
       } catch (reviewError) {
-        console.error('Failed to create high-res file review:', reviewError);
+        console.error('❌ Failed to create high-res file review:', reviewError);
+        console.error('Review error details:', reviewError instanceof Error ? reviewError.stack : String(reviewError));
         // Don't fail the order if review creation fails - continue with Printify order
       }
 
