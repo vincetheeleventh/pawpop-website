@@ -831,15 +831,22 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
       generateArtwork().then(async () => {
         console.log('✅ Generation completed successfully');
         
-        // Check if human review is enabled
-        const { isHumanReviewEnabled } = await import('@/lib/admin-review');
-        const humanReviewEnabled = isHumanReviewEnabled();
-        
-        console.log('🔍 Manual approval check:', {
-          humanReviewEnabled,
-          envVar: typeof window !== 'undefined' ? 'client-side' : process.env.ENABLE_HUMAN_REVIEW,
-          accessToken: access_token
-        });
+        // Check if human review is enabled via API endpoint
+        let humanReviewEnabled = false;
+        try {
+          const reviewStatusResponse = await fetch('/api/admin/review-status');
+          const reviewStatusData = await reviewStatusResponse.json();
+          humanReviewEnabled = reviewStatusData.humanReviewEnabled || false;
+          
+          console.log('🔍 Manual approval check:', {
+            humanReviewEnabled,
+            apiResponse: reviewStatusData,
+            accessToken: access_token
+          });
+        } catch (error) {
+          console.error('❌ Failed to check review status, defaulting to disabled:', error);
+          humanReviewEnabled = false;
+        }
         
         if (humanReviewEnabled) {
           // Human review is enabled - don't redirect, just show completion message
