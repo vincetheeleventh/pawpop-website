@@ -90,13 +90,13 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
     };
   }, [formData.petMomPhoto, formData.petPhoto]);
 
-  // Track modal opening
+  // Track modal opening (only track once when modal opens)
   useEffect(() => {
     if (isOpen) {
       trackFunnel.uploadModalOpened();
       trackInteraction.modalOpen('Upload Modal');
     }
-  }, [isOpen, trackFunnel, trackInteraction]);
+  }, [isOpen]); // Remove trackFunnel and trackInteraction from deps to prevent infinite loops
 
   if (!isOpen) return null;
 
@@ -760,15 +760,25 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                     trackArtworkGeneration(artwork.id, 15); // $15 CAD qualified lead value
                   }
 
-                  // Track Plausible completion
+                  // Check if manual approval is enabled before tracking completion
                   const generationTime = Math.round((Date.now() - startTime) / 1000);
-                  trackFunnel.artworkCompleted(generationTime);
-                  trackInteraction.formComplete('Upload Form', generationTime);
-                  trackPerformance.imageGeneration('Full Artwork Pipeline', generationTime, true);
-
-                  // Send completion email with the generated image (only if human review is disabled)
+                  
                   try {
                     const { isHumanReviewEnabled } = await import('@/lib/admin-review');
+                    
+                    if (isHumanReviewEnabled()) {
+                      // Track generation complete but pending approval
+                      trackFunnel.artworkGenerationStarted(); // Use generation started instead of completed
+                      trackInteraction.formComplete('Upload Form - Pending Approval', generationTime);
+                      trackPerformance.imageGeneration('Full Artwork Pipeline - Pending Approval', generationTime, true);
+                    } else {
+                      // Track full completion for automated flow
+                      trackFunnel.artworkCompleted(generationTime);
+                      trackInteraction.formComplete('Upload Form', generationTime);
+                      trackPerformance.imageGeneration('Full Artwork Pipeline', generationTime, true);
+                    }
+
+                  // Send completion email with the generated image (only if human review is disabled)
                     if (!isHumanReviewEnabled()) {
                       await fetch('/api/email/masterpiece-ready', {
                         method: 'POST',

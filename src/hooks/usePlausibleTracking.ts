@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 import { 
   trackEvent, 
@@ -20,12 +20,17 @@ import {
 export function usePlausibleTracking() {
   const pathname = usePathname();
 
-  // Track page changes
+  // Track page changes (only once per pathname)
   useEffect(() => {
-    trackEvent('Page View', {
-      path: pathname,
-      timestamp: new Date().toISOString()
-    });
+    // Use a timeout to avoid tracking during rapid navigation
+    const timeoutId = setTimeout(() => {
+      trackEvent('Page View', {
+        path: pathname,
+        timestamp: new Date().toISOString()
+      });
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
   }, [pathname]);
 
   // Funnel tracking functions
@@ -225,6 +230,12 @@ export function usePlausibleTracking() {
     }
   }), [pathname]);
 
+  // Memoize the returned objects to prevent infinite re-renders
+  const memoizedTrackFunnel = useMemo(() => trackFunnel(), [pathname]);
+  const memoizedTrackInteraction = useMemo(() => trackInteraction(), [pathname]);
+  const memoizedTrackPerformance = useMemo(() => trackPerformance(), [pathname]);
+  const memoizedTrackABTest = useMemo(() => trackABTest(), [pathname]);
+
   return {
     // Core tracking functions
     trackEvent,
@@ -232,7 +243,7 @@ export function usePlausibleTracking() {
     trackConversion,
     
     // Funnel tracking
-    trackFunnel: trackFunnel(),
+    trackFunnel: memoizedTrackFunnel,
     
     // Price variant tracking
     trackPriceExposure,
@@ -240,13 +251,13 @@ export function usePlausibleTracking() {
     getPriceConfig,
     
     // Interaction tracking
-    trackInteraction: trackInteraction(),
+    trackInteraction: memoizedTrackInteraction,
     
     // Performance tracking
-    trackPerformance: trackPerformance(),
+    trackPerformance: memoizedTrackPerformance,
     
     // A/B test tracking
-    trackABTest: trackABTest(),
+    trackABTest: memoizedTrackABTest,
     
     // Current page
     currentPath: pathname
