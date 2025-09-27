@@ -4,6 +4,28 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Upload, ArrowRight, ArrowLeft, Check, Camera, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import usePlausibleTracking from '@/hooks/usePlausibleTracking';
+import { 
+  validateUploadFile, 
+  ensureFileObject, 
+  withRetry, 
+  withTimeout, 
+  UploadError,
+  checkBrowserSupport,
+  validateFileContent,
+  type ValidationResult 
+} from '@/lib/upload-validation';
+import {
+  getMemoryInfo,
+  falAiCircuitBreaker,
+  requestDeduplicator,
+  uploadQueue,
+  verifyImageIntegrity,
+  deepSecurityScan,
+  getBrowserInfo,
+  uploadProgressTracker,
+  getSystemHealth,
+  emergencyCleanup
+} from '@/lib/upload-resilience';
 
 interface UploadModalProps {
   isOpen: boolean;
@@ -11,8 +33,8 @@ interface UploadModalProps {
 }
 
 interface FormData {
-  petMomPhoto: File | null;
-  petPhoto: File | null;
+  petMomPhoto: File | Blob | null;
+  petPhoto: File | Blob | null;
   name: string;
   email: string;
 }
@@ -92,8 +114,71 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
 
   const handleFileUpload = async (file: File, type: 'petMom' | 'pet') => {
     let processedFile = file;
+    const uploadId = `${type}-${Date.now()}`;
     
-    // Enhanced logging for iPhone camera uploads
+    try {
+      // Memory check before processing
+      const memoryInfo = getMemoryInfo();
+      if (memoryInfo.isLowMemory) {
+        console.warn('⚠️ Low memory detected:', memoryInfo);
+        setError(`Your device is low on memory (${memoryInfo.usagePercent}% used). Please close other tabs and try again.`);
+        return;
+      }
+      
+      // Browser support and optimization check
+      const browserSupport = checkBrowserSupport();
+      if (!browserSupport.supported) {
+        setError(`Your browser doesn't support required features: ${browserSupport.missing.join(', ')}. Please use a modern browser.`);
+        return;
+      }
+      
+      const browserInfo = getBrowserInfo();
+      console.log('🌐 Browser info:', browserInfo);
+      
+      // Enhanced validation with our new validation library
+      const validation = validateUploadFile(file, {
+        maxSizeMB: 50,
+        allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'],
+        requireName: true
+      });
+      
+      if (!validation.isValid) {
+        setError(validation.error!);
+        return;
+      }
+      
+      // Show warnings if any
+      if (validation.warnings) {
+        console.warn('⚠️ Upload warnings:', validation.warnings);
+        validation.warnings.forEach(warning => console.warn(`⚠️ ${warning}`));
+      }
+      
+      // Deep security scan
+      const isSecure = await deepSecurityScan(file);
+      if (!isSecure) {
+        setError('The uploaded file failed security validation. Please try a different image.');
+        return;
+      }
+      
+      // Security validation - check file content
+      try {
+        const isValidContent = await validateFileContent(file);
+        if (!isValidContent) {
+          setError('The uploaded file doesn\'t appear to be a valid image. Please try a different file.');
+          return;
+        }
+      } catch (contentError) {
+        console.warn('Content validation failed, proceeding anyway:', contentError);
+      }
+      
+      // Track upload progress
+      uploadProgressTracker.track(uploadId, (progress) => {
+        console.log(`📊 Upload progress ${uploadId}: ${progress}%`);
+      });
+      
+      uploadProgressTracker.updateProgress(uploadId, 10);
+      
+      // Enhanced logging for iPhone camera uploads
     const fileSizeMB = file.size / (1024 * 1024);
     console.log('📱 File upload details:', {
       name: file.name,
@@ -103,7 +188,8 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
       lastModified: file.lastModified,
       isHeicByName: file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif'),
       isHeicByType: file.type === 'image/heic' || file.type === 'image/heif',
-      uploadType: type
+      uploadType: type,
+      validationResult: validation
     });
     
     // Check for extremely large files (>50MB) that might cause issues
@@ -237,7 +323,15 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
           console.warn('⚠️ Compressed file very small, may have quality issues');
         }
         
-        processedFile = compressedFile;
+        // Verify image integrity after compression
+        uploadProgressTracker.updateProgress(uploadId, 80);
+        const isIntegrityValid = await verifyImageIntegrity(compressedFile, file);
+        if (!isIntegrityValid) {
+          console.warn('⚠️ Compressed image failed integrity check, using original');
+          processedFile = file; // Fall back to original
+        } else {
+          processedFile = compressedFile;
+        }
         
       } catch (compressionError) {
         console.error('❌ Image compression failed:', {
@@ -273,8 +367,27 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
       converted_from_heic: file.type === 'image/heic' || file.type === 'image/heif'
     });
 
-    // Scroll to bottom to reveal next button after upload
-    scrollToBottom();
+      // Scroll to bottom to reveal next button after upload
+      scrollToBottom();
+      
+      // Mark upload as complete
+      uploadProgressTracker.updateProgress(uploadId, 100);
+      uploadProgressTracker.complete(uploadId);
+      
+    } catch (error) {
+      console.error('❌ File upload failed:', error);
+      setError(error instanceof Error ? error.message : 'File upload failed');
+      
+      // Clean up progress tracking
+      uploadProgressTracker.complete(uploadId);
+      
+      // Emergency cleanup if memory issues
+      const memoryInfo = getMemoryInfo();
+      if (memoryInfo.isLowMemory) {
+        console.warn('🚨 Performing emergency cleanup due to memory issues');
+        emergencyCleanup();
+      }
+    }
   };
 
   const handleDragOver = (e: React.DragEvent, type: 'petMom' | 'pet') => {
@@ -405,18 +518,16 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
           let petPhotoUrl = '';
           
           try {
-            // Upload pet mom photo
-            const isPetMomFileValid = formData.petMomPhoto && 
-              (formData.petMomPhoto instanceof File || 
-               (typeof formData.petMomPhoto === 'object' && 
-                (formData.petMomPhoto as any).constructor?.name === 'File' &&
-                'name' in formData.petMomPhoto && 
-                'size' in formData.petMomPhoto));
+            // Upload pet mom photo with enhanced validation
+            const petMomValidation = validateUploadFile(formData.petMomPhoto);
             
-            if (isPetMomFileValid) {
+            if (petMomValidation.isValid) {
               console.log('📤 Uploading pet mom photo for artwork:', artwork.id);
               const petMomFormData = new FormData();
-              petMomFormData.append('image', formData.petMomPhoto as File);
+              
+              // Ensure proper File object for FormData
+              const imageToUpload = ensureFileObject(formData.petMomPhoto!, 'pet-mom-photo.jpg');
+              petMomFormData.append('image', imageToUpload);
               petMomFormData.append('artworkId', artwork.id);
               petMomFormData.append('imageType', 'pet_mom_photo');
               
@@ -435,18 +546,16 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
               }
             }
             
-            // Upload pet photo
-            const isPetFileValid = formData.petPhoto && 
-              (formData.petPhoto instanceof File || 
-               (typeof formData.petPhoto === 'object' && 
-                (formData.petPhoto as any).constructor?.name === 'File' &&
-                'name' in formData.petPhoto && 
-                'size' in formData.petPhoto));
+            // Upload pet photo with enhanced validation
+            const petValidation = validateUploadFile(formData.petPhoto);
             
-            if (isPetFileValid) {
+            if (petValidation.isValid) {
               console.log('📤 Uploading pet photo for artwork:', artwork.id);
               const petFormData = new FormData();
-              petFormData.append('image', formData.petPhoto as File);
+              
+              // Ensure proper File object for FormData
+              const imageToUpload = ensureFileObject(formData.petPhoto!, 'pet-photo.jpg');
+              petFormData.append('image', imageToUpload);
               petFormData.append('artworkId', artwork.id);
               petFormData.append('imageType', 'pet_photo');
               
@@ -507,45 +616,52 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
 
           console.log('🎨 Starting MonaLisa generation for artwork:', artwork.id);
           
-          // Validate that we have a valid pet mom photo file
-          console.log('🔍 Validating pet mom photo:', {
-            hasPetMomPhoto: !!formData.petMomPhoto,
-            petMomPhotoType: typeof formData.petMomPhoto,
-            isFile: formData.petMomPhoto ? formData.petMomPhoto instanceof File : false,
-            fileName: formData.petMomPhoto?.name,
-            fileSize: formData.petMomPhoto?.size,
-            isClientSide: typeof window !== 'undefined',
-            constructor: formData.petMomPhoto?.constructor?.name
+          // Enhanced validation using our validation library
+          console.log('🔍 Validating pet mom photo for generation...');
+          
+          const validation = validateUploadFile(formData.petMomPhoto, {
+            maxSizeMB: 50,
+            allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'],
+            requireName: false // Don't require name for processed files
           });
           
-          // More robust validation for production environment
-          const isValidFile = formData.petMomPhoto && 
-            (formData.petMomPhoto instanceof File || 
-             (typeof formData.petMomPhoto === 'object' && 
-              (formData.petMomPhoto as any).constructor?.name === 'File' &&
-              'name' in formData.petMomPhoto && 
-              'size' in formData.petMomPhoto));
-          
-          if (!isValidFile) {
-            console.error('❌ Pet mom photo validation failed:', {
-              petMomPhoto: formData.petMomPhoto,
-              type: typeof formData.petMomPhoto,
-              isFile: formData.petMomPhoto ? formData.petMomPhoto instanceof File : false,
-              constructor: formData.petMomPhoto?.constructor?.name,
-              hasName: formData.petMomPhoto && 'name' in formData.petMomPhoto,
-              hasSize: formData.petMomPhoto && 'size' in formData.petMomPhoto
-            });
-            throw new Error('Pet mom photo is required for MonaLisa generation');
+          if (!validation.isValid) {
+            console.error('❌ Pet mom photo validation failed:', validation.error);
+            throw new UploadError(
+              validation.error!,
+              'VALIDATION_FAILED',
+              false,
+              'Pet mom photo is required for artwork generation. Please upload a valid image.'
+            );
           }
+          
+          console.log('✅ Pet mom photo validation passed:', validation.fileInfo);
           
           // Step 3: Call MonaLisa Maker API with FormData
           const monaLisaFormData = new FormData();
-          monaLisaFormData.append('image', formData.petMomPhoto as File);
+          
+          // Ensure we have a proper File object for FormData
+          const imageToUpload = ensureFileObject(formData.petMomPhoto!, 'pet-mom-photo.jpg');
+          monaLisaFormData.append('image', imageToUpload);
           monaLisaFormData.append('artworkId', artwork.id.toString());
           
-          const monaLisaResponse = await fetch('/api/monalisa-maker', {
-            method: 'POST',
-            body: monaLisaFormData
+          // Call MonaLisa API with circuit breaker, queue management, and deduplication
+          const artworkKey = `monalisa-${artwork.id}`;
+          const monaLisaResponse = await requestDeduplicator.deduplicate(artworkKey, async () => {
+            return uploadQueue.add(`monalisa-${artwork.id}`, async () => {
+              return falAiCircuitBreaker.execute(async () => {
+                return withRetry(async () => {
+                  return withTimeout(
+                    fetch('/api/monalisa-maker', {
+                      method: 'POST',
+                      body: monaLisaFormData
+                    }),
+                    30000, // 30 second timeout
+                    'MonaLisa generation timed out'
+                  );
+                }, 2); // Retry up to 2 times
+              });
+            });
           });
 
           if (monaLisaResponse.ok) {
@@ -580,18 +696,19 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
               petIntegrationFormData.append('portrait', portraitFile);
               petIntegrationFormData.append('artworkId', artwork.id.toString());
               
-              // Add the pet image
-              if (formData.petPhoto instanceof File) {
-                petIntegrationFormData.append('pet', formData.petPhoto);
-              } else if (formData.petPhoto) {
-                // If it's a URL, fetch and convert to File
-                const petResponse = await fetch(formData.petPhoto);
-                const petBlob = await petResponse.blob();
-                const petFile = new File([petBlob], 'pet-photo.jpg', { type: 'image/jpeg' });
-                petIntegrationFormData.append('pet', petFile);
-              } else {
-                throw new Error('Pet photo is required for pet integration');
+              // Add the pet image with enhanced validation
+              const petValidation = validateUploadFile(formData.petPhoto);
+              if (!petValidation.isValid) {
+                throw new UploadError(
+                  petValidation.error!,
+                  'PET_PHOTO_INVALID',
+                  false,
+                  'Pet photo is required for artwork generation'
+                );
               }
+              
+              const petFile = ensureFileObject(formData.petPhoto!, 'pet-photo.jpg');
+              petIntegrationFormData.append('pet', petFile);
               
               const petIntegrationResponse = await fetch('/api/pet-integration', {
                 method: 'POST',
