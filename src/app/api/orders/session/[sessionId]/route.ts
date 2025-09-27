@@ -17,13 +17,65 @@ export async function GET(
     }
 
     // Get order details from database
-    const order = await getOrderByStripeSession(sessionId);
+    let order = await getOrderByStripeSession(sessionId);
 
     if (!order) {
-      return NextResponse.json(
-        { error: 'Order not found' },
-        { status: 404 }
-      );
+      // FAILURE CONDITION: Order not found - could be webhook failure
+      console.log(`⚠️ Order not found for session ${sessionId} - checking Stripe directly`);
+      
+      try {
+        // Fallback: Check Stripe session directly and create order if payment succeeded
+        const { stripe } = await import('@/lib/stripe');
+        if (stripe) {
+          const stripeSession = await stripe.checkout.sessions.retrieve(sessionId);
+          
+          if (stripeSession.payment_status === 'paid') {
+            console.log('💳 Payment confirmed in Stripe but order missing - creating emergency order');
+            
+            // Parse metadata and create order
+            const { parseOrderMetadata } = await import('@/lib/order-processing');
+            const { createOrder } = await import('@/lib/supabase-orders');
+            
+            const metadata = parseOrderMetadata(stripeSession);
+            if (metadata) {
+              const emergencyOrder = await createOrder({
+                artwork_id: stripeSession.metadata?.artworkId || 'emergency',
+                stripe_session_id: sessionId,
+                product_type: metadata.productType,
+                product_size: metadata.size,
+                price_cents: stripeSession.amount_total || 0,
+                customer_email: stripeSession.customer_details?.email || 'unknown@example.com',
+                customer_name: stripeSession.customer_details?.name || metadata.customerName || 'Emergency Customer'
+              });
+              
+              console.log('🚨 Emergency order created:', emergencyOrder.id);
+              
+              // Update order status to paid
+              const { updateOrderAfterPayment } = await import('@/lib/supabase-orders');
+              await updateOrderAfterPayment(
+                sessionId,
+                stripeSession.payment_intent as string,
+                (stripeSession as any).shipping_details
+              );
+              
+              // Retry getting the order
+              const newOrder = await getOrderByStripeSession(sessionId);
+              if (newOrder) {
+                order = newOrder;
+              }
+            }
+          }
+        }
+      } catch (emergencyError) {
+        console.error('❌ Emergency order creation failed:', emergencyError);
+      }
+      
+      if (!order) {
+        return NextResponse.json(
+          { error: 'Order not found' },
+          { status: 404 }
+        );
+      }
     }
 
     // Generate a simple order number from the database ID

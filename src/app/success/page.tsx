@@ -35,7 +35,10 @@ function SuccessContent() {
   const sessionId = searchParams.get('session_id');
   
   useEffect(() => {
-    const fetchOrderData = async () => {
+    const fetchOrderData = async (retryCount = 0) => {
+      const maxRetries = 5;
+      const retryDelay = Math.min(2000 * Math.pow(1.5, retryCount), 10000); // Exponential backoff, max 10s
+      
       if (!sessionId) {
         setError('No session ID provided');
         setLoading(false);
@@ -45,10 +48,22 @@ function SuccessContent() {
       try {
         console.log('Payment successful for session:', sessionId);
         
-        // Fetch order details from our API
-        const response = await fetch(`/api/orders/session/${sessionId}`);
+        // Fetch order details from our API with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+        
+        const response = await fetch(`/api/orders/session/${sessionId}`, {
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
         
         if (!response.ok) {
+          if (response.status === 404 && retryCount < maxRetries) {
+            // Order might not be created yet by webhook, retry after delay
+            console.log(`Order not found, retrying in ${retryDelay}ms... (attempt ${retryCount + 1}/${maxRetries})`);
+            setTimeout(() => fetchOrderData(retryCount + 1), retryDelay);
+            return;
+          }
           throw new Error('Failed to fetch order details');
         }
         
@@ -94,7 +109,33 @@ function SuccessContent() {
         
       } catch (err) {
         console.error('Error fetching order data:', err);
-        setError('Failed to load order details');
+        
+        // FAILURE CONDITION: Handle different error types
+        if (err instanceof Error) {
+          if (err.name === 'AbortError') {
+            // Timeout occurred
+            if (retryCount < maxRetries) {
+              console.log(`Request timeout, retrying in ${retryDelay}ms... (attempt ${retryCount + 1}/${maxRetries})`);
+              setTimeout(() => fetchOrderData(retryCount + 1), retryDelay);
+              return;
+            } else {
+              setError('Request timeout - please refresh the page or contact support');
+            }
+          } else if (err.message.includes('fetch')) {
+            // Network error
+            if (retryCount < maxRetries) {
+              console.log(`Network error, retrying in ${retryDelay}ms... (attempt ${retryCount + 1}/${maxRetries})`);
+              setTimeout(() => fetchOrderData(retryCount + 1), retryDelay);
+              return;
+            } else {
+              setError('Network error - please check your connection and refresh');
+            }
+          } else {
+            setError('Failed to load order details');
+          }
+        } else {
+          setError('Failed to load order details');
+        }
       } finally {
         setLoading(false);
       }
@@ -109,6 +150,7 @@ function SuccessContent() {
         <div className="max-w-3xl mx-auto text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-cyclamen mx-auto"></div>
           <p className="mt-4 text-lg text-text-primary">Loading your order details...</p>
+          <p className="mt-2 text-sm text-text-primary/70">Processing your payment and creating your order...</p>
         </div>
       </div>
     );

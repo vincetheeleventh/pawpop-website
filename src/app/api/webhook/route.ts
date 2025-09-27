@@ -4,6 +4,7 @@ import { stripe } from '@/lib/stripe';
 import { processOrder, parseOrderMetadata, handleOrderStatusUpdate } from '@/lib/order-processing';
 import { sendOrderConfirmationEmail } from '@/lib/email';
 import { trackStripeWebhook } from '@/lib/monitoring';
+import { getOrderByStripeSession, updateOrderAfterPayment } from '@/lib/supabase-orders';
 
 export async function POST(req: Request) {
   const startTime = Date.now();
@@ -67,6 +68,69 @@ export async function POST(req: Request) {
           } catch (retrieveError) {
             console.error('❌ Failed to retrieve full session with shipping details:', retrieveError);
             // Continue with original session - shipping details will be null but order can still process
+          }
+        }
+
+        // Ensure order exists in database (create if it doesn't exist)
+        let existingOrder: any = await getOrderByStripeSession(session.id);
+        if (!existingOrder) {
+          console.log('📝 Order not found in database, creating from webhook...');
+          const { createOrder } = await import('@/lib/supabase-orders');
+          
+          try {
+            const newOrder = await createOrder({
+              artwork_id: session.metadata?.artworkId || 'unknown',
+              stripe_session_id: session.id,
+              product_type: metadata.productType,
+              product_size: metadata.size,
+              price_cents: session.amount_total || 0,
+              customer_email: session.customer_details?.email || 'unknown@example.com',
+              customer_name: session.customer_details?.name || metadata.customerName || 'Unknown Customer'
+            });
+            console.log('✅ Order created from webhook:', newOrder.id);
+            existingOrder = newOrder;
+          } catch (createError) {
+            console.error('❌ Failed to create order from webhook:', createError);
+            
+            // FAILURE CONDITION: Database connection failure
+            if (createError instanceof Error && 
+                (createError.message.includes('connection') || 
+                 createError.message.includes('timeout') ||
+                 createError.message.includes('ECONNREFUSED'))) {
+              console.log('🔄 Database connection issue detected, scheduling retry...');
+              
+              // Schedule retry via monitoring system
+              try {
+                const { trackStripeWebhook } = await import('@/lib/monitoring');
+                await trackStripeWebhook({
+                  eventId: event.id,
+                  eventType: 'order_creation_retry_needed',
+                  status: 'failed',
+                  processingTime: Date.now() - startTime,
+                  errorMessage: `Database connection failure for session ${session.id}`
+                });
+              } catch (monitoringError) {
+                console.error('Failed to track retry need:', monitoringError);
+              }
+            }
+            
+            // Continue processing even if order creation fails
+          }
+        } else {
+          console.log('✅ Order already exists in database:', existingOrder.id);
+        }
+
+        // Update order status to paid and add shipping address
+        if (existingOrder) {
+          try {
+            await updateOrderAfterPayment(
+              session.id,
+              session.payment_intent as string,
+              (fullSession as any).shipping_details
+            );
+            console.log('✅ Order updated with payment details');
+          } catch (updateError) {
+            console.error('❌ Failed to update order after payment:', updateError);
           }
         }
 
