@@ -467,23 +467,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
       
       const { artwork, access_token } = await createResponse.json();
 
-      // Send initial confirmation email via API
-      try {
-        const artworkUrl = `${window.location.origin}/artwork/${access_token}`;
-        await fetch('/api/email/masterpiece-creating', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            customerName: formData.name,
-            customerEmail: formData.email,
-            petName: '', // Pet name not collected in this form
-            artworkUrl
-          })
-        });
-      } catch (emailError) {
-        console.error('Failed to send confirmation email:', emailError);
-        // Don't fail the process if email fails
-      }
+      // Note: Confirmation email will be sent after generation pipeline starts successfully
       
       // Track photo upload conversion
       if (typeof window !== 'undefined') {
@@ -494,8 +478,8 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
       // Show immediate confirmation with appropriate message based on review mode
       const { isHumanReviewEnabled } = await import('@/lib/admin-review');
       const completionMessage = isHumanReviewEnabled() 
-        ? 'Thank you! We\'ve received your photos and started creating your masterpiece. We\'ll create your artwork and email you when it\'s ready!'
-        : 'Thank you! We\'ve received your photos and started creating your masterpiece. Check your email for confirmation!';
+        ? 'Thank you! We\'ve received your photos and are starting your masterpiece creation. You\'ll receive an email confirmation once generation begins, and we\'ll email you when it\'s ready!'
+        : 'Thank you! We\'ve received your photos and are starting your masterpiece creation. You\'ll receive an email confirmation once generation begins!';
       
       setProcessing({ step: 'complete', message: completionMessage, progress: 100 });
       
@@ -670,6 +654,25 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
 
             if (monaLisaImageUrl) {
               console.log('✅ MonaLisa generation successful, proceeding to pet integration...');
+              
+              // Send confirmation email now that generation has actually started successfully
+              try {
+                const artworkUrl = `${window.location.origin}/artwork/${access_token}`;
+                await fetch('/api/email/masterpiece-creating', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    customerName: formData.name,
+                    customerEmail: formData.email,
+                    petName: '', // Pet name not collected in this form
+                    artworkUrl
+                  })
+                });
+                console.log('✅ Confirmation email sent successfully');
+              } catch (emailError) {
+                console.error('⚠️ Failed to send confirmation email:', emailError);
+                // Don't fail the process if email fails
+              }
               
               // Step 3: Update with MonaLisa result and move directly to pet integration
               await fetch('/api/artwork/update', {
