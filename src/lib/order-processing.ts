@@ -16,7 +16,8 @@ import {
   updateOrderWithPrintify,
   updateOrderFromPrintify,
   getOrderByStripeSession,
-  addOrderStatusHistory
+  addOrderStatusHistory,
+  updateOrderStatus
 } from './supabase-orders';
 import {
   getArtworkById,
@@ -206,10 +207,20 @@ export async function processOrder({ session, metadata }: ProcessOrderParams): P
   const { productType, imageUrl, size, customerName, petName, frameUpgrade } = metadata;
 
   // Update order status to paid in database
+  // Try both possible shipping property names with fallback
+  const shippingData = (session as any).shipping_details || (session as any).shipping || null;
+  console.log('🚚 processOrder - Shipping data check:', {
+    sessionId: session.id,
+    hasShippingDetails: !!(session as any).shipping_details,
+    hasShipping: !!(session as any).shipping,
+    usingShippingData: !!shippingData,
+    shippingDataKeys: shippingData ? Object.keys(shippingData) : null
+  });
+  
   await updateOrderAfterPayment(
     session.id,
     session.payment_intent as string,
-    (session as any).shipping_details
+    shippingData
   );
 
   // Add status history
@@ -243,23 +254,34 @@ export async function processOrder({ session, metadata }: ProcessOrderParams): P
 
       // Create admin review for high-res file (if enabled)
       try {
-        const { createAdminReview } = await import('./admin-review');
-        await createAdminReview({
-          artwork_id: order.artwork_id,
-          review_type: 'highres_file',
-          image_url: finalImageUrl,
-          customer_name: customerName,
-          customer_email: session.customer_details?.email || '',
-          pet_name: petName
-        });
-        console.log('✅ Admin review created for high-res file');
+        const { createAdminReview, isHumanReviewEnabled } = await import('./admin-review');
         
-        if (order) {
-          await addOrderStatusHistory(order.id, 'processing', 'High-res file submitted for admin review');
+        if (isHumanReviewEnabled()) {
+          await createAdminReview({
+            artwork_id: order.artwork_id,
+            review_type: 'highres_file',
+            image_url: finalImageUrl,
+            customer_name: customerName,
+            customer_email: session.customer_details?.email || '',
+            pet_name: petName
+          });
+          console.log('✅ Admin review created for high-res file - STOPPING order processing until approval');
+          
+          if (order) {
+            await addOrderStatusHistory(order.id, 'pending_review', 'High-res file submitted for admin review - awaiting approval before Printify order creation');
+            
+            // Update the order status to pending_review
+            await updateOrderStatus(order.stripe_session_id, 'pending_review');
+          }
+          
+          // CRITICAL: Stop processing here when manual review is enabled
+          // Printify order will be created when admin approves the high-res file
+          console.log('🛑 Order processing paused - waiting for high-res file approval');
+          return;
         }
       } catch (reviewError) {
         console.error('Failed to create high-res file review:', reviewError);
-        // Don't fail the order if review creation fails
+        // Don't fail the order if review creation fails - continue with Printify order
       }
 
     } catch (upscaleError) {
@@ -373,6 +395,169 @@ export function parseOrderMetadata(session: Stripe.Checkout.Session): OrderMetad
     shippingMethodId: metadata.shippingMethodId ? parseInt(metadata.shippingMethodId) : undefined,
     quantity: metadata.quantity ? parseInt(metadata.quantity) : undefined
   };
+}
+
+// Create Printify order after high-res file approval
+export async function createPrintifyOrderAfterApproval(
+  stripeSessionId: string,
+  approvedImageUrl: string
+): Promise<void> {
+  console.log(`🎯 Creating Printify order after high-res approval for session: ${stripeSessionId}`);
+  console.log(`📸 Using approved image URL: ${approvedImageUrl}`);
+  
+  try {
+    // Get the order details from database
+    console.log(`📋 Fetching order for session: ${stripeSessionId}`);
+    const order = await getOrderByStripeSession(stripeSessionId);
+    if (!order) {
+      throw new Error(`Order not found for Stripe session: ${stripeSessionId}`);
+    }
+    console.log(`✅ Found order: ${order.id} - ${order.product_type} (${order.product_size})`);
+
+    // For test sessions, create mock metadata from order data
+    let metadata;
+    if (stripeSessionId.startsWith('cs_test_') || stripeSessionId.startsWith('cs_printify_test_')) {
+      console.log('🧪 Using test session - creating mock metadata from order data');
+      
+      // Map database product type to ProductType enum
+      let mappedProductType: ProductType;
+      switch (order.product_type) {
+        case 'digital':
+          mappedProductType = ProductType.DIGITAL;
+          break;
+        case 'art_print':
+          mappedProductType = ProductType.ART_PRINT;
+          break;
+        case 'framed_canvas':
+          mappedProductType = ProductType.CANVAS_FRAMED;
+          break;
+        default:
+          mappedProductType = ProductType.CANVAS_FRAMED; // Default fallback
+      }
+      
+      metadata = {
+        productType: mappedProductType,
+        imageUrl: approvedImageUrl,
+        size: order.product_size,
+        customerName: order.customer_name,
+        petName: undefined, // Not stored in order
+        frameUpgrade: false, // Default for test
+        shippingMethodId: 1, // Default shipping method
+        quantity: 1 // Default quantity
+      };
+    } else {
+      // Get the original Stripe session to extract metadata
+      const stripe = new (await import('stripe')).default(process.env.STRIPE_SECRET_KEY!, {
+        apiVersion: '2025-07-30.basil',
+      });
+      
+      const session = await stripe.checkout.sessions.retrieve(stripeSessionId);
+
+      // Parse the original order metadata from Stripe session
+      metadata = parseOrderMetadata(session);
+      if (!metadata) {
+        throw new Error(`Order metadata not found for session: ${stripeSessionId}`);
+      }
+    }
+
+    const { productType, size, customerName, petName, frameUpgrade, shippingMethodId, quantity } = metadata;
+
+    // Extract shipping information from the order record (already stored from original checkout)
+    const shippingAddress = order.shipping_address;
+    if (!shippingAddress) {
+      throw new Error('Missing shipping address for physical product');
+    }
+
+    console.log('📦 Using stored shipping address:', shippingAddress);
+
+    // Handle frame upgrade for canvas stretched products
+    let finalProductType = productType;
+    if (productType === ProductType.CANVAS_STRETCHED && frameUpgrade) {
+      console.log(`🖼️ Frame upgrade requested for canvas stretched product`);
+      finalProductType = ProductType.CANVAS_FRAMED;
+      
+      await addOrderStatusHistory(order.id, 'processing', 'Frame upgrade applied - using framed canvas product');
+    }
+
+    // Validate order data
+    console.log(`🔍 Validating order data: ${productType}, ${size}, ${shippingAddress.country}`);
+    const validation = validateOrderData(productType, size, shippingAddress.country, approvedImageUrl);
+    if (!validation.isValid) {
+      throw new Error(`Order validation failed: ${validation.error}`);
+    }
+    console.log(`✅ Order validation passed`);
+
+    // Create or get Printify product with proper configuration
+    console.log(`🏭 Creating Printify product: ${finalProductType}, ${size}`);
+    const { productId, variantId } = await getOrCreatePrintifyProduct(
+      finalProductType,
+      size,
+      approvedImageUrl,
+      shippingAddress.country,
+      customerName,
+      petName
+    );
+    console.log(`✅ Printify product created: ${productId}, variant: ${variantId}`);
+    // Get shipping method (use selected method or default)
+    const shippingMethod = await getShippingMethod(shippingAddress.country, shippingMethodId);
+
+    // Create Printify order
+    console.log(`📦 Creating Printify order with product: ${productId}, variant: ${variantId}`);
+    const orderData: PrintifyOrderRequest = {
+      external_id: stripeSessionId,
+      label: `PawPop Order - ${customerName}${petName ? ` (${petName})` : ''}${frameUpgrade ? ' (Framed)' : ''}`,
+      line_items: [
+        {
+          product_id: productId,
+          variant_id: variantId,
+          quantity: quantity || 1,
+          print_areas: {
+            front: approvedImageUrl
+          }
+        }
+      ],
+      shipping_method: shippingMethod,
+      send_shipping_notification: true,
+      address_to: {
+        first_name: shippingAddress.first_name,
+        last_name: shippingAddress.last_name,
+        email: shippingAddress.email,
+        phone: shippingAddress.phone,
+        country: shippingAddress.country,
+        region: shippingAddress.region,
+        address1: shippingAddress.address1,
+        address2: shippingAddress.address2,
+        city: shippingAddress.city,
+        zip: shippingAddress.zip
+      }
+    };
+    console.log(`📋 Order data prepared:`, JSON.stringify(orderData, null, 2));
+    
+    // Create the actual Printify order
+    const shopId = process.env.PRINTIFY_SHOP_ID;
+    if (!shopId) {
+      throw new Error('PRINTIFY_SHOP_ID environment variable is not set');
+    }
+    
+    console.log(`🚀 Calling Printify API to create order...`);
+    const printifyOrder = await createPrintifyOrder(shopId, orderData);
+    console.log(`✅ Printify order created successfully:`, printifyOrder);
+    
+    // Update order with Printify details
+    await updateOrderWithPrintify(stripeSessionId, printifyOrder.id, printifyOrder.status);
+    
+    
+  } catch (error) {
+    console.error('❌ Failed to create Printify order after approval:', error);
+    
+    // Log the failure for retry later
+    const order = await getOrderByStripeSession(stripeSessionId);
+    if (order) {
+      await addOrderStatusHistory(order.id, 'failed', `Printify order creation failed after approval: ${error}`);
+    }
+    
+    throw error;
+  }
 }
 
 // Handle order fulfillment status updates

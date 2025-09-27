@@ -74,7 +74,7 @@ export interface ProductConfig {
   blueprint_id: number;
   print_provider_id: number;
   variants: Array<{
-    id: string;
+    id: string | number; // Support both string and numeric IDs
     size: string;
     price: number;
   }>;
@@ -108,11 +108,11 @@ export const PRINTIFY_PRODUCTS: Partial<Record<ProductType, Record<string, Produ
   [ProductType.CANVAS_STRETCHED]: {
     GLOBAL: {
       blueprint_id: 1159, // Matte Canvas, Stretched, 1.25"
-      print_provider_id: 1, // Generic Brand
+      print_provider_id: 105, // Jondo
       variants: [
-        { id: 'canvas_12x18', size: '12x18', price: 5900 }, // $59.00 CAD
-        { id: 'canvas_16x24', size: '16x24', price: 7900 }, // $79.00 CAD
-        { id: 'canvas_20x30', size: '20x30', price: 9900 }  // $99.00 CAD
+        { id: 91644, size: '12x18', price: 5900 }, // $59.00 CAD - 12″ × 18″ (Vertical) / 1.25"
+        { id: 91647, size: '16x24', price: 7900 }, // $79.00 CAD - 16″ × 24″ (Vertical) / 1.25"
+        { id: 91650, size: '20x30', price: 9900 }  // $99.00 CAD - 20″ × 30″ (Vertical) / 1.25"
       ],
       frame_upgrade_price: 4000 // $40 CAD
     }
@@ -120,11 +120,11 @@ export const PRINTIFY_PRODUCTS: Partial<Record<ProductType, Record<string, Produ
   [ProductType.CANVAS_FRAMED]: {
     GLOBAL: {
       blueprint_id: 944, // Matte Canvas, Framed Multi-color
-      print_provider_id: 1, // Generic Brand
+      print_provider_id: 105, // Jondo
       variants: [
-        { id: 'framed_12x18', size: '12x18', price: 9900 }, // $99.00 CAD
-        { id: 'framed_16x24', size: '16x24', price: 11900 }, // $119.00 CAD
-        { id: 'framed_20x30', size: '20x30', price: 14900 }  // $149.00 CAD
+        { id: 111829, size: '12x18', price: 9900 }, // $99.00 CAD - 12″ × 18″ (Vertical) / Black / 1.25"
+        { id: 111837, size: '16x24', price: 11900 }, // $119.00 CAD - 16″ × 24″ (Vertical) / Black / 1.25"
+        { id: 88295, size: '20x30', price: 14900 }  // $149.00 CAD - 20″ × 30″ (Vertical) / Black / 1.25"
       ]
     }
   }
@@ -292,7 +292,8 @@ export async function createPrintifyProduct(
     // Add canvas-specific print details for canvas products
     ...(isCanvas && {
       print_details: {
-        print_on_side: "mirror"
+        print_on_side: "mirror", // Mirror the image on both sides
+        print_on_sides: true     // Enable printing on both sides
       }
     })
   };
@@ -341,6 +342,9 @@ export async function createPrintifyOrder(
     throw new Error("Printify API token is not configured");
   }
 
+  console.log(`🚀 Creating Printify order for shop: ${shopId}`);
+  console.log(`📋 Order data:`, JSON.stringify(orderData, null, 2));
+
   const response = await fetch(`${PRINTIFY_API_URL}/shops/${shopId}/orders.json`, {
     method: 'POST',
     headers: {
@@ -350,13 +354,31 @@ export async function createPrintifyOrder(
     body: JSON.stringify(orderData)
   });
 
+  console.log(`📡 Printify API response status: ${response.status}`);
+
   if (!response.ok) {
-    const errorData = await response.json();
-    console.error("Printify order creation error:", errorData);
-    throw new Error(`Failed to create Printify order: ${errorData.message}`);
+    const errorText = await response.text();
+    console.error("❌ Printify order creation error:", {
+      status: response.status,
+      statusText: response.statusText,
+      body: errorText
+    });
+    
+    let errorMessage = 'Operation failed';
+    try {
+      const errorData = JSON.parse(errorText);
+      errorMessage = errorData.message || errorData.error || 'Operation failed';
+      console.error("Parsed error data:", errorData);
+    } catch (e) {
+      console.error("Raw error text:", errorText);
+    }
+    
+    throw new Error(`Failed to create Printify order: ${errorMessage}`);
   }
 
-  return response.json();
+  const result = await response.json();
+  console.log(`✅ Printify order created successfully:`, result);
+  return result;
 }
 
 // Get shipping methods for a specific product

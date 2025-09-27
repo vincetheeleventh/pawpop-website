@@ -102,7 +102,7 @@ Premium stretched canvas prints with optional framing upgrade.
 
 **Blueprint Configuration:**
 - **Blueprint ID**: 1159 (Matte Canvas, Stretched, 1.25")
-- **Print Provider ID**: 1 (Generic Brand)
+- **Print Provider ID**: 105 (Jondo)
 - **Product Type**: `canvas_stretched`
 - **Region**: `GLOBAL`
 - **Printify URL**: https://printify.com/app/products/1159/generic-brand/matte-canvas-stretched-125
@@ -110,9 +110,9 @@ Premium stretched canvas prints with optional framing upgrade.
 **Available Sizes & Pricing:**
 | Size | Variant ID | Price (CAD) | Description | Frame Upgrade |
 |------|------------|-------------|-------------|---------------|
-| 12x18 | canvas_12x18 | $59.00 | 12″ × 18″ Portrait | +$40.00 CAD |
-| 16x24 | canvas_16x24 | $79.00 | 16″ × 24″ Portrait | +$40.00 CAD |
-| 20x30 | canvas_20x30 | $99.00 | 20″ × 30″ Portrait | +$40.00 CAD |
+| 12x18 | 91644 | $59.00 | 12″ × 18″ Portrait | +$40.00 CAD |
+| 16x24 | 91647 | $79.00 | 16″ × 24″ Portrait | +$40.00 CAD |
+| 20x30 | 91650 | $99.00 | 20″ × 30″ Portrait | +$40.00 CAD |
 
 **Canvas Features:**
 - High-quality matte finish
@@ -131,7 +131,7 @@ Premium framed canvas prints - sold as upsell option.
 
 **Blueprint Configuration:**
 - **Blueprint ID**: 944 (Matte Canvas, Framed Multi-color)
-- **Print Provider ID**: 1 (Generic Brand)
+- **Print Provider ID**: 105 (Jondo)
 - **Product Type**: `canvas_framed`
 - **Region**: `GLOBAL`
 - **Printify URL**: https://printify.com/app/products/944/generic-brand/matte-canvas-framed-multi-color
@@ -139,9 +139,9 @@ Premium framed canvas prints - sold as upsell option.
 **Available Sizes & Pricing:**
 | Size | Variant ID | Price (CAD) | Description |
 |------|------------|-------------|-------------|
-| 12x18 | framed_12x18 | $99.00 | 12″ × 18″ Portrait |
-| 16x24 | framed_16x24 | $119.00 | 16″ × 24″ Portrait |
-| 20x30 | framed_20x30 | $149.00 | 20″ × 30″ Portrait |
+| 12x18 | 111829 | $99.00 | 12″ × 18″ Portrait |
+| 16x24 | 111837 | $119.00 | 16″ × 24″ Portrait |
+| 20x30 | 88295 | $149.00 | 20″ × 30″ Portrait |
 
 **Canvas Features:**
 - High-quality matte finish

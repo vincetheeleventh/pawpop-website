@@ -70,7 +70,7 @@ export async function getOrCreatePrintifyProduct(
   if (cachedProductId) {
     return {
       productId: cachedProductId,
-      variantId: 1 // Simplified - in real implementation, map to actual variant IDs
+      variantId: typeof variant.id === 'number' ? variant.id : parseInt(variant.id.toString())
     };
   }
 
@@ -100,7 +100,7 @@ export async function getOrCreatePrintifyProduct(
 
     return {
       productId: printifyProduct.id,
-      variantId: 1 // Simplified - in real implementation, map to actual variant IDs
+      variantId: typeof variant.id === 'number' ? variant.id : parseInt(variant.id.toString())
     };
 
   } catch (error) {
