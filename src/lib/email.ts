@@ -156,10 +156,10 @@ export async function sendMasterpieceCreatingEmail(data: MasterpieceCreatingEmai
           
           <p><strong>What happens next:</strong></p>
           <ul>
-            <li>🎨 Our artists are transforming your photo into a stunning Mona Lisa-style portrait using modern illustration tools with human finishing touches</li>
-            <li>⏱️ This usually takes 2-5 minutes to complete</li>
+            <li>🎨 We are transforming your photo into a stunning Mona Lisa-style masterpiece</li>
+            <li>⏱️ This process will take 24-48 hours.</li>
             <li>📧 You'll receive another email as soon as your masterpiece is ready</li>
-            <li>🖼️ You can then choose to purchase beautiful prints or keep it digital</li>
+            <li>🖼️ You can then choose to purchase beautiful canvas prints or keep it digital</li>
           </ul>
           
           <div class="divider"></div>
