@@ -77,10 +77,8 @@ async function reconcileSession(sessionId: string) {
       throw new Error('Stripe not configured');
     }
     
-    // Get session from Stripe
-    const stripeSession = await stripe.checkout.sessions.retrieve(sessionId, {
-      expand: ['shipping_details']
-    });
+    // Get session from Stripe (without expanding shipping_details for live sessions)
+    const stripeSession = await stripe.checkout.sessions.retrieve(sessionId);
     
     if (stripeSession.payment_status !== 'paid') {
       console.log(`⏭️ Session ${sessionId} not paid, skipping`);
@@ -105,11 +103,11 @@ async function reconcileSession(sessionId: string) {
       customer_name: stripeSession.customer_details?.name || metadata.customerName || 'Reconciled Customer'
     });
     
-    // Update order status to paid
+    // Update order status to paid (without shipping details for now)
     await updateOrderAfterPayment(
       sessionId,
       stripeSession.payment_intent as string,
-      (stripeSession as any).shipping_details
+      null // Skip shipping details for live sessions
     );
     
     console.log(`🚨 Reconciled order created: ${newOrder.id} for session ${sessionId}`);
