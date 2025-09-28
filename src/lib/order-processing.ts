@@ -166,7 +166,7 @@ async function getShippingMethod(countryCode: string, selectedMethodId?: number)
 }
 
 // Trigger upscaling for physical products
-async function triggerUpscaling(artworkId: string): Promise<string> {
+export async function triggerUpscaling(artworkId: string): Promise<string> {
   console.log(`🔍 Triggering upscaling for artwork ${artworkId}`);
   
   try {

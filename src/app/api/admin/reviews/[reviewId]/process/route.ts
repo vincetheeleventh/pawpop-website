@@ -124,6 +124,23 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
               console.error('❌ Failed to create missing order:', orderError);
               // Don't fail the approval process
             }
+            
+            // CRITICAL: Trigger high-res upscaling after artwork approval
+            // This ensures upscaling happens even if order processing was delayed
+            try {
+              console.log('🎨 Triggering high-res upscaling after artwork approval...');
+              
+              const { triggerUpscaling } = await import('@/lib/order-processing');
+              const upscaledImageUrl = await triggerUpscaling(review.artwork_id);
+              
+              console.log(`✅ High-res upscaling completed: ${upscaledImageUrl}`);
+              console.log('   Upscaled image will be used for any future orders');
+              
+            } catch (upscaleError) {
+              console.error('❌ Failed to trigger upscaling after approval:', upscaleError);
+              // Don't fail the approval process if upscaling fails
+              console.log('   Order processing will attempt upscaling again if needed');
+            }
           } else if (review.review_type === 'highres_file') {
             // For high-res file approval: Trigger Printify order creation
             console.log('🎯 High-res file approved! Triggering Printify order creation...')
