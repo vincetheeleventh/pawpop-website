@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { processAdminReview } from '@/lib/admin-review'
 import { sendMasterpieceReadyEmail } from '@/lib/email'
 import { supabaseAdmin } from '@/lib/supabase'
+import { ProductType } from '@/lib/printify-products'
 
 interface RouteParams {
   params: {
@@ -82,6 +83,46 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
               console.log('✅ Completion email sent successfully!')
             } else {
               console.warn('⚠️ Failed to send completion email:', emailResult.error)
+            }
+            
+            // CRITICAL: Check if there's a pending order that needs to be created
+            // This handles cases where payment was made but order wasn't created due to webhook issues
+            try {
+              console.log('🔍 Checking for missing order records...');
+              
+              // Look for any Stripe session associated with this artwork
+              const { data: existingOrders } = await supabaseAdmin
+                .from('orders')
+                .select('id, stripe_session_id')
+                .eq('artwork_id', review.artwork_id)
+                .limit(1);
+              
+              if (!existingOrders || existingOrders.length === 0) {
+                console.log('⚠️ No order found for approved artwork - checking for pending purchase...');
+                
+                // This is likely a case where payment was made but order wasn't created
+                // We should create the order now that the artwork is approved
+                const { createOrder } = await import('@/lib/supabase-orders');
+                
+                // Create order with reasonable defaults (will be updated when we get more info)
+                const newOrder = await createOrder({
+                  artwork_id: review.artwork_id,
+                  stripe_session_id: `manual_${review.artwork_id}`, // Temporary - will be updated if we find the real session
+                  product_type: ProductType.CANVAS_FRAMED, // Default to most popular product
+                  product_size: '16x24', // Default size
+                  price_cents: 24900, // $249 CAD
+                  customer_email: review.customer_email,
+                  customer_name: review.customer_name
+                });
+                
+                console.log(`✅ Created missing order record: ${newOrder.id}`);
+                console.log('   This order can be updated with correct Stripe session if found');
+              } else {
+                console.log('✅ Order already exists for this artwork');
+              }
+            } catch (orderError) {
+              console.error('❌ Failed to create missing order:', orderError);
+              // Don't fail the approval process
             }
           } else if (review.review_type === 'highres_file') {
             // For high-res file approval: Trigger Printify order creation

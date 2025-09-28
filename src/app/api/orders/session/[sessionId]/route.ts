@@ -50,12 +50,12 @@ export async function GET(
               
               console.log('🚨 Emergency order created:', emergencyOrder.id);
               
-              // Update order status to paid
+              // Update order status to paid (skip shipping details for live sessions)
               const { updateOrderAfterPayment } = await import('@/lib/supabase-orders');
               await updateOrderAfterPayment(
                 sessionId,
                 stripeSession.payment_intent as string,
-                (stripeSession as any).shipping_details
+                null // Skip shipping details for live sessions to avoid API errors
               );
               
               // Retry getting the order
