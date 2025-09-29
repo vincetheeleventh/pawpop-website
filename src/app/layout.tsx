@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/Footer';
 import { Providers } from './providers';
 import { GoogleAdsTracking } from '@/components/analytics/GoogleAdsTracking';
 import PlausibleScript from '@/components/analytics/PlausibleScript';
+import HotjarScript from '@/components/analytics/HotjarScript';
 
 // PawPop Brand Fonts
 const arvo = Arvo({ 
@@ -70,6 +71,7 @@ export default function RootLayout({
         <Providers>
           <GoogleAdsTracking />
           <PlausibleScript />
+          <HotjarScript />
           <Header />
           <main>{children}</main>
           <Footer />

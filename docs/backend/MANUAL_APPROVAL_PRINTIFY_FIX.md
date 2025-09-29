@@ -1,5 +1,13 @@
 # Manual Approval → Printify Integration Fix
 
+## Current Schema: UUID-Based Architecture
+
+**IMPORTANT**: This documentation reflects the current UUID-based schema where:
+- **Artwork IDs**: UUID format (e.g., `12345678-1234-1234-1234-123456789012`)
+- **Access Tokens**: 64-character hex strings for artwork page URLs
+- **Database**: JSONB structure for images and metadata
+- **APIs**: Expect UUID format for artwork operations
+
 ## Problem Identified
 
 The manual approval workflow for high-resolution files was **NOT properly integrated** with Printify order creation. Here's what was happening:
@@ -156,34 +164,45 @@ ADMIN_EMAIL=pawpopart@gmail.com  # Admin notification recipient
 - **Image Replacement**: Admin can upload replacement images if needed
 - **Order Accuracy**: Printify orders only created after approval
 - **Customer Experience**: No defective products shipped
-
 ## Testing
 
 ### **Test Script Created:**
 `/scripts/test-manual-approval-printify.js`
 
-**Test Coverage:**
-- ✅ Order processing stops at high-res review
-- ✅ Admin approval triggers Printify order creation
-- ✅ High-res image passed to Printify
-- ✅ Shipping address preserved from Stripe
-- ✅ Order status progression tracking
+### **Schema Compatibility:**
+- **UUID Artwork IDs**: Required for all API operations (upscaling, admin reviews)
+- **Access Tokens**: Used only for artwork page URLs (`/artwork/[token]`)
+- **Database Structure**: JSONB fields for `source_images`, `generated_images`, `processing_status`
+- **API Endpoints**: All expect UUID format artwork IDs
+
+### **Test Data Format:**
+- **Artwork ID**: UUID format (e.g., `2010158d-b508-4aca-ad73-9c96131d22fe`)
+- **Access Token**: 64-char hex (e.g., `a37817b3e3b6072902813af2fc3b5ec07a185da41a9858c0f1d2df54b3ddfe0c`)
+- **Product**: Framed Canvas (16x24) - $79.99
+- **Customer**: test / vxi@Live.ca
+- **Shipping**: US address (123 Test Street, San Francisco, CA 94105)
 
 ### **Manual Testing Steps:**
 1. Set `ENABLE_HUMAN_REVIEW=true`
 2. Purchase a physical product (framed canvas/art print)
-3. Verify order stops at `pending_review` status
 4. Check admin dashboard for high-res review
 5. Approve the review
 6. Verify Printify order creation with correct details
 
 ## Production Deployment
 
+### **Schema Requirements:**
+- [ ] Database uses UUID artwork IDs for all operations
+- [ ] APIs expect UUID format (36 characters with dashes)
+- [ ] Access tokens (64-char hex) used only for artwork page URLs
+- [ ] JSONB structure for image and metadata storage
+
 ### **Deployment Checklist:**
 - [ ] Environment variable `ENABLE_HUMAN_REVIEW=true` set
 - [ ] Admin email configured: `ADMIN_EMAIL=pawpopart@gmail.com`
 - [ ] All Printify API credentials configured
-- [ ] Test the complete workflow end-to-end
+- [ ] UUID-based artwork creation working
+- [ ] Test the complete workflow end-to-end with UUID artwork IDs
 - [ ] Monitor order status progression
 
 ### **Rollback Plan:**

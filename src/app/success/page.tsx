@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle, Package, Clock, Mail, ArrowRight } from 'lucide-react';
+import { useImageTracking } from '@/lib/image-tracking';
 
 interface OrderData {
   orderNumber: string;
@@ -33,6 +34,17 @@ function SuccessContent() {
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
+  const imageRef = useRef<HTMLImageElement>(null);
+
+  // Initialize image tracking
+  const { attachToRef, detach } = useImageTracking({
+    imageType: 'artwork_preview',
+    orderId: orderData?.orderNumber,
+    customerName: orderData?.customerName,
+    petName: orderData?.artwork?.petName,
+    productType: orderData?.productType,
+    customerEmail: orderData?.customerEmail
+  });
   
   useEffect(() => {
     const fetchOrderData = async (retryCount = 0) => {
@@ -58,11 +70,46 @@ function SuccessContent() {
         clearTimeout(timeoutId);
         
         if (!response.ok) {
-          if (response.status === 404 && retryCount < maxRetries) {
-            // Order might not be created yet by webhook, retry after delay
-            console.log(`Order not found, retrying in ${retryDelay}ms... (attempt ${retryCount + 1}/${maxRetries})`);
-            setTimeout(() => fetchOrderData(retryCount + 1), retryDelay);
-            return;
+          if (response.status === 404) {
+            if (retryCount < maxRetries) {
+              // Order might not be created yet by webhook, retry after delay
+              console.log(`Order not found, retrying in ${retryDelay}ms... (attempt ${retryCount + 1}/${maxRetries})`);
+              setTimeout(() => fetchOrderData(retryCount + 1), retryDelay);
+              return;
+            } else {
+              // FINAL RETRY: Trigger emergency order creation
+              console.log('🚨 Final retry - triggering emergency order creation...');
+              try {
+                const reconcileResponse = await fetch('/api/orders/reconcile', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ sessionIds: [sessionId] })
+                });
+                
+                if (reconcileResponse.ok) {
+                  console.log('✅ Emergency order creation attempted, retrying fetch...');
+                  // Wait a moment for the order to be created, then try one more time
+                  setTimeout(() => {
+                    fetch(`/api/orders/session/${sessionId}`)
+                      .then(res => res.ok ? res.json() : Promise.reject())
+                      .then(data => {
+                        console.log('✅ Order found after emergency creation!');
+                        setOrderData(data);
+                      })
+                      .catch(() => {
+                        console.log('❌ Emergency order creation failed');
+                        setError('Order not found - please contact support with your session ID: ' + sessionId);
+                      })
+                      .finally(() => setLoading(false));
+                  }, 2000);
+                  return;
+                } else {
+                  console.log('❌ Emergency order creation API failed');
+                }
+              } catch (emergencyError) {
+                console.error('❌ Emergency order creation error:', emergencyError);
+              }
+            }
           }
           throw new Error('Failed to fetch order details');
         }
@@ -142,7 +189,12 @@ function SuccessContent() {
     };
 
     fetchOrderData();
-  }, [sessionId]);
+
+    // Cleanup image tracking on unmount
+    return () => {
+      detach();
+    };
+  }, [sessionId, detach]);
 
   if (loading) {
     return (
@@ -343,9 +395,28 @@ function SuccessContent() {
                   </h3>
                   <div className="aspect-square rounded-xl overflow-hidden mb-4">
                     <img 
+                      ref={(el) => {
+                        if (el) attachToRef(el);
+                      }}
                       src={orderData.artwork.previewImage} 
                       alt="Your custom artwork"
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover cursor-pointer"
+                      onClick={() => {
+                        // Track image view/interaction
+                        if (typeof window !== 'undefined' && window.plausible) {
+                          window.plausible('Image Viewed', {
+                            props: {
+                              image_type: 'artwork_preview',
+                              order_id: orderData.orderNumber,
+                              product_type: orderData.productType
+                            }
+                          });
+                        }
+                        // Open image in new tab for viewing
+                        if (orderData.artwork?.previewImage) {
+                          window.open(orderData.artwork.previewImage, '_blank');
+                        }
+                      }}
                     />
                   </div>
                   {orderData.artwork.accessToken && (

@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { landingPageCopy } from '@/lib/copy';
 import { HeroVideoReveal } from './HeroVideoReveal';
 import { UploadModal } from '@/components/forms/UploadModal';
+import { hotjar } from '@/lib/hotjar';
 
 interface HeroSectionProps {
   autoOpenUpload?: boolean;
@@ -22,6 +23,11 @@ export const HeroSection = ({ autoOpenUpload = false }: HeroSectionProps) => {
       setIsModalOpen(true);
     }
   }, [autoOpenUpload]);
+
+  // Track landing page view
+  useEffect(() => {
+    hotjar.landingPage.viewed();
+  }, []);
 
   return (
     <section className="min-h-screen flex items-center justify-center px-0 md:px-6 py-8 bg-card-surface">
@@ -55,7 +61,10 @@ export const HeroSection = ({ autoOpenUpload = false }: HeroSectionProps) => {
 
           {/* Single CTA Button - Mobile Optimized */}
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => {
+              setIsModalOpen(true);
+              hotjar.landingPage.ctaClicked();
+            }}
             className="
               inline-block w-full max-w-xs
               bg-atomic-tangerine hover:bg-orange-600

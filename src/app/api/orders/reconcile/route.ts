@@ -92,11 +92,22 @@ async function reconcileSession(sessionId: string) {
       return { sessionId, status: 'no_metadata' };
     }
     
+    // Map ProductType enum to database constraint values
+    const mapProductTypeToDb = (productType: string): string => {
+      switch (productType) {
+        case 'canvas_framed': return 'framed_canvas';
+        case 'canvas_stretched': return 'art_print'; // Map to closest valid value
+        case 'art_print': return 'art_print';
+        case 'digital': return 'digital';
+        default: return 'framed_canvas'; // Default fallback
+      }
+    };
+    
     // Create missing order
     const newOrder = await createOrder({
       artwork_id: stripeSession.metadata?.artworkId || 'reconciled',
       stripe_session_id: sessionId,
-      product_type: metadata.productType,
+      product_type: mapProductTypeToDb(metadata.productType) as any, // Cast to bypass type check for DB constraint compatibility
       product_size: metadata.size,
       price_cents: stripeSession.amount_total || 0,
       customer_email: stripeSession.customer_details?.email || 'unknown@example.com',

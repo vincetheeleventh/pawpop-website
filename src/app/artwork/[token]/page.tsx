@@ -1,13 +1,15 @@
 // src/app/artwork/[token]/page.tsx
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, notFound } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { PurchaseModalRouter, getModalVariant, trackModalVariant, type ModalVariant } from '@/components/modals/PurchaseModalRouter';
 import { PurchaseModalPhysicalFirst } from '@/components/modals/PurchaseModalPhysicalFirst';
 import MockupDisplay from '@/components/artwork/MockupDisplay';
 import ProductPurchaseModal from '@/components/modals/ProductPurchaseModal';
+import { useImageTracking } from '@/lib/image-tracking';
+import { hotjar } from '@/lib/hotjar';
 
 interface Mockup {
   type: string;
@@ -43,6 +45,15 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
   const [modalVariant, setModalVariant] = useState<ModalVariant>('equal-tiers');
   const [isManualApprovalEnabled, setIsManualApprovalEnabled] = useState<boolean>(false);
   const router = useRouter();
+  const imageRef = useRef<HTMLImageElement>(null);
+
+  // Initialize image tracking
+  const { attachToRef, detach } = useImageTracking({
+    imageType: 'artwork_main',
+    artworkId: artwork?.id,
+    customerName: artwork?.customer_name,
+    petName: artwork?.pet_name
+  });
 
   // Fetch manual approval status
   const fetchReviewStatus = async () => {
@@ -71,7 +82,15 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
         trackArtworkView(params.token, 2); // $2 CAD engagement value
       });
     }
-  }, [params.token]);
+
+    // Track Hotjar artwork page view
+    hotjar.artwork.pageViewed();
+
+    // Cleanup image tracking on unmount
+    return () => {
+      detach();
+    };
+  }, [params.token, detach]);
 
   const fetchArtwork = async () => {
     try {
@@ -96,6 +115,9 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
       artwork_id: artwork.id,
       customer_name: artwork.customer_name
     });
+    
+    // Track Hotjar artwork CTA click
+    hotjar.artwork.ctaClicked();
     
     setShowPurchaseModal(true);
   };
@@ -230,6 +252,9 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
               <div className="bg-card-surface rounded-2xl shadow-xl p-8 lg:sticky lg:top-8">
                 <div className="bg-gradient-to-br from-naples-yellow/20 to-mindaro/10 rounded-xl p-6 mb-6">
                   <img 
+                    ref={(el) => {
+                      if (el) attachToRef(el);
+                    }}
                     src={artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res || artwork.generated_image_url}
                     alt="Your PawPop Masterpiece"
                     className="w-full h-auto object-contain rounded-lg shadow-md"

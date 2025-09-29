@@ -49,7 +49,9 @@
     "test:plausible-full": "node scripts/test-plausible-e2e.js",
     "test:plausible-full-headed": "node scripts/test-plausible-e2e.js --headed",
     "test:plausible-integration": "node scripts/test-plausible-integration.js",
-    "test:plausible-validate": "node scripts/validate-plausible-production.js"
+    "test:plausible-validate": "node scripts/validate-plausible-production.js",
+    "test:hotjar": "vitest run tests/lib/hotjar.test.ts",
+    "test:hotjar-watch": "vitest tests/lib/hotjar.test.ts"
   },
   "dependencies": {
     "@fal-ai/client": "^1.6.2",

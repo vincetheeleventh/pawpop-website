@@ -5,6 +5,7 @@ import { X, Minus, Plus, Truck, Star } from 'lucide-react'
 import { redirectToCheckout } from '@/lib/stripe-simple'
 import { getDynamicPricing } from '@/lib/copy'
 import usePlausibleTracking from '@/hooks/usePlausibleTracking'
+import { hotjar } from '@/lib/hotjar'
 
 interface Mockup {
   type: string
@@ -94,6 +95,8 @@ export default function ProductPurchaseModal({
     if (isOpen) {
       trackFunnel.purchaseModalOpened(productType)
       trackInteraction.modalOpen('Product Purchase Modal')
+      hotjar.purchase.modalOpened()
+      hotjar.purchase.productSelected(productType)
       
       // Track price variant exposure
       const currentPrice = getCurrentPrice()
@@ -246,6 +249,7 @@ export default function ProductPurchaseModal({
     // Track checkout initiation
     trackFunnel.checkoutInitiated(productType, currentPrice, quantity)
     trackInteraction.buttonClick('Buy Now', 'Purchase Modal')
+    hotjar.purchase.checkoutStarted()
 
     try {
       // Validate required data
@@ -327,6 +331,7 @@ export default function ProductPurchaseModal({
       const error = err instanceof Error ? err : new Error('An error occurred during checkout')
       console.error('Checkout error:', error)
       setError(error.message)
+      hotjar.purchase.error()
       setLoading(false)
     }
   }

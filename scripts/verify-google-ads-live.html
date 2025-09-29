@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google Ads Conversion Tracking Test</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    .status {
+      padding: 15px;
+      border-radius: 5px;
+      margin: 15px 0;
+    }
+    .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+    .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 5px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .code {
+      background: #f4f4f4;
+      padding: 10px;
+      border-radius: 4px;
+      font-family: monospace;
+      margin: 10px 0;
+      overflow-x: auto;
+    }
+    #log {
+      background: #000;
+      color: #0f0;
+      padding: 15px;
+      border-radius: 5px;
+      font-family: monospace;
+      font-size: 12px;
+      max-height: 400px;
+      overflow-y: auto;
+      margin-top: 20px;
+    }
+    .log-entry {
+      margin: 3px 0;
+    }
+    .step {
+      margin: 20px 0;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Google Ads Conversion Tracking Verification</h1>
+    
+    <div class="status info">
+      <strong>Instructions:</strong>
+      <ol>
+        <li>Open this file on your live website (pawpopart.com)</li>
+        <li>Click the test buttons below</li>
+        <li>Check the console log for gtag responses</li>
+        <li>Verify conversions appear in Google Ads (may take 3-6 hours)</li>
+      </ol>
+    </div>
+
+    <div class="step">
+      <h3>Step 1: Check if Google Ads Tag is Loading</h3>
+      <button onclick="checkGtagLoaded()">Check gtag Status</button>
+      <div id="gtag-status"></div>
+    </div>
+
+    <div class="step">
+      <h3>Step 2: Test Conversion Events</h3>
+      <p>Click each button to fire a test conversion:</p>
+      <button onclick="testPhotoUpload()">Test Photo Upload Conversion</button>
+      <button onclick="testArtworkGeneration()">Test Artwork Generation</button>
+      <button onclick="testArtworkView()">Test Artwork View</button>
+      <button onclick="testPurchase()">Test Purchase Conversion</button>
+    </div>
+
+    <div class="step">
+      <h3>Step 3: Check Network Requests</h3>
+      <div class="status warning">
+        <strong>Action Required:</strong><br>
+        1. Open DevTools (F12) → Network tab<br>
+        2. Filter by "collect" or "gtag"<br>
+        3. Fire conversions and watch for requests<br>
+        4. If no requests appear, gtag is not loading
+      </div>
+    </div>
+
+    <div id="log"></div>
+  </div>
+
+  <!-- Google Ads Tag - Replace with your actual Conversion ID -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-939186815"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'AW-939186815');
+
+    // Conversion IDs
+    const CONVERSIONS = {
+      PHOTO_UPLOAD: 'AW-939186815/bSpECPPkoZ8bEP-0678D',
+      ARTWORK_GENERATION: 'AW-939186815/g4XtCJeJnp8bEP-0678D',
+      PURCHASE: 'AW-939186815/zqMlCO-SoZ8bEP-0678D',
+      ARTWORK_VIEW: 'AW-939186815/HI_4CMbKop8bEP-0678D'
+    };
+
+    // Logging utilities
+    function log(message, type = 'info') {
+      const logDiv = document.getElementById('log');
+      const time = new Date().toLocaleTimeString();
+      const colors = {
+        info: '#0f0',
+        success: '#0f0',
+        error: '#f00',
+        warning: '#ff0'
+      };
+      logDiv.innerHTML += `<div class="log-entry" style="color: ${colors[type]}">[${time}] ${message}</div>`;
+      logDiv.scrollTop = logDiv.scrollHeight;
+      console.log(`[${type.toUpperCase()}]`, message);
+    }
+
+    // Check if gtag is loaded
+    function checkGtagLoaded() {
+      const statusDiv = document.getElementById('gtag-status');
+      
+      if (typeof gtag === 'function' && typeof window.dataLayer !== 'undefined') {
+        statusDiv.innerHTML = '<div class="status success">✅ Google Ads tag is loaded correctly!</div>';
+        log('✅ gtag is loaded and ready', 'success');
+        log(`DataLayer has ${window.dataLayer.length} events`, 'info');
+        return true;
+      } else {
+        statusDiv.innerHTML = `
+          <div class="status error">
+            ❌ Google Ads tag is NOT loading!<br><br>
+            <strong>Possible causes:</strong><br>
+            • Ad blocker is blocking the script<br>
+            • Network connection issue<br>
+            • Script tag not present on page<br>
+            • CSP (Content Security Policy) blocking<br><br>
+            <strong>Solutions:</strong><br>
+            1. Disable ad blockers<br>
+            2. Test in incognito mode<br>
+            3. Check browser console for errors<br>
+            4. Verify script tag is in HTML
+          </div>
+        `;
+        log('❌ gtag is NOT loaded', 'error');
+        return false;
+      }
+    }
+
+    // Test photo upload conversion
+    function testPhotoUpload() {
+      if (!checkGtagLoaded()) return;
+      
+      log('Firing photo upload conversion...', 'info');
+      gtag('event', 'conversion', {
+        'send_to': CONVERSIONS.PHOTO_UPLOAD,
+        'value': 2.0,
+        'currency': 'CAD',
+        'transaction_id': 'test_' + Date.now()
+      });
+      log('✅ Photo upload conversion fired!', 'success');
+      alert('Photo upload conversion fired! Check the console log and Network tab.');
+    }
+
+    // Test artwork generation conversion
+    function testArtworkGeneration() {
+      if (!checkGtagLoaded()) return;
+      
+      log('Firing artwork generation conversion...', 'info');
+      gtag('event', 'conversion', {
+        'send_to': CONVERSIONS.ARTWORK_GENERATION,
+        'value': 8.0,
+        'currency': 'CAD',
+        'transaction_id': 'test_' + Date.now()
+      });
+      log('✅ Artwork generation conversion fired!', 'success');
+      alert('Artwork generation conversion fired! Check the console log and Network tab.');
+    }
+
+    // Test artwork view conversion
+    function testArtworkView() {
+      if (!checkGtagLoaded()) return;
+      
+      log('Firing artwork view conversion...', 'info');
+      gtag('event', 'conversion', {
+        'send_to': CONVERSIONS.ARTWORK_VIEW,
+        'value': 1.0,
+        'currency': 'CAD',
+        'transaction_id': 'test_' + Date.now()
+      });
+      log('✅ Artwork view conversion fired!', 'success');
+      alert('Artwork view conversion fired! Check the console log and Network tab.');
+    }
+
+    // Test purchase conversion
+    function testPurchase() {
+      if (!checkGtagLoaded()) return;
+      
+      log('Firing purchase conversion...', 'info');
+      gtag('event', 'conversion', {
+        'send_to': CONVERSIONS.PURCHASE,
+        'value': 29.99,
+        'currency': 'CAD',
+        'transaction_id': 'test_purchase_' + Date.now()
+      });
+      log('✅ Purchase conversion fired!', 'success');
+      alert('Purchase conversion fired! Check the console log and Network tab.');
+    }
+
+    // Auto-check on load
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        log('Page loaded, checking gtag status...', 'info');
+        checkGtagLoaded();
+      }, 1000);
+    });
+  </script>
+</body>
+</html>

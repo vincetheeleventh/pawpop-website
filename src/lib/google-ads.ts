@@ -14,6 +14,30 @@ export interface ConversionEvent {
   custom_parameters?: Record<string, any>;
 }
 
+export interface EnhancedConversionData {
+  email?: string;
+  phone_number?: string;
+  address?: {
+    first_name?: string;
+    last_name?: string;
+    street?: string;
+    city?: string;
+    region?: string;
+    postal_code?: string;
+    country?: string;
+  };
+}
+
+// Set enhanced conversion user data (hashed automatically by gtag)
+export const setEnhancedConversionData = (userData: EnhancedConversionData) => {
+  if (typeof window === 'undefined' || !window.gtag) return;
+
+  // gtag automatically hashes the data before sending
+  window.gtag('set', 'user_data', userData);
+  
+  console.log('Google Ads: Enhanced conversion user data set (will be hashed automatically)');
+};
+
 // Google Ads Conversion IDs (you'll need to replace these with actual values from Google Ads)
 export const GOOGLE_ADS_CONVERSIONS = {
   PHOTO_UPLOAD: process.env.NEXT_PUBLIC_GOOGLE_ADS_PHOTO_UPLOAD_ID || 'AW-CONVERSION_ID/CONVERSION_LABEL',
@@ -43,8 +67,13 @@ export const initGoogleAds = (conversionId: string) => {
 };
 
 // Track photo upload completion
-export const trackPhotoUpload = (value: number = 2) => {
+export const trackPhotoUpload = (value: number = 2, userData?: EnhancedConversionData) => {
   if (typeof window === 'undefined' || !window.gtag) return;
+
+  // Set enhanced conversion data if provided
+  if (userData) {
+    setEnhancedConversionData(userData);
+  }
 
   const conversionData: ConversionEvent = {
     send_to: GOOGLE_ADS_CONVERSIONS.PHOTO_UPLOAD,
@@ -68,8 +97,13 @@ export const trackPhotoUpload = (value: number = 2) => {
 };
 
 // Track artwork generation completion
-export const trackArtworkGeneration = (artworkId: string, value: number = 1) => {
+export const trackArtworkGeneration = (artworkId: string, value: number = 1, userData?: EnhancedConversionData) => {
   if (typeof window === 'undefined' || !window.gtag) return;
+
+  // Set enhanced conversion data if provided
+  if (userData) {
+    setEnhancedConversionData(userData);
+  }
 
   const conversionData: ConversionEvent = {
     send_to: GOOGLE_ADS_CONVERSIONS.ARTWORK_GENERATION,
@@ -101,9 +135,15 @@ export const trackPurchase = (
   orderId: string, 
   value: number, 
   productType: string,
-  currency: string = 'CAD'
+  currency: string = 'CAD',
+  userData?: EnhancedConversionData
 ) => {
   if (typeof window === 'undefined' || !window.gtag) return;
+
+  // Set enhanced conversion data if provided
+  if (userData) {
+    setEnhancedConversionData(userData);
+  }
 
   const conversionData: ConversionEvent = {
     send_to: GOOGLE_ADS_CONVERSIONS.PURCHASE,
