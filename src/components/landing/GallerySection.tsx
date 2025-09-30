@@ -1,12 +1,17 @@
 // src/components/landing/GallerySection.tsx
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Carousel from 'react-multi-carousel';
 import 'react-multi-carousel/lib/styles.css';
 
 export const GallerySection = () => {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   // Gallery images from public/images/gallery
   const galleryImages = [
     {
@@ -69,7 +74,7 @@ export const GallerySection = () => {
       <div className="w-full">
         <div className="w-full px-0 md:px-6">
           <div className="gallery-carousel-container">
-            <Carousel
+            {isClient && <Carousel
             responsive={responsive}
             infinite={true}
             autoPlay={false}
@@ -160,7 +165,7 @@ export const GallerySection = () => {
                 </div>
               </div>
             ))}
-          </Carousel>
+          </Carousel>}
           </div>
         </div>
       </div>

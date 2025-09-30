@@ -53,6 +53,12 @@ export const Header = () => {
             >
               How It Works
             </a>
+            <Link
+              href="/products"
+              className="text-text-primary/70 hover:text-text-primary transition-colors font-medium"
+            >
+              Pricing
+            </Link>
             
             {/* CTA Button */}
             <Link
