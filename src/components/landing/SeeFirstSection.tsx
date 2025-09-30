@@ -53,15 +53,15 @@ export const SeeFirstSection = () => {
               <ul className="space-y-3 text-gray-600">
                 <li className="flex items-start">
                   <span className="text-green-500 mr-2 text-xl">•</span>
-                  <span><strong>FREE proof</strong> — upload your photo at no cost</span>
+                  <span><strong>Free artwork proof</strong> — see your masterpiece before you buy</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-green-500 mr-2 text-xl">•</span>
-                  <span>Upload in 3 minutes, get your proof in 24 hours</span>
+                  <span>Upload 2 photos, get your proof in 24 hours</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-green-500 mr-2 text-xl">•</span>
-                  <span>Love it? Buy it. Don't love it? Walk away!</span>
+                  <span>Want it on your wall? We'll ship a physical artwork to you.</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-green-500 mr-2 text-xl">•</span>
@@ -75,7 +75,7 @@ export const SeeFirstSection = () => {
         {/* Bottom CTA */}
         <div className="text-center">
           <p className="text-2xl md:text-3xl font-arvo font-bold text-text-primary mb-4">
-            Upload in 3 minutes, get your FREE proof in 24 hours! 🎨
+            Upload 2 photos, get your proof in 24 hours! 🎨
           </p>
           <p className="text-lg text-gray-600">
             No credit card. No commitment. Just upload and see your masterpiece.
