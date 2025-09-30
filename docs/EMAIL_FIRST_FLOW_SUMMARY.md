@@ -46,6 +46,7 @@ GET  /api/artwork/by-upload-token         - Fetch artwork by token
 - **New Events**: Email Captured, Upload Deferred, Deferred Upload Completed
 - **Funnel Tracking**: Complete visibility into email → upload conversion
 - **Metrics**: Capture rate, deferred conversion rate, reminder effectiveness
+- **User Type Tracking**: Gifter vs self-purchaser differentiation (see `/docs/analytics/USER_TYPE_TRACKING.md`)
 
 ## 📊 Expected Impact
 

@@ -166,11 +166,11 @@ export async function POST(
       const artworkUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/artwork/${artwork.access_token}`
       
       const emailResult = await sendMasterpieceReadyEmail({
-        customerName: artwork.customer_name,
+        customerName: artwork.customer_name || '',
         customerEmail: artwork.customer_email,
         petName: artwork.pet_name,
         artworkUrl,
-        generatedImageUrl: uploadedImageUrl
+        imageUrl: uploadedImageUrl
       })
 
       if (emailResult.success) {

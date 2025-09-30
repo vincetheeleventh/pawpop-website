@@ -8,12 +8,13 @@ export async function POST(request: NextRequest) {
       reviewId, 
       reviewType, 
       customerName, 
+      customerEmail,
       petName, 
       imageUrl, 
       falGenerationUrl 
     } = body
 
-    if (!reviewId || !reviewType || !customerName || !imageUrl) {
+    if (!reviewId || !reviewType || !customerEmail || !imageUrl) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields' },
         { status: 400 }
@@ -23,7 +24,8 @@ export async function POST(request: NextRequest) {
     const result = await sendAdminReviewNotification({
       reviewId,
       reviewType,
-      customerName,
+      customerName: customerName || '',
+      customerEmail,
       petName,
       imageUrl,
       falGenerationUrl

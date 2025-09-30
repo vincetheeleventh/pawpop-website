@@ -74,6 +74,9 @@ export interface Artwork {
   upload_completed_at?: string
   upload_token?: string
   
+  // User type tracking (gifter vs self-purchaser analytics)
+  user_type?: 'gifter' | 'self_purchaser'
+  
   created_at: string
   updated_at: string
 }

@@ -79,7 +79,8 @@ export async function createAdminReview(data: CreateReviewData): Promise<AdminRe
       await sendAdminReviewNotification({
         reviewId: review.id,
         reviewType: data.review_type,
-        customerName: data.customer_name,
+        customerName: data.customer_name || '',
+        customerEmail: data.customer_email,
         petName: data.pet_name,
         imageUrl: data.image_url,
         falGenerationUrl: data.fal_generation_url

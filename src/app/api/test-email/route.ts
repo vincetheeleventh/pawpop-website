@@ -15,6 +15,7 @@ export async function POST(req: Request) {
       orderNumber: `test_order_${Date.now()}`,
       productType: 'art_print',
       productSize: '16x24',
+      price: 36.00,
       amount: 3600, // $36.00 in cents
       currency: 'cad',
       petName: 'Buddy'

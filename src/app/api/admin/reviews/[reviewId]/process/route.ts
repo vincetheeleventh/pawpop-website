@@ -73,10 +73,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           if (review.review_type === 'artwork_proof' && artwork?.access_token) {
             // For artwork proof approval: Send completion email
             const emailResult = await sendMasterpieceReadyEmail({
-              customerName: review.customer_name,
+              customerName: review.customer_name || '',
               customerEmail: review.customer_email,
               artworkUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/artwork/${artwork.access_token}`,
-              generatedImageUrl: review.image_url
+              imageUrl: review.image_url
             })
 
             if (emailResult.success) {

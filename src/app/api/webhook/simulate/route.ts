@@ -38,11 +38,12 @@ export async function POST(req: Request) {
       
       if (customerEmail) {
         await sendOrderConfirmationEmail({
-          customerName,
+          customerName: customerName || '',
           customerEmail,
           orderNumber: session.id,
           productType: metadata.productType || 'PawPop Print',
           productSize: metadata.size,
+          price: (session.amount_total || 0) / 100,
           amount: session.amount_total || 0,
           currency: session.currency || 'cad',
           petName: metadata.petName

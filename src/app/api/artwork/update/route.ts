@@ -123,19 +123,18 @@ export async function PATCH(request: NextRequest) {
     // BUT ONLY if manual approval is disabled
     if (generation_step === 'completed' && existingArtwork.generation_step !== 'completed' && generated_image_url) {
       const artworkUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://pawpopart.com'}/artwork/${existingArtwork.access_token}`
-      
       // Check if manual approval is enabled
       const { isHumanReviewEnabled } = await import('@/lib/admin-review');
       
       if (!isHumanReviewEnabled()) {
         // Only send completion email if manual approval is disabled
         try {
-          await sendMasterpieceReadyEmail({
-            customerName: existingArtwork.customer_name,
-            customerEmail: existingArtwork.customer_email,
+          const emailResult = await sendMasterpieceReadyEmail({
+            customerName: updatedArtwork.customer_name || existingArtwork.customer_name || '',
+            customerEmail: updatedArtwork.customer_email || existingArtwork.customer_email,
             petName: updatedArtwork.pet_name || existingArtwork.pet_name,
             artworkUrl,
-            generatedImageUrl: generated_image_url
+            imageUrl: generated_image_url
           })
           console.log('Masterpiece ready email sent successfully (manual approval disabled)')
         } catch (emailError) {

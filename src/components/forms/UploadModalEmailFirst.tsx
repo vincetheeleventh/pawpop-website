@@ -42,6 +42,7 @@ interface FormData {
   petPhoto: File | Blob | null;
   name: string;
   email: string;
+  isGift: boolean;
 }
 
 type FlowStep = 'email-capture' | 'upload-choice' | 'photo-upload' | 'processing' | 'complete';
@@ -58,7 +59,8 @@ export const UploadModalEmailFirst = ({ isOpen, onClose, prefillData }: UploadMo
     petMomPhoto: null,
     petPhoto: null,
     name: prefillData?.customerName || '',
-    email: prefillData?.customerEmail || ''
+    email: prefillData?.customerEmail || '',
+    isGift: false
   });
   const [artworkId, setArtworkId] = useState<string | null>(prefillData?.artworkId || null);
   const [uploadToken, setUploadToken] = useState<string | null>(null);
@@ -71,7 +73,7 @@ export const UploadModalEmailFirst = ({ isOpen, onClose, prefillData }: UploadMo
   const router = useRouter();
   
   // Analytics tracking
-  const { trackFunnel, trackInteraction, trackPerformance } = usePlausibleTracking();
+  const { trackFunnel, trackInteraction, trackPerformance, trackEvent } = usePlausibleTracking();
   const clarityTracking = useClarityTracking();
 
   const petMomInputRef = useRef<HTMLInputElement>(null);
@@ -130,8 +132,8 @@ export const UploadModalEmailFirst = ({ isOpen, onClose, prefillData }: UploadMo
 
   // Handle email capture and artwork creation
   const handleEmailCapture = async () => {
-    if (!formData.name || !formData.email) {
-      setError('Please enter your name and email');
+    if (!formData.email) {
+      setError('Please enter your email');
       return;
     }
 
@@ -142,37 +144,35 @@ export const UploadModalEmailFirst = ({ isOpen, onClose, prefillData }: UploadMo
       return;
     }
 
+    const userType = formData.isGift ? 'gifter' : 'self_purchaser';
+
     setIsSubmitting(true);
     setError(null);
 
     try {
-      // Track email capture
+      // Track email capture with user type
+      trackEvent('Email Captured', { user_type: userType, is_gift: formData.isGift });
       trackFunnel.emailCaptured();
       trackInteraction.formStart('Email Capture Form');
       trackInteraction.formComplete('Email Capture Form');
       clarityTracking.trackInteraction.formStarted('email_capture');
       clarityTracking.trackInteraction.formCompleted('email_capture');
+      clarityTracking.setTag('user_type', userType);
+      clarityTracking.setTag('is_gift', formData.isGift);
 
       // Track Google Ads email capture conversion with enhanced conversion data
       if (typeof window !== 'undefined') {
         const { trackPhotoUpload } = await import('@/lib/google-ads');
         
-        // Parse name into first and last name
-        const nameParts = formData.name.trim().split(' ');
-        const firstName = nameParts[0] || '';
-        const lastName = nameParts.slice(1).join(' ') || '';
-        
         // Track email capture (using PHOTO_UPLOAD conversion for email-first flow)
-        // This tracks when user enters email, not when they upload photos
-        trackPhotoUpload(2, {
-          email: formData.email,
-          address: {
-            first_name: firstName,
-            last_name: lastName
-          }
+        // Higher value for gifters (typically higher purchase intent)
+        const conversionValue = formData.isGift ? 3 : 2; // $3 CAD for gifters, $2 for self-purchasers
+        
+        trackPhotoUpload(conversionValue, {
+          email: formData.email
         });
         
-        console.log('Google Ads: Email capture conversion tracked with enhanced data');
+        console.log(`Google Ads: Email capture conversion tracked (${userType}, value: $${conversionValue})`);
       }
 
       // Create artwork record with email captured
@@ -180,10 +180,11 @@ export const UploadModalEmailFirst = ({ isOpen, onClose, prefillData }: UploadMo
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          customer_name: formData.name,
+          customer_name: '', // Will be collected later if needed
           customer_email: formData.email,
           email_captured_at: new Date().toISOString(),
-          upload_deferred: false // Will be set to true if they choose "Upload Later"
+          upload_deferred: false, // Will be set to true if they choose "Upload Later"
+          user_type: userType // Track gifter vs self_purchaser
         }),
       });
 
@@ -265,7 +266,7 @@ export const UploadModalEmailFirst = ({ isOpen, onClose, prefillData }: UploadMo
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          customerName: formData.name,
+          customerName: '', // Name not collected in email-first flow
           customerEmail: formData.email,
           uploadUrl
         })
@@ -569,7 +570,7 @@ export const UploadModalEmailFirst = ({ isOpen, onClose, prefillData }: UploadMo
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                customerName: formData.name,
+                customerName: '', // Name not collected in email-first flow
                 customerEmail: formData.email,
                 petName: '',
                 artworkUrl
@@ -713,26 +714,11 @@ export const UploadModalEmailFirst = ({ isOpen, onClose, prefillData }: UploadMo
                   Create Your Unique Masterpiece
                 </h2>
                 <p className="text-lg text-gray-600">
-                  Enter your details to get started. You can upload photos now or later!
+                  Enter your email to get started. You can upload photos now or later!
                 </p>
               </div>
 
               <div className="space-y-4">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                    Pet Mom's Name *
-                  </label>
-                  <input
-                    id="name"
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-atomic-tangerine focus:ring-2 focus:ring-atomic-tangerine/20 outline-none transition-all"
-                    placeholder="Enter pet mom's name"
-                    required
-                  />
-                </div>
-
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                     Email Address *
@@ -745,7 +731,39 @@ export const UploadModalEmailFirst = ({ isOpen, onClose, prefillData }: UploadMo
                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-atomic-tangerine focus:ring-2 focus:ring-atomic-tangerine/20 outline-none transition-all"
                     placeholder="your@email.com"
                     required
+                    autoFocus
                   />
+                </div>
+
+                {/* Gift Toggle */}
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">🎁</span>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          Is this a gift?
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Help us personalize your experience
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, isGift: !prev.isGift }))}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-atomic-tangerine focus:ring-offset-2 ${
+                        formData.isGift ? 'bg-atomic-tangerine' : 'bg-gray-300'
+                      }`}
+                      aria-label="Toggle gift status"
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          formData.isGift ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
                 </div>
 
                 {error && (
@@ -757,7 +775,7 @@ export const UploadModalEmailFirst = ({ isOpen, onClose, prefillData }: UploadMo
 
                 <button
                   onClick={handleEmailCapture}
-                  disabled={isSubmitting || !formData.name || !formData.email}
+                  disabled={isSubmitting || !formData.email}
                   className="w-full bg-atomic-tangerine hover:bg-atomic-tangerine/90 text-white font-fredoka text-lg py-4 px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? (
@@ -774,7 +792,7 @@ export const UploadModalEmailFirst = ({ isOpen, onClose, prefillData }: UploadMo
                 </button>
 
                 <p className="text-xs text-center text-gray-500">
-                  By continuing, you agree to receive emails about your masterpiece.
+                  By continuing, you agree to receive emails about your masterpiece. We never spam.
                 </p>
               </div>
             </div>

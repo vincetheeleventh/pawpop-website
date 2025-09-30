@@ -38,10 +38,10 @@ export async function POST(request: NextRequest) {
 
     // Send masterpiece ready email
     const result = await sendMasterpieceReadyEmail({
-      customerName,
+      customerName: customerName || '',
       customerEmail,
       artworkUrl,
-      generatedImageUrl,
+      imageUrl: generatedImageUrl,
       petName
     })
 

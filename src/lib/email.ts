@@ -17,33 +17,35 @@ export interface EmailData {
 }
 
 export interface MasterpieceCreatingEmailData {
-  customerName: string
+  customerName?: string
   customerEmail: string
   petName?: string
   artworkUrl: string
 }
 
 export interface MasterpieceReadyEmailData {
-  customerName: string
+  customerName?: string
   customerEmail: string
   petName?: string
   artworkUrl: string
-  generatedImageUrl: string
+  imageUrl: string
 }
 
 export interface OrderConfirmationEmailData {
-  customerName: string
+  customerName?: string
   customerEmail: string
   orderNumber: string
   productType: string
-  productSize?: string
-  amount: number
+  productSize: string
+  price: number
+  amount: number // Price in cents
   currency: string
   petName?: string
+  shippingAddress?: any
 }
 
 export interface ShippingNotificationEmailData {
-  customerName: string
+  customerName?: string
   customerEmail: string
   orderNumber: string
   trackingNumber?: string
@@ -55,10 +57,11 @@ export interface ShippingNotificationEmailData {
 export interface AdminReviewNotificationData {
   reviewId: string
   reviewType: 'artwork_proof' | 'highres_file'
-  customerName: string
+  customerName?: string
   petName?: string
   imageUrl: string
   falGenerationUrl?: string
+  customerEmail: string
 }
 
 /**
@@ -150,7 +153,7 @@ export async function sendMasterpieceCreatingEmail(data: MasterpieceCreatingEmai
         </div>
         
         <div class="content">
-          <h2>Hi ${data.customerName}!</h2>
+          <h2>${data.customerName ? `Hi ${data.customerName}!` : 'Hello there! 👋'}</h2>
           
           <p>Thank you for choosing PawPop! We've received your beautiful photo${petNameText} and our artists are now working their magic to create your handcrafted, one-of-a-kind Mona Lisa masterpiece.</p>
           
@@ -227,12 +230,12 @@ export async function sendMasterpieceReadyEmail(data: MasterpieceReadyEmailData)
         </div>
         
         <div class="content">
-          <h2>Hi ${data.customerName}!</h2>
+          <h2>${data.customerName ? `Hi ${data.customerName}!` : 'Amazing news! 🎉'}</h2>
           
-          <p>Amazing news! We've completed${petNameText} stunning Mona Lisa transformation. The result is absolutely beautiful!</p>
+          <p>${data.customerName ? 'We\'ve' : 'Your'} completed${petNameText} stunning Mona Lisa transformation${data.customerName ? '' : ' is ready'}. The result is absolutely beautiful!</p>
           
           <div class="artwork-preview">
-            <img src="${data.generatedImageUrl}" alt="Your PawPop Masterpiece" style="max-width: 200px; height: auto; border-radius: 8px;" />
+            <img src="${data.imageUrl}" alt="Your PawPop Masterpiece" style="max-width: 200px; height: auto; border-radius: 8px;" />
           </div>
           
           <p><strong>Your unique masterpiece is ready to view!</strong></p>
@@ -313,7 +316,7 @@ export async function sendOrderConfirmationEmail(data: OrderConfirmationEmailDat
         </div>
         
         <div class="content">
-          <h2>Thank you for your order, ${data.customerName}!</h2>
+          <h2>${data.customerName ? `Thank you for your order, ${data.customerName}!` : 'Thank you for your order! 🎨'}</h2>
           
           <p>We've received your order${petNameText} and are excited to create your beautiful PawPop print!</p>
           
@@ -408,7 +411,7 @@ export async function sendShippingNotificationEmail(data: ShippingNotificationEm
         </div>
         
         <div class="content">
-          <h2>Great news, ${data.customerName}!</h2>
+          <h2>${data.customerName ? `Great news, ${data.customerName}!` : 'Great news! 📦'}</h2>
           
           <p>Your PawPop ${data.productType} (Order #${data.orderNumber}) has been carefully packaged and is now on its way to you!</p>
           
@@ -690,7 +693,7 @@ export async function sendAdminReviewNotification(data: AdminReviewNotificationD
  * Send email confirmation after email capture (before photo upload)
  */
 export interface EmailCaptureConfirmationData {
-  customerName: string
+  customerName?: string
   customerEmail: string
   uploadUrl: string
 }
@@ -723,7 +726,7 @@ export async function sendEmailCaptureConfirmation(data: EmailCaptureConfirmatio
         </div>
         
         <div class="content">
-          <h2>Hi ${data.customerName}! 👋</h2>
+          <h2>${data.customerName ? `Hi ${data.customerName}! 👋` : 'Welcome to PawPop! 👋'}</h2>
           
           <p style="font-size: 16px; line-height: 1.8;">
             Thanks for your interest in creating a Renaissance masterpiece! We've saved your spot and you can upload your photos whenever you're ready.
@@ -794,7 +797,7 @@ export async function sendEmailCaptureConfirmation(data: EmailCaptureConfirmatio
  * Send upload reminder email (24h, 72h, 7d)
  */
 export interface UploadReminderData {
-  customerName: string
+  customerName?: string
   customerEmail: string
   uploadUrl: string
   reminderNumber: number // 1, 2, or 3
@@ -859,7 +862,7 @@ export async function sendUploadReminder(data: UploadReminderData): Promise<{ su
         </div>
         
         <div class="content">
-          <h2>Hi ${data.customerName}!</h2>
+          <h2>${data.customerName ? `Hi ${data.customerName}!` : msg.headline}</h2>
           
           <p style="font-size: 16px; line-height: 1.8;">
             ${msg.message}
@@ -924,7 +927,7 @@ export async function sendUploadReminder(data: UploadReminderData): Promise<{ su
   const text = `
 ${msg.headline}
 
-Hi ${data.customerName}!
+${data.customerName ? `Hi ${data.customerName}!` : 'Hello!'}
 
 ${msg.message}
 
