@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Upload, ArrowRight, ArrowLeft, Check, Camera, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import usePlausibleTracking from '@/hooks/usePlausibleTracking';
-import { hotjar } from '@/lib/hotjar';
+import useClarityTracking from '@/hooks/useClarityTracking';
 import { 
   validateUploadFile, 
   ensureFileObject, 
@@ -62,6 +62,9 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
   
   // Plausible tracking
   const { trackFunnel, trackInteraction, trackPerformance, getPriceVariant } = usePlausibleTracking();
+  
+  // Clarity tracking
+  const clarityTracking = useClarityTracking();
 
   const petMomInputRef = useRef<HTMLInputElement>(null);
   const petInputRef = useRef<HTMLInputElement>(null);
@@ -96,7 +99,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
     if (isOpen) {
       trackFunnel.uploadModalOpened();
       trackInteraction.modalOpen('Upload Modal');
-      hotjar.upload.modalOpened();
+      clarityTracking.trackFunnel.uploadModalOpened();
     }
   }, [isOpen]); // Remove trackFunnel and trackInteraction from deps to prevent infinite loops
 
@@ -368,7 +371,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
       upload_type: type,
       converted_from_heic: file.type === 'image/heic' || file.type === 'image/heif'
     });
-    hotjar.upload.photoUploaded();
+    clarityTracking.trackFunnel.photoUploaded(file.type, file.size);
 
       // Scroll to bottom to reveal next button after upload
       scrollToBottom();
@@ -447,7 +450,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
     // Track form submission start
     trackFunnel.artworkGenerationStarted();
     trackInteraction.formStart('Upload Form');
-    hotjar.upload.formSubmitted();
+    clarityTracking.trackFunnel.artworkGenerationStarted();
     
     const startTime = Date.now();
     
@@ -907,7 +910,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
       // Track error
       trackInteraction.error('Upload Form Error', error instanceof Error ? error.message : 'Unknown error');
       trackPerformance.imageGeneration('Full Artwork Pipeline', Math.round((Date.now() - startTime) / 1000), false);
-      hotjar.upload.error(error instanceof Error ? error.message : 'unknown');
+      clarityTracking.trackInteraction.errorOccurred('upload_form_error', error instanceof Error ? error.message : 'unknown');
       
       setError(error instanceof Error ? error.message : 'Something went wrong');
       setProcessing({ step: 'error', message: 'Submission failed', progress: 0 });
