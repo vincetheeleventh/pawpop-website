@@ -4,9 +4,11 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { HeroSection } from "@/components/landing/HeroSection";
 import { GallerySection } from "@/components/landing/GallerySection";
+import { SeeFirstSection } from "@/components/landing/SeeFirstSection";
 import { ReactionsSection } from "@/components/landing/ReactionsSection";
 import { WhyPawPopSection } from "@/components/landing/WhyPawPopSection";
 import { ProcessSection } from "@/components/landing/ProcessSection";
+import { PricingSection } from "@/components/landing/PricingSection";
 
 function HomeContent() {
   const searchParams = useSearchParams();
@@ -20,6 +22,9 @@ function HomeContent() {
       <section id="gallery">
         <GallerySection />
       </section>
+      <section id="see-first">
+        <SeeFirstSection />
+      </section>
       <section id="testimonials">
         <ReactionsSection />
       </section>
@@ -28,6 +33,9 @@ function HomeContent() {
       </section>
       <section id="process">
         <ProcessSection />
+      </section>
+      <section id="pricing">
+        <PricingSection />
       </section>
     </div>
   );

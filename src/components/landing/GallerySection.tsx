@@ -57,7 +57,7 @@ export const GallerySection = () => {
     <section className="w-full bg-site-bg py-8 md:py-12">
       {/* Section Title - Always visible, outside carousel container */}
       <div className="text-center mb-6 md:mb-8 px-6">
-        <h2 className="font-arvo text-3xl md:text-4xl font-bold text-text-primary mb-2">
+        <h2 className="font-arvo text-5xl md:text-6xl lg:text-7xl font-bold text-text-primary mb-2">
           Gallery
         </h2>
         <p className="text-gray-600 text-base md:text-lg">
@@ -135,7 +135,7 @@ export const GallerySection = () => {
             }
           >
             {galleryImages.map((image, index) => (
-              <div key={index} className="px-2 md:px-3">
+              <div key={index} className="px-0 md:px-3">
                 <div className="relative w-full">
                   <Image
                     src={image.src}
@@ -146,7 +146,7 @@ export const GallerySection = () => {
                       w-full h-auto
                       object-contain object-center
                       select-none block
-                      rounded-lg md:rounded-xl
+                      rounded-none md:rounded-xl
                       shadow-lg hover:shadow-xl
                       transition-shadow duration-200
                     "
@@ -156,7 +156,7 @@ export const GallerySection = () => {
                     draggable={false}
                   />
                   {/* Optional overlay for better visual appeal */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent pointer-events-none rounded-lg md:rounded-xl" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent pointer-events-none rounded-none md:rounded-xl" />
                 </div>
               </div>
             ))}
