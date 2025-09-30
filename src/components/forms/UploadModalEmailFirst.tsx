@@ -29,6 +29,12 @@ import {
 interface UploadModalEmailFirstProps {
   isOpen: boolean;
   onClose: () => void;
+  prefillData?: {
+    artworkId?: string;
+    customerName?: string;
+    customerEmail?: string;
+    skipEmailCapture?: boolean;
+  };
 }
 
 interface FormData {
@@ -46,15 +52,15 @@ interface ProcessingState {
   progress: number;
 }
 
-export const UploadModalEmailFirst = ({ isOpen, onClose }: UploadModalEmailFirstProps) => {
-  const [flowStep, setFlowStep] = useState<FlowStep>('email-capture');
+export const UploadModalEmailFirst = ({ isOpen, onClose, prefillData }: UploadModalEmailFirstProps) => {
+  const [flowStep, setFlowStep] = useState<FlowStep>(prefillData?.skipEmailCapture ? 'photo-upload' : 'email-capture');
   const [formData, setFormData] = useState<FormData>({
     petMomPhoto: null,
     petPhoto: null,
-    name: '',
-    email: ''
+    name: prefillData?.customerName || '',
+    email: prefillData?.customerEmail || ''
   });
-  const [artworkId, setArtworkId] = useState<string | null>(null);
+  const [artworkId, setArtworkId] = useState<string | null>(prefillData?.artworkId || null);
   const [uploadToken, setUploadToken] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [processing, setProcessing] = useState<ProcessingState | null>(null);
@@ -146,6 +152,28 @@ export const UploadModalEmailFirst = ({ isOpen, onClose }: UploadModalEmailFirst
       trackInteraction.formComplete('Email Capture Form');
       clarityTracking.trackInteraction.formStarted('email_capture');
       clarityTracking.trackInteraction.formCompleted('email_capture');
+
+      // Track Google Ads email capture conversion with enhanced conversion data
+      if (typeof window !== 'undefined') {
+        const { trackPhotoUpload } = await import('@/lib/google-ads');
+        
+        // Parse name into first and last name
+        const nameParts = formData.name.trim().split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
+        
+        // Track email capture (using PHOTO_UPLOAD conversion for email-first flow)
+        // This tracks when user enters email, not when they upload photos
+        trackPhotoUpload(2, {
+          email: formData.email,
+          address: {
+            first_name: firstName,
+            last_name: lastName
+          }
+        });
+        
+        console.log('Google Ads: Email capture conversion tracked with enhanced data');
+      }
 
       // Create artwork record with email captured
       const createResponse = await fetch('/api/artwork/create', {

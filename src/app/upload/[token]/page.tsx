@@ -137,10 +137,16 @@ export default function DeferredUploadPage() {
       </div>
 
       {/* Upload Modal - Pre-filled with customer info */}
-      {showUploadModal && (
+      {showUploadModal && artwork && (
         <UploadModalEmailFirst
           isOpen={showUploadModal}
           onClose={() => setShowUploadModal(false)}
+          prefillData={{
+            artworkId: artwork.id,
+            customerName: artwork.customer_name,
+            customerEmail: artwork.customer_email,
+            skipEmailCapture: true
+          }}
         />
       )}
     </div>
