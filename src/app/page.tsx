@@ -6,8 +6,6 @@ import { HeroSection } from "@/components/landing/HeroSection";
 import { GallerySection } from "@/components/landing/GallerySection";
 import { SeeFirstSection } from "@/components/landing/SeeFirstSection";
 import { ReactionsSection } from "@/components/landing/ReactionsSection";
-import { WhyPawPopSection } from "@/components/landing/WhyPawPopSection";
-import { ProcessSection } from "@/components/landing/ProcessSection";
 import { PricingSection } from "@/components/landing/PricingSection";
 
 function HomeContent() {
@@ -27,12 +25,6 @@ function HomeContent() {
       </section>
       <section id="testimonials">
         <ReactionsSection />
-      </section>
-      <section id="why">
-        <WhyPawPopSection />
-      </section>
-      <section id="process">
-        <ProcessSection />
       </section>
       <section id="pricing">
         <PricingSection />

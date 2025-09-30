@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { UploadModal } from '@/components/forms/UploadModal';
+import { UploadModalEmailFirst } from '@/components/forms/UploadModalEmailFirst';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
@@ -28,10 +28,10 @@ export default function UploadPageClient() {
           </Link>
 
           <h1 className="text-3xl font-arvo font-bold text-text-primary text-center mb-4">
-            Upload Your Pet's Photo
+            Create Your Custom Pet Portrait
           </h1>
           <p className="text-lg text-text-primary/80 text-center mb-8">
-            Transform your pet's photo into a beautiful custom portrait
+            Enter your email first, then upload your pet's photo to create a beautiful custom portrait
           </p>
           
           {/* CTA Button to open modal */}
@@ -49,15 +49,15 @@ export default function UploadPageClient() {
                   min-h-[56px] touch-manipulation
                 "
               >
-                Start Upload
+                Start Creating
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Upload Modal */}
-      <UploadModal 
+      {/* Upload Modal - Email First Flow */}
+      <UploadModalEmailFirst 
         isOpen={isModalOpen} 
         onClose={handleClose} 
       />

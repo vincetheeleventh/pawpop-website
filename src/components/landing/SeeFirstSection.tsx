@@ -57,7 +57,7 @@ export const SeeFirstSection = () => {
                 </li>
                 <li className="flex items-start">
                   <span className="text-green-500 mr-2 text-xl">•</span>
-                  <span>See your unique artwork in ~3 minutes</span>
+                  <span>Upload in 3 minutes, get your proof in 24 hours</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-green-500 mr-2 text-xl">•</span>
@@ -75,7 +75,7 @@ export const SeeFirstSection = () => {
         {/* Bottom CTA */}
         <div className="text-center">
           <p className="text-2xl md:text-3xl font-arvo font-bold text-text-primary mb-4">
-            Get your FREE proof in 3 minutes! 🎨
+            Upload in 3 minutes, get your FREE proof in 24 hours! 🎨
           </p>
           <p className="text-lg text-gray-600">
             No credit card. No commitment. Just upload and see your masterpiece.
