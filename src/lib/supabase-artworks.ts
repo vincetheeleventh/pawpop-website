@@ -14,6 +14,9 @@ export interface CreateArtworkData {
   customer_email: string
   pet_name?: string
   user_id?: string
+  email_captured_at?: string
+  upload_deferred?: boolean
+  user_type?: 'gifter' | 'self_purchaser'
   source_images?: {
     pet_photo?: string
     pet_mom_photo?: string

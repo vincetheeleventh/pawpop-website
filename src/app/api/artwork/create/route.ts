@@ -6,12 +6,12 @@ import { isValidEmail } from '@/lib/utils'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { customer_name, customer_email, pet_name } = body
+    const { customer_name, customer_email, pet_name, email_captured_at, upload_deferred, user_type } = body
 
-    // Validate required fields
-    if (!customer_name || !customer_email) {
+    // Validate required fields (customer_name is optional for email-first flow)
+    if (!customer_email) {
       return NextResponse.json(
-        { error: 'Missing required fields: customer_name, customer_email' },
+        { error: 'Missing required field: customer_email' },
         { status: 400 }
       )
     }
@@ -26,9 +26,12 @@ export async function POST(request: NextRequest) {
 
     // Create artwork record
     const { artwork, access_token } = await createArtwork({
-      customer_name,
+      customer_name: customer_name || '',
       customer_email,
-      pet_name
+      pet_name: pet_name || '',
+      email_captured_at,
+      upload_deferred,
+      user_type
     })
 
     return NextResponse.json({
