@@ -7,7 +7,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { artworkId } = body
 
+    console.log('📝 Generate upload token request for artwork:', artworkId)
+
     if (!artworkId) {
+      console.error('❌ Missing artworkId in request')
       return NextResponse.json(
         { error: 'Missing artworkId' },
         { status: 400 }
@@ -15,6 +18,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!supabaseAdmin) {
+      console.error('❌ Database not configured')
       return NextResponse.json(
         { error: 'Database not configured' },
         { status: 500 }
@@ -22,12 +26,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate upload token using database function
+    console.log('🔄 Calling generate_upload_token database function...')
     const { data, error } = await supabaseAdmin.rpc('generate_upload_token')
 
     if (error) {
-      console.error('Failed to generate upload token:', error)
+      console.error('❌ Failed to generate upload token:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      })
       return NextResponse.json(
-        { error: 'Failed to generate upload token' },
+        { 
+          error: 'Failed to generate upload token',
+          details: error.message,
+          hint: error.hint
+        },
         { status: 500 }
       )
     }

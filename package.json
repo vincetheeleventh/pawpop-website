@@ -31,6 +31,8 @@
     "test:admin-review-unit": "vitest run tests/lib/admin-review-simple.test.ts tests/api/admin-reviews-simple.test.ts",
     "test:admin-review-e2e": "playwright test tests/e2e/admin-review-system.spec.ts tests/e2e/admin-review-order-flow.spec.ts tests/e2e/admin-review-email-flow.spec.ts",
     "test:admin-review-quick": "vitest run tests/lib/admin-review-simple.test.ts --reporter=verbose",
+    "test:email-first-tracking": "vitest run tests/components/UploadModalEmailFirst-tracking.test.tsx --reporter=verbose",
+    "validate:email-first-tracking": "node scripts/validate-email-first-tracking.js",
     "migration:status": "node scripts/migration-manager.js status",
     "migration:create": "node scripts/migration-manager.js create",
     "migration:apply": "node scripts/migration-manager.js apply",

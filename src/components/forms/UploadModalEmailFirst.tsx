@@ -143,7 +143,9 @@ export const UploadModalEmailFirst = ({ isOpen, onClose }: UploadModalEmailFirst
       // Track email capture
       trackFunnel.emailCaptured();
       trackInteraction.formStart('Email Capture Form');
+      trackInteraction.formComplete('Email Capture Form');
       clarityTracking.trackInteraction.formStarted('email_capture');
+      clarityTracking.trackInteraction.formCompleted('email_capture');
 
       // Create artwork record with email captured
       const createResponse = await fetch('/api/artwork/create', {
@@ -172,18 +174,26 @@ export const UploadModalEmailFirst = ({ isOpen, onClose }: UploadModalEmailFirst
         body: JSON.stringify({ artworkId: artwork.id }),
       });
 
-      if (tokenResponse.ok) {
-        const { uploadToken: token } = await tokenResponse.json();
-        setUploadToken(token);
+      if (!tokenResponse.ok) {
+        const tokenError = await tokenResponse.json();
+        throw new Error(tokenError.error || 'Failed to generate upload token');
       }
-
-      console.log('✅ Email captured, artwork created:', artwork.id);
+      
+      const { uploadToken: token } = await tokenResponse.json();
+      setUploadToken(token);
+      
+      console.log('✅ Email captured, artwork created:', artwork.id, 'Upload token:', token);
 
       // Move to upload choice step
       setFlowStep('upload-choice');
 
     } catch (error) {
-      console.error('Error capturing email:', error);
+      console.error('❌ Error capturing email:', error);
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        fullError: error
+      });
       setError(error instanceof Error ? error.message : 'Failed to save your information');
     } finally {
       setIsSubmitting(false);
@@ -194,6 +204,7 @@ export const UploadModalEmailFirst = ({ isOpen, onClose }: UploadModalEmailFirst
   const handleUploadNow = () => {
     setFlowStep('photo-upload');
     trackInteraction.buttonClick('Upload Now', 'upload-choice');
+    clarityTracking.trackInteraction.buttonClick('upload_now', 'upload-choice');
   };
 
   // Handle "Upload Later" choice
@@ -234,7 +245,9 @@ export const UploadModalEmailFirst = ({ isOpen, onClose }: UploadModalEmailFirst
 
       trackInteraction.buttonClick('Upload Later', 'upload-choice');
       trackFunnel.deferredUpload();
+      trackInteraction.formComplete('Deferred Upload Choice');
       clarityTracking.trackInteraction.buttonClick('upload_later', 'upload-choice');
+      clarityTracking.trackInteraction.formCompleted('deferred_upload');
 
       console.log('✅ Upload Later successful - showing completion message');
 
@@ -368,8 +381,10 @@ export const UploadModalEmailFirst = ({ isOpen, onClose }: UploadModalEmailFirst
       trackInteraction.featureUsed('Photo Upload', {
         file_type: file.type,
         file_size_mb: Math.round(file.size / 1024 / 1024 * 100) / 100,
-        upload_type: type
+        upload_type: type,
+        converted_from_heic: needsHeicConversion
       });
+      clarityTracking.trackFunnel.photoUploaded(file.type, file.size);
       
       uploadProgressTracker.updateProgress(uploadId, 100);
       uploadProgressTracker.complete(uploadId);
@@ -432,7 +447,8 @@ export const UploadModalEmailFirst = ({ isOpen, onClose }: UploadModalEmailFirst
     setFlowStep('processing');
     
     trackFunnel.artworkGenerationStarted();
-    trackInteraction.formStart('Upload Form');
+    trackInteraction.formStart('Upload Form - Email First');
+    clarityTracking.trackFunnel.artworkGenerationStarted();
     
     const startTime = Date.now();
     
@@ -580,9 +596,35 @@ export const UploadModalEmailFirst = ({ isOpen, onClose }: UploadModalEmailFirst
                 })
               });
 
+              // Track artwork generation completion with enhanced user data
+              if (typeof window !== 'undefined') {
+                const { trackArtworkGeneration } = await import('@/lib/google-ads');
+                trackArtworkGeneration(artworkId, 15); // $15 CAD qualified lead value
+              }
+
+              // Check if manual approval is enabled before tracking completion
               const generationTime = Math.round((Date.now() - startTime) / 1000);
-              trackFunnel.artworkCompleted(generationTime);
-              trackInteraction.formComplete('Upload Form', generationTime);
+              
+              try {
+                const { isHumanReviewEnabled } = await import('@/lib/admin-review');
+                
+                if (isHumanReviewEnabled()) {
+                  // Track generation complete but pending approval
+                  trackFunnel.artworkGenerationStarted(); // Use generation started instead of completed
+                  trackInteraction.formComplete('Upload Form - Email First - Pending Approval', generationTime);
+                  trackPerformance.imageGeneration('Full Artwork Pipeline - Email First - Pending Approval', generationTime, true);
+                } else {
+                  // Track full completion for automated flow
+                  trackFunnel.artworkCompleted(generationTime);
+                  trackInteraction.formComplete('Upload Form - Email First', generationTime);
+                  trackPerformance.imageGeneration('Full Artwork Pipeline - Email First', generationTime, true);
+                }
+              } catch {
+                // Fallback if admin-review module not available
+                trackFunnel.artworkCompleted(generationTime);
+                trackInteraction.formComplete('Upload Form - Email First', generationTime);
+                trackPerformance.imageGeneration('Full Artwork Pipeline - Email First', generationTime, true);
+              }
               
               setProcessing({
                 step: 'complete',
@@ -601,6 +643,12 @@ export const UploadModalEmailFirst = ({ isOpen, onClose }: UploadModalEmailFirst
 
     } catch (error) {
       console.error('Error during artwork generation:', error);
+      
+      // Track error
+      trackInteraction.error('Upload Form Error - Email First', error instanceof Error ? error.message : 'Unknown error');
+      trackPerformance.imageGeneration('Full Artwork Pipeline - Email First', Math.round((Date.now() - startTime) / 1000), false);
+      clarityTracking.trackInteraction.errorOccurred('upload_form_error_email_first', error instanceof Error ? error.message : 'unknown');
+      
       setError(error instanceof Error ? error.message : 'Failed to generate artwork');
       setProcessing({
         step: 'error',
