@@ -5,6 +5,7 @@ import { X, Minus, Plus, Truck, Star } from 'lucide-react'
 import { redirectToCheckout } from '@/lib/stripe-simple'
 import { getDynamicPricing } from '@/lib/copy'
 import usePlausibleTracking from '@/hooks/usePlausibleTracking'
+import useClarityTracking from '@/hooks/useClarityTracking'
 
 interface Mockup {
   type: string
@@ -86,6 +87,7 @@ export default function ProductPurchaseModal({
 
   // Plausible tracking and dynamic pricing
   const { trackFunnel, trackInteraction, trackPriceExposure, getPriceConfig } = usePlausibleTracking()
+  const clarityTracking = useClarityTracking()
   const dynamicPricing = getDynamicPricing()
   const priceConfig = getPriceConfig()
 
@@ -94,6 +96,7 @@ export default function ProductPurchaseModal({
     if (isOpen) {
       trackFunnel.purchaseModalOpened(productType)
       trackInteraction.modalOpen('Product Purchase Modal')
+      clarityTracking.trackFunnel.purchaseModalOpened(productType)
       
       // Track price variant exposure
       const currentPrice = getCurrentPrice()
@@ -246,6 +249,7 @@ export default function ProductPurchaseModal({
     // Track checkout initiation
     trackFunnel.checkoutInitiated(productType, currentPrice, quantity)
     trackInteraction.buttonClick('Buy Now', 'Purchase Modal')
+    clarityTracking.trackFunnel.checkoutInitiated(productType, currentPrice)
 
     try {
       // Validate required data
