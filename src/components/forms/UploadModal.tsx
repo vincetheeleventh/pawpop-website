@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Upload, ArrowRight, ArrowLeft, Check, Camera, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import usePlausibleTracking from '@/hooks/usePlausibleTracking';
+import { hotjar } from '@/lib/hotjar';
 import { 
   validateUploadFile, 
   ensureFileObject, 
@@ -95,6 +96,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
     if (isOpen) {
       trackFunnel.uploadModalOpened();
       trackInteraction.modalOpen('Upload Modal');
+      hotjar.upload.modalOpened();
     }
   }, [isOpen]); // Remove trackFunnel and trackInteraction from deps to prevent infinite loops
 
@@ -366,6 +368,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
       upload_type: type,
       converted_from_heic: file.type === 'image/heic' || file.type === 'image/heif'
     });
+    hotjar.upload.photoUploaded();
 
       // Scroll to bottom to reveal next button after upload
       scrollToBottom();
@@ -444,6 +447,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
     // Track form submission start
     trackFunnel.artworkGenerationStarted();
     trackInteraction.formStart('Upload Form');
+    hotjar.upload.formSubmitted();
     
     const startTime = Date.now();
     
@@ -469,10 +473,22 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
 
       // Note: Confirmation email will be sent after generation pipeline starts successfully
       
-      // Track photo upload conversion
+      // Track photo upload conversion with enhanced user data
       if (typeof window !== 'undefined') {
         const { trackPhotoUpload } = await import('@/lib/google-ads');
-        trackPhotoUpload(5); // $5 CAD lead value
+        
+        // Parse customer name into first/last name for enhanced conversions
+        const nameParts = formData.name.trim().split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
+        
+        trackPhotoUpload(5, {
+          email: formData.email,
+          address: {
+            first_name: firstName,
+            last_name: lastName
+          }
+        }); // $5 CAD lead value with enhanced conversion data
       }
       
       // Show immediate confirmation with appropriate message based on review mode
@@ -754,10 +770,22 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                     })
                   });
 
-                  // Track artwork generation completion conversion
+                  // Track artwork generation completion conversion with enhanced user data
                   if (typeof window !== 'undefined') {
                     const { trackArtworkGeneration } = await import('@/lib/google-ads');
-                    trackArtworkGeneration(artwork.id, 15); // $15 CAD qualified lead value
+                    
+                    // Parse customer name for enhanced conversions
+                    const nameParts = formData.name.trim().split(' ');
+                    const firstName = nameParts[0] || '';
+                    const lastName = nameParts.slice(1).join(' ') || '';
+                    
+                    trackArtworkGeneration(artwork.id, 15, {
+                      email: formData.email,
+                      address: {
+                        first_name: firstName,
+                        last_name: lastName
+                      }
+                    }); // $15 CAD qualified lead value with enhanced conversion data
                   }
 
                   // Check if manual approval is enabled before tracking completion
@@ -879,6 +907,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
       // Track error
       trackInteraction.error('Upload Form Error', error instanceof Error ? error.message : 'Unknown error');
       trackPerformance.imageGeneration('Full Artwork Pipeline', Math.round((Date.now() - startTime) / 1000), false);
+      hotjar.upload.error(error instanceof Error ? error.message : 'unknown');
       
       setError(error instanceof Error ? error.message : 'Something went wrong');
       setProcessing({ step: 'error', message: 'Submission failed', progress: 0 });

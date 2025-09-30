@@ -7,6 +7,15 @@ export interface ServerConversionData {
   currency: string;
   productType: string;
   customerEmail?: string;
+  customerName?: string;
+  customerPhone?: string;
+  customerAddress?: {
+    street?: string;
+    city?: string;
+    region?: string;
+    postal_code?: string;
+    country?: string;
+  };
   customParameters?: Record<string, any>;
 }
 
@@ -41,9 +50,35 @@ export async function trackServerSideConversion(
     // This sends the conversion to Google Ads via gtag
     const measurementId = conversionId.replace('AW-', 'G-'); // Convert to GA4 format if needed
     
-    // Prepare the conversion payload
+    // Prepare enhanced conversion user data
+    const userData: Record<string, any> = {};
+    
+    if (conversionData.customerEmail) {
+      userData.email = conversionData.customerEmail;
+    }
+    
+    if (conversionData.customerPhone) {
+      userData.phone_number = conversionData.customerPhone;
+    }
+    
+    if (conversionData.customerName || conversionData.customerAddress) {
+      userData.address = {};
+      
+      if (conversionData.customerName) {
+        const nameParts = conversionData.customerName.trim().split(' ');
+        userData.address.first_name = nameParts[0] || '';
+        userData.address.last_name = nameParts.slice(1).join(' ') || '';
+      }
+      
+      if (conversionData.customerAddress) {
+        Object.assign(userData.address, conversionData.customerAddress);
+      }
+    }
+
+    // Prepare the conversion payload with enhanced conversions
     const payload = {
-      client_id: generateClientId(conversionData.orderId), // Generate consistent client ID
+      client_id: generateClientId(conversionData.orderId),
+      user_data: Object.keys(userData).length > 0 ? userData : undefined,
       events: [
         {
           name: 'conversion',
@@ -80,13 +115,15 @@ export async function trackServerSideConversion(
 
     // For now, we'll log the conversion data for manual verification
     // In production, you would send this to Google's Measurement Protocol
-    console.log('🎯 Google Ads Server-Side Conversion Tracked:', {
+    console.log('🎯 Google Ads Server-Side Conversion Tracked (Enhanced):', {
       conversion_id: conversionId,
       conversion_label: conversionLabel,
       order_id: conversionData.orderId,
       value: conversionData.value,
       currency: conversionData.currency,
       product_type: conversionData.productType,
+      has_enhanced_data: Object.keys(userData).length > 0,
+      enhanced_fields: Object.keys(userData),
       timestamp: new Date().toISOString()
     });
 
