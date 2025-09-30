@@ -1,13 +1,24 @@
 // src/components/landing/PricingSection.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getDynamicPricing } from '@/lib/copy';
 import { UploadModalEmailFirst } from '@/components/forms/UploadModalEmailFirst';
 
 export const PricingSection = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const pricing = getDynamicPricing();
+  const [isClient, setIsClient] = useState(false);
+  const [pricing, setPricing] = useState<ReturnType<typeof getDynamicPricing> | null>(null);
+
+  useEffect(() => {
+    setIsClient(true);
+    setPricing(getDynamicPricing());
+  }, []);
+
+  if (!isClient || !pricing) {
+    return null; // or a loading skeleton
+  }
+
   const { title, options } = pricing;
 
   return (
