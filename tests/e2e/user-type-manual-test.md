@@ -269,7 +269,70 @@ All tests should pass with:
 
 ---
 
-## 📝 Test Results Template
+## 📝 Test Results
+
+### Automated E2E Test Results (Playwright)
+
+```
+Date: 2025-09-30
+Tester: Automated (Playwright/Chromium)
+Duration: 8.7 seconds
+
+Test 1: Email Modal UI           [✅] Pass
+  - Email input exists (verified)
+  - Name input does NOT exist (count: 0)
+  - Modal displays correctly
+  
+Test 2: Self-Purchaser Flow       [✅] Pass
+  - Default toggle state is OFF
+  - Email capture works without name
+  
+Test 3: Gifter Flow               [✅] Pass
+  - Toggle switches to ON
+  - Helper text appears
+  
+Test 4: Toggle Interaction        [✅] Pass
+  - OFF → ON transition works
+  - ON → OFF transition works
+  - Visual feedback confirmed
+  
+Test 5: Email Validation          [✅] Pass
+  - Validation error shown for empty email
+  - Form prevents submission without valid email
+  
+Test 6: Plausible Tracking        [✅] Pass
+  - Plausible scripts found: 1
+  - Script loaded successfully
+  
+Test 7: Google Ads Tracking       [✅] Pass
+  - Google Ads scripts found: 4
+  - gtag.js loaded successfully
+  
+Test 8: Clarity Tags              [✅] Pass
+  - Clarity loaded: true
+  - Available in window object
+  
+Test 9: Deferred Upload           [⚠️] Not Tested
+  - Requires full flow testing
+  
+Test 10: Immediate Upload         [⚠️] Not Tested
+  - Requires full flow testing
+  
+Test 11: Email Templates          [⚠️] Not Tested
+  - Requires email integration testing
+  
+Test 12: Database Storage         [⚠️] Not Tested
+  - Requires database access
+
+Notes:
+- All core UI and interaction tests passing (8/8)
+- Analytics integration verified and working
+- Email capture flow working without name field
+- Gift toggle functionality confirmed
+- Full flow tests require manual verification or extended E2E setup
+```
+
+### Manual Test Results Template
 
 ```
 Date: ___________
