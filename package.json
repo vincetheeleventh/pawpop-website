@@ -42,6 +42,8 @@
     "migration:apply:staging": "MIGRATION_ENV=staging npm run migration:apply",
     "migration:apply:production": "MIGRATION_ENV=production npm run migration:apply",
     "migration:test": "node scripts/test-migration-system.js",
+    "reminders:check": "node scripts/send-upload-reminders.js --dry-run",
+    "reminders:send": "node scripts/send-upload-reminders.js",
     "test:new-schema-e2e": "node scripts/test/test-new-schema-e2e.js",
     "test:plausible": "vitest run tests/lib/plausible.test.ts tests/hooks/usePlausibleTracking.test.tsx tests/integration/plausible-ab-testing.test.ts",
     "test:plausible-watch": "vitest tests/lib/plausible.test.ts tests/hooks/usePlausibleTracking.test.tsx tests/integration/plausible-ab-testing.test.ts",
