@@ -782,8 +782,9 @@ export async function sendEmailCaptureConfirmation(data: EmailCaptureConfirmatio
 
   const result = await sendEmail({
     to: data.customerEmail,
-    subject: `Your Renaissance Masterpiece Awaits! 🎨`,
-    html
+    subject: `Action Required: Complete Your PawPop Order`,
+    html,
+    replyTo: 'pawpopart@gmail.com'
   })
 
   return result
@@ -803,25 +804,28 @@ export async function sendUploadReminder(data: UploadReminderData): Promise<{ su
   // Different messaging based on reminder number
   const messages = {
     1: {
-      subject: `Ready to create your masterpiece? 🎨`,
-      emoji: '👋',
-      headline: 'Still Thinking About It?',
-      message: `We noticed you haven't uploaded your photos yet! No worries - your spot is still reserved and ready whenever you are.`,
-      urgency: ''
+      subject: `Reminder: Complete Your PawPop Order`,
+      emoji: '',
+      headline: 'Order Status: Awaiting Photos',
+      message: `You started creating a custom Renaissance portrait but haven't uploaded your photos yet. Your order is ready to process as soon as you upload.`,
+      urgency: '',
+      orderNote: '<p style="background: #F5F5F5; padding: 15px; margin: 20px 0; border-radius: 8px; font-size: 14px; color: #666;"><strong>Order Status:</strong> Awaiting photo upload<br><strong>Time to Complete:</strong> 3 minutes<br><strong>Processing Time:</strong> 2-5 minutes after upload</p>'
     },
     2: {
-      subject: `Don't miss out on your Renaissance portrait! ✨`,
-      emoji: '⏰',
-      headline: 'Your Masterpiece is Waiting',
-      message: `Just a friendly reminder that you can create your stunning Renaissance portrait anytime! It only takes 3 minutes.`,
-      urgency: '<p style="background: #FFF3CD; border-left: 4px solid #FFD670; padding: 15px; margin: 20px 0; border-radius: 8px; font-size: 15px;"><strong>💡 Limited Time:</strong> Upload within 48 hours and see your transformation!</p>'
+      subject: `Action Required: Upload Photos to Complete Order`,
+      emoji: '',
+      headline: 'Order Incomplete: Photos Needed',
+      message: `Your PawPop order is on hold pending photo upload. To complete your order and receive your Renaissance portrait, please upload your photos.`,
+      urgency: '',
+      orderNote: '<p style="background: #F5F5F5; padding: 15px; margin: 20px 0; border-radius: 8px; font-size: 14px; color: #666;"><strong>Order Status:</strong> Incomplete<br><strong>Action Needed:</strong> Upload 2 photos<br><strong>Link Expires:</strong> 7 days from registration</p>'
     },
     3: {
-      subject: `Last chance: Your Renaissance portrait awaits! 🎨`,
-      emoji: '🚨',
-      headline: 'Final Reminder',
-      message: `This is our last reminder! Your reserved spot for a Renaissance masterpiece is about to expire. Don't miss this chance to create something truly special.`,
-      urgency: '<p style="background: #FFE5E5; border-left: 4px solid #FF9770; padding: 15px; margin: 20px 0; border-radius: 8px; font-size: 15px;"><strong>⚠️ Expiring Soon:</strong> This is your final reminder. Upload now or your reservation will be released!</p>'
+      subject: `Final Notice: Complete Your PawPop Order`,
+      emoji: '',
+      headline: 'Order Expiring: Action Required',
+      message: `This is a final reminder that your PawPop order will expire soon. Upload your photos now to complete your order and receive your custom Renaissance portrait.`,
+      urgency: '',
+      orderNote: '<p style="background: #FFF3E0; border-left: 3px solid #FF9770; padding: 15px; margin: 20px 0; border-radius: 8px; font-size: 14px;"><strong>⚠️ Order Expiring:</strong> Your upload link will expire in 48 hours. Complete your order now to avoid cancellation.</p>'
     }
   }
 
@@ -851,7 +855,7 @@ export async function sendUploadReminder(data: UploadReminderData): Promise<{ su
     <body>
       <div class="container">
         <div class="header">
-          <h1>${msg.emoji} ${msg.headline}</h1>
+          <h1>${msg.headline}</h1>
         </div>
         
         <div class="content">
@@ -861,7 +865,7 @@ export async function sendUploadReminder(data: UploadReminderData): Promise<{ su
             ${msg.message}
           </p>
           
-          ${msg.urgency}
+          ${msg.orderNote || msg.urgency}
           
           <div style="text-align: center; margin: 35px 0;">
             <a href="${data.uploadUrl}" class="cta-button" style="display: inline-block; background: #FF9770 !important; color: #FFFFFF !important; padding: 18px 40px; text-decoration: none; border-radius: 12px; font-weight: 600; border: none; font-family: 'Fredoka One', cursive; font-size: 18px;">
@@ -869,9 +873,18 @@ export async function sendUploadReminder(data: UploadReminderData): Promise<{ su
             </a>
           </div>
           
-          <h3 style="color: #2C2C2C; font-family: 'Arvo', serif; font-weight: 700; text-align: center;">✨ See What Others Have Created</h3>
+          <h3 style="color: #2C2C2C; font-family: 'Arvo', serif; font-weight: 700;">What You'll Receive:</h3>
+          <ul style="font-size: 15px; line-height: 1.8;">
+            <li>Custom Renaissance-style portrait</li>
+            <li>High-resolution digital file</li>
+            <li>Ready in 2-5 minutes after upload</li>
+          </ul>
           
-          <div class="example-grid">
+          <p style="font-size: 14px; color: #666; margin-top: 30px;">
+            Questions about your order? Reply to this email for support.
+          </p>
+          
+          <div style="display: none;" class="example-grid">
             <div class="example-item">
               <img src="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/images/hero_1.jpeg" alt="Example transformation" />
               <p style="font-size: 13px; margin: 8px 0 0 0; color: #666;">Sarah & Bella</p>
@@ -907,10 +920,34 @@ export async function sendUploadReminder(data: UploadReminderData): Promise<{ su
     </html>
   `
 
+  // Plain text version for better deliverability
+  const text = `
+${msg.headline}
+
+Hi ${data.customerName}!
+
+${msg.message}
+
+Upload Photos Now: ${data.uploadUrl}
+
+What You'll Receive:
+- Custom Renaissance-style portrait
+- High-resolution digital file  
+- Ready in 2-5 minutes after upload
+
+Questions about your order? Reply to this email for support.
+
+---
+PawPop
+Where pet moms become Renaissance masterpieces
+2006-1323 Homer St, Vancouver BC Canada V6B 5T1
+  `.trim()
+
   const result = await sendEmail({
     to: data.customerEmail,
     subject: msg.subject,
-    html
+    html,
+    replyTo: 'pawpopart@gmail.com'
   })
 
   return result
