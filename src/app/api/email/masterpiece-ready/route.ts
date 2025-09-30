@@ -8,9 +8,9 @@ export async function POST(request: NextRequest) {
     const { customerName, customerEmail, artworkUrl, generatedImageUrl, petName } = body
 
     // Validate required fields
-    if (!customerName || !customerEmail || !artworkUrl || !generatedImageUrl) {
+    if (!customerEmail || !artworkUrl || !generatedImageUrl) {
       return NextResponse.json(
-        { error: 'Missing required fields: customerName, customerEmail, artworkUrl, generatedImageUrl' },
+        { error: 'Missing required fields: customerEmail, artworkUrl, generatedImageUrl' },
         { status: 400 }
       )
     }

@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { customerName, customerEmail, petName, artworkUrl } = body
 
-    if (!customerName || !customerEmail || !artworkUrl) {
+    if (!customerEmail || !artworkUrl) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields' },
         { status: 400 }
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await sendMasterpieceCreatingEmail({
-      customerName,
+      customerName: customerName || '',
       customerEmail,
       petName: petName || '',
       artworkUrl

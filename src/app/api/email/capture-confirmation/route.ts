@@ -7,9 +7,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { customerName, customerEmail, uploadUrl } = body
 
-    if (!customerName || !customerEmail || !uploadUrl) {
+    if (!customerEmail || !uploadUrl) {
       return NextResponse.json(
-        { error: 'Missing required fields: customerName, customerEmail, uploadUrl' },
+        { error: 'Missing required fields: customerEmail, uploadUrl' },
         { status: 400 }
       )
     }
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     console.log('📧 Sending email capture confirmation to:', customerEmail)
 
     const result = await sendEmailCaptureConfirmation({
-      customerName,
+      customerName: customerName || '',
       customerEmail,
       uploadUrl
     })
