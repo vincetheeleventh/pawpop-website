@@ -41,6 +41,15 @@ export function usePlausibleTracking() {
     // Step 2: Upload modal opened
     uploadModalOpened: () => trackFunnelStep('Upload Modal Opened', 2),
     
+    // Step 2.5: Email captured (new email-first flow)
+    emailCaptured: () => trackFunnelStep('Email Captured', 2.5),
+    
+    // Step 2.6: Upload deferred (chose "Upload Later")
+    deferredUpload: () => trackFunnelStep('Upload Deferred', 2.6),
+    
+    // Step 2.7: Deferred upload completed (came back via email link)
+    deferredUploadCompleted: () => trackFunnelStep('Deferred Upload Completed', 2.7),
+    
     // Step 3: Photo uploaded
     photoUploaded: (fileSize?: number, fileType?: string) => {
       const props: Record<string, string | number | boolean> = {};

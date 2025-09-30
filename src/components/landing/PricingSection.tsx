@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { getDynamicPricing } from '@/lib/copy';
-import { UploadModal } from '@/components/forms/UploadModal';
+import { UploadModalEmailFirst } from '@/components/forms/UploadModalEmailFirst';
 
 export const PricingSection = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,8 +41,8 @@ export const PricingSection = () => {
         </div>
       </section>
 
-      {/* Upload Modal */}
-      <UploadModal 
+      {/* Upload Modal - Email First Flow */}
+      <UploadModalEmailFirst 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
       />

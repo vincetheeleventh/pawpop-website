@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { landingPageCopy } from '@/lib/copy';
 import { HeroVideoReveal } from './HeroVideoReveal';
-import { UploadModal } from '@/components/forms/UploadModal';
+import { UploadModalEmailFirst } from '@/components/forms/UploadModalEmailFirst';
 
 interface HeroSectionProps {
   autoOpenUpload?: boolean;
@@ -124,8 +124,8 @@ export const HeroSection = ({ autoOpenUpload = false }: HeroSectionProps) => {
         </div>
       </div>
 
-      {/* Upload Modal */}
-      <UploadModal 
+      {/* Upload Modal - Email First Flow */}
+      <UploadModalEmailFirst 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
       />

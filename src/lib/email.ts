@@ -685,3 +685,233 @@ export async function sendAdminReviewNotification(data: AdminReviewNotificationD
 
   return result
 }
+
+/**
+ * Send email confirmation after email capture (before photo upload)
+ */
+export interface EmailCaptureConfirmationData {
+  customerName: string
+  customerEmail: string
+  uploadUrl: string
+}
+
+export async function sendEmailCaptureConfirmation(data: EmailCaptureConfirmationData): Promise<{ success: boolean; error?: string }> {
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Thanks for your interest!</title>
+      <style>
+        body { font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #2C2C2C; margin: 0; padding: 0; background-color: #F5EED7; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .header { background: #FF70A6; color: #FFFFFF; padding: 40px 30px; text-align: center; }
+        .header h1 { margin: 0; font-size: 28px; font-weight: 700; font-family: 'Arvo', serif; }
+        .content { padding: 40px 30px; background-color: #FFFFFF; }
+        .content h2 { color: #2C2C2C; margin-top: 0; font-family: 'Arvo', serif; font-weight: 700; }
+        .cta-button { display: inline-block; background: #FF9770 !important; color: #FFFFFF !important; padding: 15px 30px; text-decoration: none; border-radius: 12px; font-weight: 600; margin: 20px 0; border: none; font-family: 'Fredoka One', cursive; }
+        .footer { background-color: #F5EED7; padding: 30px; text-align: center; color: #2C2C2C; font-size: 14px; }
+        .divider { height: 1px; background: #FFD670; margin: 30px 0; }
+        .highlight-box { background: #FFF9E6; border-left: 4px solid #FFD670; padding: 20px; margin: 20px 0; border-radius: 8px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>✨ Your Spot is Reserved!</h1>
+        </div>
+        
+        <div class="content">
+          <h2>Hi ${data.customerName}! 👋</h2>
+          
+          <p style="font-size: 16px; line-height: 1.8;">
+            Thanks for your interest in creating a Renaissance masterpiece! We've saved your spot and you can upload your photos whenever you're ready.
+          </p>
+          
+          <div class="highlight-box">
+            <p style="margin: 0; font-size: 16px; font-weight: 600; color: #2C2C2C;">
+              🎨 <strong>What happens next?</strong>
+            </p>
+            <p style="margin: 10px 0 0 0; font-size: 15px;">
+              When you're ready, just upload your photos and we'll transform them into a stunning Renaissance-style portrait in about 3 minutes!
+            </p>
+          </div>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${data.uploadUrl}" class="cta-button" style="display: inline-block; background: #FF9770 !important; color: #FFFFFF !important; padding: 15px 30px; text-decoration: none; border-radius: 12px; font-weight: 600; border: none; font-family: 'Fredoka One', cursive;">
+              Upload Photos Now
+            </a>
+          </div>
+          
+          <div class="divider"></div>
+          
+          <h3 style="color: #2C2C2C; font-family: 'Arvo', serif; font-weight: 700;">📸 What You'll Need:</h3>
+          <ul style="font-size: 15px; line-height: 1.8;">
+            <li><strong>Pet Mom Photo:</strong> A clear photo of the pet mom's face</li>
+            <li><strong>Pet Photo:</strong> A photo of their beloved pet</li>
+            <li><strong>3 Minutes:</strong> That's all it takes to create magic!</li>
+          </ul>
+          
+          <div class="highlight-box">
+            <p style="margin: 0; font-size: 14px; color: #666;">
+              💡 <strong>Pro Tip:</strong> Have your photos ready on your device before you start. This makes the process super quick and easy!
+            </p>
+          </div>
+          
+          <p style="font-size: 15px; margin-top: 30px;">
+            Questions? Just reply to this email - we're here to help! 💕
+          </p>
+          
+        </div>
+        
+        <div class="footer">
+          <p style="margin: 0 0 10px 0;">
+            <strong>PawPop</strong><br>
+            Where pet moms become Renaissance masterpieces
+          </p>
+          <p style="margin: 0; font-size: 13px; color: #666;">
+            2006-1323 Homer St, Vancouver BC Canada V6B 5T1
+          </p>
+        </div>
+        
+      </div>
+    </body>
+    </html>
+  `
+
+  const result = await sendEmail({
+    to: data.customerEmail,
+    subject: `Your Renaissance Masterpiece Awaits! 🎨`,
+    html
+  })
+
+  return result
+}
+
+/**
+ * Send upload reminder email (24h, 72h, 7d)
+ */
+export interface UploadReminderData {
+  customerName: string
+  customerEmail: string
+  uploadUrl: string
+  reminderNumber: number // 1, 2, or 3
+}
+
+export async function sendUploadReminder(data: UploadReminderData): Promise<{ success: boolean; error?: string }> {
+  // Different messaging based on reminder number
+  const messages = {
+    1: {
+      subject: `Ready to create your masterpiece? 🎨`,
+      emoji: '👋',
+      headline: 'Still Thinking About It?',
+      message: `We noticed you haven't uploaded your photos yet! No worries - your spot is still reserved and ready whenever you are.`,
+      urgency: ''
+    },
+    2: {
+      subject: `Don't miss out on your Renaissance portrait! ✨`,
+      emoji: '⏰',
+      headline: 'Your Masterpiece is Waiting',
+      message: `Just a friendly reminder that you can create your stunning Renaissance portrait anytime! It only takes 3 minutes.`,
+      urgency: '<p style="background: #FFF3CD; border-left: 4px solid #FFD670; padding: 15px; margin: 20px 0; border-radius: 8px; font-size: 15px;"><strong>💡 Limited Time:</strong> Upload within 48 hours and see your transformation!</p>'
+    },
+    3: {
+      subject: `Last chance: Your Renaissance portrait awaits! 🎨`,
+      emoji: '🚨',
+      headline: 'Final Reminder',
+      message: `This is our last reminder! Your reserved spot for a Renaissance masterpiece is about to expire. Don't miss this chance to create something truly special.`,
+      urgency: '<p style="background: #FFE5E5; border-left: 4px solid #FF9770; padding: 15px; margin: 20px 0; border-radius: 8px; font-size: 15px;"><strong>⚠️ Expiring Soon:</strong> This is your final reminder. Upload now or your reservation will be released!</p>'
+    }
+  }
+
+  const msg = messages[data.reminderNumber as keyof typeof messages] || messages[1]
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${msg.subject}</title>
+      <style>
+        body { font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #2C2C2C; margin: 0; padding: 0; background-color: #F5EED7; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #FF9770 0%, #FF70A6 100%); color: #FFFFFF; padding: 40px 30px; text-align: center; }
+        .header h1 { margin: 0; font-size: 28px; font-weight: 700; font-family: 'Arvo', serif; }
+        .content { padding: 40px 30px; background-color: #FFFFFF; }
+        .content h2 { color: #2C2C2C; margin-top: 0; font-family: 'Arvo', serif; font-weight: 700; }
+        .cta-button { display: inline-block; background: #FF9770 !important; color: #FFFFFF !important; padding: 18px 40px; text-decoration: none; border-radius: 12px; font-weight: 600; margin: 20px 0; border: none; font-family: 'Fredoka One', cursive; font-size: 18px; }
+        .footer { background-color: #F5EED7; padding: 30px; text-align: center; color: #2C2C2C; font-size: 14px; }
+        .example-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 25px 0; }
+        .example-item { text-align: center; }
+        .example-item img { width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>${msg.emoji} ${msg.headline}</h1>
+        </div>
+        
+        <div class="content">
+          <h2>Hi ${data.customerName}!</h2>
+          
+          <p style="font-size: 16px; line-height: 1.8;">
+            ${msg.message}
+          </p>
+          
+          ${msg.urgency}
+          
+          <div style="text-align: center; margin: 35px 0;">
+            <a href="${data.uploadUrl}" class="cta-button" style="display: inline-block; background: #FF9770 !important; color: #FFFFFF !important; padding: 18px 40px; text-decoration: none; border-radius: 12px; font-weight: 600; border: none; font-family: 'Fredoka One', cursive; font-size: 18px;">
+              Upload Photos Now
+            </a>
+          </div>
+          
+          <h3 style="color: #2C2C2C; font-family: 'Arvo', serif; font-weight: 700; text-align: center;">✨ See What Others Have Created</h3>
+          
+          <div class="example-grid">
+            <div class="example-item">
+              <img src="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/images/hero_1.jpeg" alt="Example transformation" />
+              <p style="font-size: 13px; margin: 8px 0 0 0; color: #666;">Sarah & Bella</p>
+            </div>
+            <div class="example-item">
+              <img src="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/images/pet-integration-output.jpg" alt="Example transformation" />
+              <p style="font-size: 13px; margin: 8px 0 0 0; color: #666;">Jennifer & Muffin</p>
+            </div>
+          </div>
+          
+          <p style="font-size: 15px; text-align: center; margin-top: 30px; color: #666;">
+            <strong>It only takes 3 minutes</strong> to create your masterpiece! 🎨
+          </p>
+          
+          <p style="font-size: 14px; margin-top: 30px; color: #999; text-align: center;">
+            Not interested? <a href="#" style="color: #999; text-decoration: underline;">Unsubscribe</a>
+          </p>
+          
+        </div>
+        
+        <div class="footer">
+          <p style="margin: 0 0 10px 0;">
+            <strong>PawPop</strong><br>
+            Where pet moms become Renaissance masterpieces
+          </p>
+          <p style="margin: 0; font-size: 13px; color: #666;">
+            2006-1323 Homer St, Vancouver BC Canada V6B 5T1
+          </p>
+        </div>
+        
+      </div>
+    </body>
+    </html>
+  `
+
+  const result = await sendEmail({
+    to: data.customerEmail,
+    subject: msg.subject,
+    html
+  })
+
+  return result
+}

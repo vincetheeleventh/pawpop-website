@@ -66,6 +66,14 @@ export interface Artwork {
     mockup_generation: 'pending' | 'processing' | 'completed' | 'failed'
   }
   
+  // Deferred upload tracking (email-first flow)
+  email_captured_at?: string
+  upload_deferred?: boolean
+  upload_reminder_sent_at?: string
+  upload_reminder_count?: number
+  upload_completed_at?: string
+  upload_token?: string
+  
   created_at: string
   updated_at: string
 }
