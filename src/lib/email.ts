@@ -56,12 +56,13 @@ export interface ShippingNotificationEmailData {
 
 export interface AdminReviewNotificationData {
   reviewId: string
-  reviewType: 'artwork_proof' | 'highres_file'
+  reviewType: 'artwork_proof' | 'highres_file' | 'edit_request'
   customerName?: string
   petName?: string
   imageUrl: string
   falGenerationUrl?: string
   customerEmail: string
+  editRequestText?: string // For edit_request type
 }
 
 /**
@@ -574,7 +575,9 @@ export async function sendSystemAlertEmail(data: SystemAlertEmailData) {
  * Send admin review notification email
  */
 export async function sendAdminReviewNotification(data: AdminReviewNotificationData): Promise<{ success: boolean; messageId?: string; error?: string }> {
-  const reviewTypeDisplay = data.reviewType === 'artwork_proof' ? 'Artwork Proof' : 'High-Res File'
+  const reviewTypeDisplay = data.reviewType === 'artwork_proof' ? 'Artwork Proof' : 
+                           data.reviewType === 'highres_file' ? 'High-Res File' : 
+                           'Edit Request'
   const petNameDisplay = data.petName ? ` for ${data.petName}` : ''
   
   const html = `
@@ -629,6 +632,14 @@ export async function sendAdminReviewNotification(data: AdminReviewNotificationD
               <img src="${data.imageUrl}" alt="Artwork for review" style="max-width: 400px; max-height: 400px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
             </div>
           </div>
+          
+          ${data.editRequestText ? `
+          <!-- Edit Request -->
+          <div style="background: #fff3cd; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 2px solid #ffc107;">
+            <h3 style="color: #856404; margin: 0 0 15px 0; font-family: 'Arvo', serif; font-weight: 700;">📝 Customer's Edit Request</h3>
+            <p style="margin: 0; font-size: 16px; line-height: 1.6; color: #2C2C2C; white-space: pre-wrap;">${data.editRequestText}</p>
+          </div>
+          ` : ''}
           
           ${data.falGenerationUrl ? `
           <!-- FAL.ai Reference -->

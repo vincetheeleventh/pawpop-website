@@ -5,7 +5,7 @@ export interface AdminReview {
   id: string
   review_id: string // API returns review_id as the primary identifier
   artwork_id: string
-  review_type: 'artwork_proof' | 'highres_file'
+  review_type: 'artwork_proof' | 'highres_file' | 'edit_request'
   status: 'pending' | 'approved' | 'rejected'
   image_url: string
   fal_generation_url?: string
@@ -22,16 +22,18 @@ export interface AdminReview {
     pet_photo?: string
   }
   manually_replaced?: boolean // Track if image was manually replaced by admin
+  edit_request_text?: string // Customer's edit request (for edit_request type)
 }
 
 export interface CreateReviewData {
   artwork_id: string
-  review_type: 'artwork_proof' | 'highres_file'
+  review_type: 'artwork_proof' | 'highres_file' | 'edit_request'
   image_url: string
   fal_generation_url?: string
   customer_name: string
   customer_email: string
   pet_name?: string
+  edit_request_text?: string // For edit_request type
 }
 
 // Check if human review is enabled
@@ -60,7 +62,8 @@ export async function createAdminReview(data: CreateReviewData): Promise<AdminRe
         fal_generation_url: data.fal_generation_url,
         customer_name: data.customer_name,
         customer_email: data.customer_email,
-        pet_name: data.pet_name
+        pet_name: data.pet_name,
+        edit_request_text: data.edit_request_text
       })
       .select()
       .single()
@@ -101,7 +104,7 @@ export async function createAdminReview(data: CreateReviewData): Promise<AdminRe
 }
 
 // Get all pending reviews
-export async function getPendingReviews(reviewType?: 'artwork_proof' | 'highres_file'): Promise<AdminReview[]> {
+export async function getPendingReviews(reviewType?: 'artwork_proof' | 'highres_file' | 'edit_request'): Promise<AdminReview[]> {
   if (!supabaseAdmin) {
     throw new Error('Supabase admin client not available')
   }
@@ -159,7 +162,7 @@ export async function processAdminReview(
 // Update artwork review status
 export async function updateArtworkReviewStatus(
   artworkId: string,
-  reviewType: 'artwork_proof' | 'highres_file',
+  reviewType: 'artwork_proof' | 'highres_file' | 'edit_request',
   status: 'pending' | 'approved' | 'rejected' | 'not_required'
 ): Promise<void> {
   if (!supabaseAdmin) {
@@ -250,7 +253,7 @@ export async function getAdminReview(reviewId: string): Promise<AdminReview | nu
 }
 
 // Helper function to determine if review is required for a step
-export function shouldCreateReview(reviewType: 'artwork_proof' | 'highres_file'): boolean {
+export function shouldCreateReview(reviewType: 'artwork_proof' | 'highres_file' | 'edit_request'): boolean {
   if (!isHumanReviewEnabled()) {
     return false
   }
@@ -262,7 +265,7 @@ export function shouldCreateReview(reviewType: 'artwork_proof' | 'highres_file')
 // Helper function to wait for review approval
 export async function waitForReviewApproval(
   artworkId: string,
-  reviewType: 'artwork_proof' | 'highres_file',
+  reviewType: 'artwork_proof' | 'highres_file' | 'edit_request',
   maxWaitMinutes: number = 60
 ): Promise<boolean> {
   if (!isHumanReviewEnabled()) {
@@ -274,7 +277,13 @@ export async function waitForReviewApproval(
 
   while (Date.now() - startTime < maxWaitMs) {
     const status = await checkArtworkReviewStatus(artworkId)
-    const reviewStatus = status[reviewType]
+    
+    // Handle edit_request type separately (doesn't block workflow)
+    if (reviewType === 'edit_request') {
+      return true // Edit requests don't block workflow
+    }
+    
+    const reviewStatus = status[reviewType as 'artwork_proof' | 'highres_file']
 
     if (reviewStatus === 'approved') {
       return true

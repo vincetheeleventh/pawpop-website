@@ -8,6 +8,7 @@ import { PurchaseModalRouter, getModalVariant, trackModalVariant, type ModalVari
 import { PurchaseModalPhysicalFirst } from '@/components/modals/PurchaseModalPhysicalFirst';
 import MockupDisplay from '@/components/artwork/MockupDisplay';
 import ProductPurchaseModal from '@/components/modals/ProductPurchaseModal';
+import RequestEditModal from '@/components/modals/RequestEditModal';
 
 interface Mockup {
   type: string;
@@ -42,6 +43,7 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
   const [selectedProductMockups, setSelectedProductMockups] = useState<Mockup[]>([]);
   const [modalVariant, setModalVariant] = useState<ModalVariant>('equal-tiers');
   const [isManualApprovalEnabled, setIsManualApprovalEnabled] = useState<boolean>(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const router = useRouter();
 
   // Fetch manual approval status
@@ -116,6 +118,14 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
     setShowProductModal(false);
     setSelectedProductType('');
     setSelectedProductMockups([]);
+  };
+
+  const handleRequestEdit = () => {
+    setShowEditModal(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setShowEditModal(false);
   };
 
 
@@ -236,6 +246,16 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
                   />
                 </div>
                 
+                {/* Request Edits Button */}
+                <button
+                  onClick={handleRequestEdit}
+                  className="w-full px-6 py-3 border-2 border-pale-azure hover:bg-pale-azure/10 text-text-primary rounded-xl font-arvo font-semibold transition-all duration-200"
+                >
+                  ✏️ Request Edits
+                </button>
+                <p className="text-xs text-gray-500 text-center mt-2 font-geist">
+                  Not quite perfect? Let us know what to adjust
+                </p>
               </div>
 
               {/* Right Column: Product Options */}
@@ -294,6 +314,16 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
           mockups={selectedProductMockups}
           artwork={artwork}
           onProductClick={handleProductClick}
+        />
+      )}
+
+      {/* Request Edit Modal */}
+      {artwork && (
+        <RequestEditModal
+          isOpen={showEditModal}
+          onClose={handleCloseEditModal}
+          artworkId={artwork.id}
+          artworkImageUrl={artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res || artwork.generated_image_url}
         />
       )}
     </>

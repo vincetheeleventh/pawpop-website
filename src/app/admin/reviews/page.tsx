@@ -7,7 +7,7 @@ import { AdminReview } from '@/lib/admin-review'
 export default function AdminReviewsPage() {
   const [reviews, setReviews] = useState<AdminReview[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'artwork_proof' | 'highres_file'>('all')
+  const [filter, setFilter] = useState<'all' | 'artwork_proof' | 'highres_file' | 'edit_request'>('all')
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -55,7 +55,15 @@ export default function AdminReviewsPage() {
   }
 
   const getReviewTypeDisplay = (type: string) => {
-    return type === 'artwork_proof' ? 'Artwork Proof' : 'High-Res File'
+    return type === 'artwork_proof' ? 'Artwork Proof' : 
+           type === 'highres_file' ? 'High-Res File' : 
+           'Edit Request'
+  }
+  
+  const getReviewTypeColor = (type: string) => {
+    return type === 'artwork_proof' ? 'bg-blue-100 text-blue-800' : 
+           type === 'highres_file' ? 'bg-purple-100 text-purple-800' : 
+           'bg-orange-100 text-orange-800'
   }
 
   const pendingCount = reviews.filter(r => r.status === 'pending').length
@@ -140,6 +148,17 @@ export default function AdminReviewsPage() {
             >
               High-Res Files ({reviews.filter(r => r.review_type === 'highres_file').length})
             </button>
+            <button
+              onClick={() => setFilter('edit_request')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                filter === 'edit_request'
+                  ? 'bg-cyclamen text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+              data-testid="filter-edit-request"
+            >
+              Edit Requests ({reviews.filter(r => r.review_type === 'edit_request').length})
+            </button>
           </div>
         </div>
 
@@ -173,7 +192,7 @@ export default function AdminReviewsPage() {
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(review.status)}`}>
                           {review.status.charAt(0).toUpperCase() + review.status.slice(1)}
                         </span>
-                        <span className="text-sm text-gray-500" data-testid="review-type">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getReviewTypeColor(review.review_type)}`} data-testid="review-type">
                           {getReviewTypeDisplay(review.review_type)}
                         </span>
                         <span className="text-sm text-gray-400">
@@ -202,6 +221,16 @@ export default function AdminReviewsPage() {
                           </div>
                         </div>
                       </div>
+
+                      {review.edit_request_text && (
+                        <div className="bg-orange-50 rounded-lg p-4 mb-4 border border-orange-200">
+                          <div className="flex items-start mb-2">
+                            <MessageSquare className="w-4 h-4 text-orange-600 mr-2 mt-0.5 flex-shrink-0" />
+                            <span className="text-sm font-medium text-orange-900">Customer's Edit Request</span>
+                          </div>
+                          <p className="text-sm text-gray-700 whitespace-pre-wrap pl-6">{review.edit_request_text}</p>
+                        </div>
+                      )}
 
                       {review.fal_generation_url && (
                         <div className="mb-4">

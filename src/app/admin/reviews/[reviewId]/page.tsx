@@ -168,7 +168,9 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
   }
 
   const getReviewTypeDisplay = (type: string) => {
-    return type === 'artwork_proof' ? 'Artwork Proof' : 'High-Res File'
+    return type === 'artwork_proof' ? 'Artwork Proof' : 
+           type === 'highres_file' ? 'High-Res File' : 
+           'Edit Request'
   }
 
   if (loading) {
@@ -328,6 +330,19 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
                 </div>
               </div>
             </div>
+
+            {/* Customer's Edit Request */}
+            {review.edit_request_text && (
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  <MessageSquare className="w-5 h-5 inline mr-2" />
+                  Customer's Edit Request
+                </h3>
+                <div className="bg-orange-50 rounded-lg p-4 border-2 border-orange-200">
+                  <p className="text-gray-900 whitespace-pre-wrap">{review.edit_request_text}</p>
+                </div>
+              </div>
+            )}
 
             {/* FAL.ai Reference */}
             {review.fal_generation_url && (
