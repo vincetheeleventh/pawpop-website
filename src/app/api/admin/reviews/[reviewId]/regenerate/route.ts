@@ -8,15 +8,16 @@ export async function POST(
 ) {
   try {
     const { reviewId } = params
-    const { prompt_tweak, regenerate_monalisa } = await request.json()
+    const { prompt_tweak, regenerate_monalisa, monalisa_prompt } = await request.json()
 
     if (!supabaseAdmin) {
       throw new Error('Supabase admin client not available')
     }
 
     console.log(`🔄 Starting regeneration for review ${reviewId}`)
-    console.log(`📝 Prompt tweak: "${prompt_tweak}"`)
+    console.log(`📝 Pet integration prompt: "${prompt_tweak}"`)
     console.log(`🎨 Regenerate MonaLisa: ${regenerate_monalisa}`)
+    console.log(`🖼️ MonaLisa prompt: "${monalisa_prompt}"`)
 
     // 1. Get review details with artwork info
     const { data: review, error: reviewError } = await supabaseAdmin
@@ -97,7 +98,8 @@ export async function POST(
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           imageUrl: petMomPhoto,
-          artworkId: artwork.id
+          artworkId: artwork.id,
+          customPrompt: monalisa_prompt // Pass custom MonaLisa prompt if provided
         })
       })
 

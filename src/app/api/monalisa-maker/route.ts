@@ -17,6 +17,7 @@ export async function POST(req: NextRequest) {
     let imageUrl: string;
     let imageFile: File | null = null;
     let artworkId = `temp_${Date.now()}`;
+    let customPrompt: string | undefined;
     const contentType = req.headers.get('content-type');
 
     const extractUrlFromUploadResult = (uploadResult: unknown): string | undefined => {
@@ -219,6 +220,12 @@ export async function POST(req: NextRequest) {
         artworkId = body.artworkId;
       }
       
+      // Store custom prompt if provided
+      if (body.customPrompt) {
+        customPrompt = body.customPrompt;
+        console.log('🎨 Using custom MonaLisa prompt:', customPrompt);
+      }
+      
       // Enhanced validation for imageUrl
       if (!imageUrl) {
         return NextResponse.json({ error: 'No imageUrl provided in request body' }, { status: 400 });
@@ -255,9 +262,13 @@ export async function POST(req: NextRequest) {
     // Step 1: Transform user photo into Mona Lisa portrait
     console.log("🎨 Running MonaLisa Maker transformation...");
     
+    // Use custom prompt if provided, otherwise use default
+    const promptToUse = customPrompt || "keep likeness and hairstyle the same, change pose and style to mona lisa";
+    console.log("📝 Using prompt:", promptToUse);
+    
     // Use image file directly if we have FormData, otherwise use image_url
     const falInput: any = {
-      prompt: "keep likeness and hairstyle the same, change pose and style to mona lisa",
+      prompt: promptToUse,
       loras: [{
         path: "https://v3.fal.media/files/koala/HV-XcuBOG0z0apXA9dzP7_adapter_model.safetensors",
         scale: 1.0

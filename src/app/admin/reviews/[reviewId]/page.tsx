@@ -23,7 +23,9 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
   
   // Regeneration state
   const DEFAULT_PROMPT = "Incorporate the pet into the painting of the woman. She is holding it in her lap. Keep the painted style and likeness of the woman and pet"
+  const DEFAULT_MONALISA_PROMPT = "keep likeness and hairstyle the same, change pose and style to mona lisa"
   const [promptTweak, setPromptTweak] = useState(DEFAULT_PROMPT)
+  const [monalisaPrompt, setMonalisaPrompt] = useState(DEFAULT_MONALISA_PROMPT)
   const [regenerateMonalisa, setRegenerateMonalisa] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
@@ -161,8 +163,9 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
       setError(null)
 
       console.log('🔄 Starting regeneration...')
-      console.log('📝 Prompt tweak:', promptTweak)
+      console.log('📝 Pet integration prompt:', promptTweak)
       console.log('🎨 Regenerate MonaLisa:', regenerateMonalisa)
+      console.log('🖼️ MonaLisa prompt:', monalisaPrompt)
 
       const response = await fetch(`/api/admin/reviews/${params.reviewId}/regenerate`, {
         method: 'POST',
@@ -171,7 +174,8 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
         },
         body: JSON.stringify({
           prompt_tweak: promptTweak,
-          regenerate_monalisa: regenerateMonalisa
+          regenerate_monalisa: regenerateMonalisa,
+          monalisa_prompt: regenerateMonalisa ? monalisaPrompt : undefined
         })
       })
 
@@ -186,8 +190,9 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
       // Refresh the review data to show new image
       await fetchReview()
 
-      // Reset form
-      setPromptTweak('')
+      // Reset form to defaults
+      setPromptTweak(DEFAULT_PROMPT)
+      setMonalisaPrompt(DEFAULT_MONALISA_PROMPT)
       setRegenerateMonalisa(false)
 
       // Show success message
@@ -520,6 +525,25 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
                     Check this to regenerate both the MonaLisa portrait and pet integration
                   </p>
                 </div>
+
+                {/* MonaLisa Prompt Editor - shown when regenerating base */}
+                {regenerateMonalisa && (
+                  <div className="mb-4 ml-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                    <label className="block text-sm font-medium text-purple-900 mb-2">
+                      MonaLisa Maker Prompt
+                    </label>
+                    <textarea
+                      value={monalisaPrompt}
+                      onChange={(e) => setMonalisaPrompt(e.target.value)}
+                      placeholder="Enter the MonaLisa transformation prompt..."
+                      className="w-full h-24 p-3 border border-purple-300 rounded-lg resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono text-sm bg-white"
+                      disabled={regenerating}
+                    />
+                    <p className="text-xs text-purple-700 mt-1">
+                      This prompt controls how the base portrait is transformed into MonaLisa style.
+                    </p>
+                  </div>
+                )}
 
                 {/* Regenerate Button */}
                 <button
