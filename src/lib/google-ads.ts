@@ -40,7 +40,8 @@ export const setEnhancedConversionData = (userData: EnhancedConversionData) => {
 
 // Google Ads Conversion IDs (you'll need to replace these with actual values from Google Ads)
 export const GOOGLE_ADS_CONVERSIONS = {
-  PHOTO_UPLOAD: process.env.NEXT_PUBLIC_GOOGLE_ADS_PHOTO_UPLOAD_ID || 'AW-CONVERSION_ID/CONVERSION_LABEL',
+  // Email signup conversion (email-first flow) - tracks when user enters email
+  PHOTO_UPLOAD: process.env.NEXT_PUBLIC_GOOGLE_ADS_EMAIL_SIGNUP_ID || process.env.NEXT_PUBLIC_GOOGLE_ADS_PHOTO_UPLOAD_ID || 'AW-CONVERSION_ID/CONVERSION_LABEL',
   ARTWORK_GENERATION: process.env.NEXT_PUBLIC_GOOGLE_ADS_ARTWORK_GENERATION_ID || 'AW-CONVERSION_ID/CONVERSION_LABEL',
   PURCHASE: process.env.NEXT_PUBLIC_GOOGLE_ADS_PURCHASE_ID || 'AW-CONVERSION_ID/CONVERSION_LABEL',
   ARTWORK_VIEW: process.env.NEXT_PUBLIC_GOOGLE_ADS_ARTWORK_VIEW_ID || 'AW-CONVERSION_ID/CONVERSION_LABEL',
