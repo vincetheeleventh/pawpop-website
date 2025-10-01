@@ -13,7 +13,7 @@ export interface CreateArtworkData {
   customer_name: string
   customer_email: string
   pet_name?: string
-  user_id?: string
+  user_id?: string | null
   email_captured_at?: string
   upload_deferred?: boolean
   user_type?: 'gifter' | 'self_purchaser'

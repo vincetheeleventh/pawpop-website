@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createArtwork } from '@/lib/supabase-artworks'
 import { isValidEmail } from '@/lib/utils'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,6 +25,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Create or get user by email
+    let userId: string | null = null
+    try {
+      console.log('👤 Creating/getting user for:', customer_email)
+      const { data: userIdData, error: userError } = await supabaseAdmin!.rpc('create_or_get_user_by_email', {
+        p_email: customer_email,
+        p_customer_name: customer_name || ''
+      })
+      
+      if (!userError && userIdData) {
+        userId = userIdData
+        console.log('✅ User ID:', userId)
+      } else {
+        console.error('⚠️ User creation failed, continuing without user_id:', userError)
+      }
+    } catch (userErr) {
+      console.error('⚠️ User creation error (non-fatal):', userErr)
+      // Continue anyway - user creation is optional
+    }
+
     // Create artwork record
     const { artwork, access_token } = await createArtwork({
       customer_name: customer_name || '',
@@ -32,6 +53,7 @@ export async function POST(request: NextRequest) {
       email_captured_at,
       upload_deferred,
       user_type,
+      user_id: userId, // Link to user if created
       price_variant: price_variant || 'A' // Default to variant A
     })
 
