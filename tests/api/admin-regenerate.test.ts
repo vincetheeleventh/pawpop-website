@@ -114,7 +114,7 @@ describe('Regeneration History', () => {
     ]
     
     expect(history).toHaveLength(3)
-    expect(history[0].timestamp).toBeLessThan(history[1].timestamp)
-    expect(history[1].timestamp).toBeLessThan(history[2].timestamp)
+    expect(new Date(history[0].timestamp).getTime()).toBeLessThan(new Date(history[1].timestamp).getTime())
+    expect(new Date(history[1].timestamp).getTime()).toBeLessThan(new Date(history[2].timestamp).getTime())
   })
 })

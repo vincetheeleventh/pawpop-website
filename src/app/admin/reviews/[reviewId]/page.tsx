@@ -38,13 +38,23 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
   const fetchReview = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/admin/reviews/${params.reviewId}`)
+      const response = await fetch(`/api/admin/reviews/${params.reviewId}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      })
       
       if (!response.ok) {
         throw new Error('Failed to fetch review')
       }
       
       const data = await response.json()
+      console.log('📊 Review data loaded:', {
+        id: data.review?.id,
+        hasHistory: !!data.review?.regeneration_history,
+        historyLength: data.review?.regeneration_history?.length || 0
+      })
       setReview(data.review)
       setNotes(data.review?.review_notes || '')
     } catch (err) {
@@ -302,6 +312,17 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(review.status)}`}>
                   {review.status.charAt(0).toUpperCase() + review.status.slice(1)}
                 </span>
+                {review.status === 'approved' && review.artwork_token && (
+                  <a
+                    href={`/artwork/${review.artwork_token}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-4 py-2 bg-cyclamen text-white rounded-lg hover:bg-cyclamen/90 transition-colors text-sm font-medium"
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    View Artwork Page
+                  </a>
+                )}
               </div>
             </div>
           </div>
@@ -594,9 +615,15 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
                           </div>
                         )}
                         <div className="flex items-center gap-2 mb-2 text-xs">
-                          <span className={`px-2 py-1 rounded ${entry.regenerated_monalisa ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'}`}>
-                            {entry.regenerated_monalisa ? 'MonaLisa Regenerated' : 'MonaLisa Reused'}
-                          </span>
+                          {entry.manually_uploaded ? (
+                            <span className="px-2 py-1 rounded bg-blue-100 text-blue-700">
+                              ✋ Manual Upload
+                            </span>
+                          ) : (
+                            <span className={`px-2 py-1 rounded ${entry.regenerated_monalisa ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'}`}>
+                              {entry.regenerated_monalisa ? 'MonaLisa Regenerated' : 'MonaLisa Reused'}
+                            </span>
+                          )}
                         </div>
                         <img 
                           src={entry.image_url}

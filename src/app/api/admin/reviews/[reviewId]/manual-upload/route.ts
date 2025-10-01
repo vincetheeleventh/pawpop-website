@@ -137,12 +137,41 @@ export async function POST(
       )
     }
 
+    // Add manual upload to regeneration history
+    const currentHistory = review.regeneration_history || []
+    
+    // Save current image to history before replacing
+    if (review.image_url) {
+      const historyEntry = {
+        timestamp: new Date().toISOString(),
+        image_url: review.image_url,
+        monalisa_base_url: artwork.generated_images?.monalisa_base,
+        prompt_tweak: '',
+        regenerated_monalisa: false,
+        fal_generation_url: review.fal_generation_url,
+        manually_uploaded: false
+      }
+      currentHistory.push(historyEntry)
+    }
+    
+    // Add new manual upload entry
+    const manualUploadEntry = {
+      timestamp: new Date().toISOString(),
+      image_url: uploadedImageUrl,
+      monalisa_base_url: artwork.generated_images?.monalisa_base,
+      prompt_tweak: 'Manual upload by admin',
+      regenerated_monalisa: false,
+      fal_generation_url: null,
+      manually_uploaded: true
+    }
+
     // Update the admin review to mark it as manually replaced
     const { error: reviewUpdateError } = await supabaseAdmin
       .from('admin_reviews')
       .update({
         image_url: uploadedImageUrl,
-        manually_replaced: true
+        manually_replaced: true,
+        regeneration_history: [...currentHistory, manualUploadEntry]
       })
       .eq('id', reviewId)
 

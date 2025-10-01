@@ -7,7 +7,8 @@ export interface RegenerationHistoryEntry {
   monalisa_base_url?: string
   prompt_tweak: string
   regenerated_monalisa: boolean
-  fal_generation_url?: string
+  fal_generation_url?: string | null
+  manually_uploaded?: boolean // Track if this was a manual upload by admin
 }
 
 export interface AdminReview {

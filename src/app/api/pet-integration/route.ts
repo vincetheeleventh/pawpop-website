@@ -190,38 +190,42 @@ export async function POST(req: NextRequest) {
       
       console.log(`📁 Final artwork stored in Supabase: ${supabaseImageUrl}`);
       
-      // Create admin review for artwork proof (if enabled)
-      try {
-        const { createAdminReview, isHumanReviewEnabled } = await import('@/lib/admin-review');
-        const { supabaseAdmin } = await import('@/lib/supabase');
-        
-        if (isHumanReviewEnabled() && supabaseAdmin) {
-          console.log('🔍 Creating admin review for artwork proof...');
+      // Create admin review for artwork proof (if enabled and not a regeneration)
+      if (!isRegeneration) {
+        try {
+          const { createAdminReview, isHumanReviewEnabled } = await import('@/lib/admin-review');
+          const { supabaseAdmin } = await import('@/lib/supabase');
           
-          // Get artwork details for the review
-          const { data: artwork } = await supabaseAdmin
-            .from('artworks')
-            .select('customer_name, customer_email, pet_name')
-            .eq('id', artworkId)
-            .single();
-          
-          if (artwork) {
-            await createAdminReview({
-              artwork_id: artworkId,
-              review_type: 'artwork_proof',
-              image_url: supabaseImageUrl,
-              fal_generation_url: falImageUrl,
-              customer_name: artwork.customer_name,
-              customer_email: artwork.customer_email,
-              pet_name: artwork.pet_name
-            });
+          if (isHumanReviewEnabled() && supabaseAdmin) {
+            console.log('🔍 Creating admin review for artwork proof...');
             
-            console.log('✅ Admin review created successfully');
+            // Get artwork details for the review
+            const { data: artwork } = await supabaseAdmin
+              .from('artworks')
+              .select('customer_name, customer_email, pet_name')
+              .eq('id', artworkId)
+              .single();
+            
+            if (artwork) {
+              await createAdminReview({
+                artwork_id: artworkId,
+                review_type: 'artwork_proof',
+                image_url: supabaseImageUrl,
+                fal_generation_url: falImageUrl,
+                customer_name: artwork.customer_name,
+                customer_email: artwork.customer_email,
+                pet_name: artwork.pet_name
+              });
+              
+              console.log('✅ Admin review created successfully');
+            }
           }
+        } catch (reviewError) {
+          console.warn('⚠️ Failed to create admin review:', reviewError);
+          // Don't fail the main process if review creation fails
         }
-      } catch (reviewError) {
-        console.warn('⚠️ Failed to create admin review:', reviewError);
-        // Don't fail the main process if review creation fails
+      } else {
+        console.log('🔄 Skipping admin review creation for regeneration');
       }
       
       // Return both URLs - Supabase for storage, fal.ai as fallback
