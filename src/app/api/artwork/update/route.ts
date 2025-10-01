@@ -8,7 +8,7 @@ import { storeFalImageInSupabase } from '@/lib/supabase-storage'
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json()
-    const { artwork_id, generated_image_url, source_images, generation_step, pet_name, generated_images } = body
+    const { artwork_id, generated_image_url, source_images, generation_step, pet_name, generated_images, upload_deferred } = body
 
     // Validate required fields
     if (!artwork_id) {
@@ -115,6 +115,12 @@ export async function PATCH(request: NextRequest) {
     }
     
     if (pet_name !== undefined) updateData.pet_name = pet_name
+    
+    // Handle upload_deferred flag for "Upload Later" flow
+    if (upload_deferred !== undefined) {
+      updateData.upload_deferred = upload_deferred
+      console.log('📝 Setting upload_deferred:', upload_deferred)
+    }
 
     // Update artwork
     const updatedArtwork = await updateArtwork(artwork_id, updateData)
