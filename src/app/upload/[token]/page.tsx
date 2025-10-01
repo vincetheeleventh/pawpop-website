@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Upload, AlertCircle, Check } from 'lucide-react';
 import { UploadModalEmailFirst } from '@/components/forms/UploadModalEmailFirst';
+import usePlausibleTracking from '@/hooks/usePlausibleTracking';
+import useClarityTracking from '@/hooks/useClarityTracking';
 
 export default function DeferredUploadPage() {
   const params = useParams();
@@ -14,6 +16,10 @@ export default function DeferredUploadPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  
+  // Analytics hooks
+  const { trackEvent, trackFunnel, trackInteraction } = usePlausibleTracking();
+  const clarityTracking = useClarityTracking();
 
   useEffect(() => {
     if (!token) {
@@ -38,6 +44,15 @@ export default function DeferredUploadPage() {
         // Check if already completed
         if (data.artwork.generation_step !== 'pending') {
           setError('This upload link has already been used. Check your email for your artwork link!');
+        } else {
+          // Track deferred upload return (user came back via email link)
+          trackEvent('Deferred Upload Page Viewed', {
+            user_type: data.artwork.user_type || 'unknown'
+          });
+          trackFunnel.deferredUploadCompleted(); // Step 2.7 in funnel
+          clarityTracking.trackInteraction.modalOpened('deferred_upload_page');
+          clarityTracking.setTag('upload_type', 'deferred');
+          console.log('📊 Deferred upload page viewed - user returned via email');
         }
 
       } catch (err) {
@@ -49,7 +64,8 @@ export default function DeferredUploadPage() {
     };
 
     fetchArtwork();
-  }, [token]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]); // Only depend on token - analytics hooks are stable
 
   if (loading) {
     return (
@@ -123,7 +139,13 @@ export default function DeferredUploadPage() {
           </div>
 
           <button
-            onClick={() => setShowUploadModal(true)}
+            onClick={() => {
+              // Track when deferred users start uploading
+              trackInteraction.buttonClick('Upload Photos Now (Deferred)', 'deferred-upload-page');
+              clarityTracking.trackInteraction.buttonClick('start_deferred_upload', 'deferred-upload-page');
+              console.log('📊 Deferred user started upload');
+              setShowUploadModal(true);
+            }}
             className="w-full bg-atomic-tangerine hover:bg-atomic-tangerine/90 text-white font-fredoka text-xl py-4 px-6 rounded-xl transition-all flex items-center justify-center gap-2"
           >
             <Upload className="w-6 h-6" />
