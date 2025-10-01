@@ -1,4 +1,7 @@
-# Deferred Upload Link Fix
+# Deferred Upload Link Fix - RESOLVED
+
+**Date**: 2025-10-01  
+**Status**: ✅ FIXED
 
 ## 🐛 **Critical Bug Fixed**
 
@@ -10,7 +13,22 @@
 
 ## 🔍 **Root Cause**
 
-### **Issue #1: Inverted Logic in API Validation**
+### **Issue #1: Missing upload_deferred Handler in Update API**
+
+**File:** `/src/app/api/artwork/update/route.ts`
+
+**Problem:** The artwork update API wasn't accepting or processing the `upload_deferred` parameter when users clicked "Upload Later".
+
+**Flow:**
+1. User captures email → artwork created with `upload_deferred: false`
+2. User clicks "Upload Later" → calls `/api/artwork/update` with `upload_deferred: true`
+3. ❌ **API ignored the parameter** - didn't extract it from request body
+4. ❌ **Database never updated** - `upload_deferred` stayed `false`
+5. User clicks email link → validation fails because `upload_deferred !== true`
+
+---
+
+### **Issue #2: Inverted Logic in API Validation** (PREVIOUSLY FIXED)
 
 **File:** `/src/app/api/artwork/by-upload-token/route.ts`
 
@@ -45,7 +63,31 @@ But when a user clicks "Upload Later", we set `upload_deferred = true`, so the v
 
 ## ✅ **Solution Implemented**
 
-### **Fix #1: Corrected API Validation Logic**
+### **Fix #1: Added upload_deferred Handler to Update API** (NEW - 2025-10-01)
+
+**File:** `/src/app/api/artwork/update/route.ts`
+
+**Changes:**
+```typescript
+// Line 11: Added upload_deferred to destructured parameters
+const { artwork_id, generated_image_url, source_images, generation_step, pet_name, generated_images, upload_deferred } = body
+
+// Lines 119-123: Added handler for upload_deferred
+if (upload_deferred !== undefined) {
+  updateData.upload_deferred = upload_deferred
+  console.log('📝 Setting upload_deferred:', upload_deferred)
+}
+```
+
+**Result:**
+- ✅ API now accepts `upload_deferred` parameter
+- ✅ Database properly updated when user clicks "Upload Later"
+- ✅ Upload links work correctly
+- ✅ Added logging for debugging
+
+---
+
+### **Fix #2: Corrected API Validation Logic** (PREVIOUSLY FIXED)
 
 **File:** `/src/app/api/artwork/by-upload-token/route.ts`
 
