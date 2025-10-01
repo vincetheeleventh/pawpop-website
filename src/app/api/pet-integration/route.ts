@@ -13,6 +13,8 @@ export async function POST(req: NextRequest) {
     let portraitUrl: string;
     let petUrl: string;
     let artworkId = `temp_${Date.now()}`;
+    let promptTweak = '';
+    let isRegeneration = false;
     const contentType = req.headers.get('content-type');
 
     if (contentType?.includes('multipart/form-data')) {
@@ -115,8 +117,8 @@ export async function POST(req: NextRequest) {
     } else {
       // Handle JSON request with image URLs
       const body = await req.json();
-      portraitUrl = body.portraitUrl;
-      petUrl = body.petUrl;
+      portraitUrl = body.portraitUrl || body.monalisaImageUrl;
+      petUrl = body.petUrl || body.petImageUrl;
       
       if (body.artworkId) {
         artworkId = body.artworkId;
@@ -125,13 +127,28 @@ export async function POST(req: NextRequest) {
       if (!portraitUrl || !petUrl) {
         return NextResponse.json({ error: 'Both portraitUrl and petUrl are required' }, { status: 400 });
       }
+      
+      // Extract prompt tweak for admin regeneration
+      promptTweak = body.promptTweak || '';
+      isRegeneration = body.isRegeneration || false;
+      
+      if (isRegeneration && promptTweak) {
+        console.log(`🔄 Regeneration mode with prompt tweak: "${promptTweak}"`);
+      }
     }
 
     // Step 2: Add pet to Mona Lisa portrait using Flux Pro Kontext Max Multi
     console.log("🐾 Running pet integration with Flux Pro Kontext Max Multi...");
+    
+    // Build prompt with optional tweak
+    const basePrompt = "Incorporate the pet into the painting of the woman. She is holding it in her lap. Keep the painted style and likeness of the woman and pet";
+    const finalPrompt = promptTweak ? `${basePrompt}. ${promptTweak}` : basePrompt;
+    
+    console.log(`📝 Using prompt: "${finalPrompt}"`);
+    
     const result = await fal.subscribe("fal-ai/flux-pro/kontext/max/multi", {
       input: {
-        prompt: "Incorporate the pet into the painting of the woman. She is holding it in her lap. Keep the painted style and likeness of the woman and pet",
+        prompt: finalPrompt,
         guidance_scale: 3.0,
         num_images: 1,
         output_format: "jpeg",
@@ -212,6 +229,8 @@ export async function POST(req: NextRequest) {
         imageUrl: supabaseImageUrl,
         falImageUrl: falImageUrl,
         supabaseUrl: supabaseImageUrl,
+        supabaseImageUrl: supabaseImageUrl, // For regeneration API
+        falRequestId: result.requestId, // For regeneration API
         success: true,
         requestId: result.requestId
       });

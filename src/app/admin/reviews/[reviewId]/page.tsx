@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckCircle, XCircle, ArrowLeft, ExternalLink, MessageSquare, Clock, Upload } from 'lucide-react'
+import { CheckCircle, XCircle, ArrowLeft, ExternalLink, MessageSquare, Clock, Upload, RefreshCw, ChevronDown, ChevronUp, Image as ImageIcon } from 'lucide-react'
 import { AdminReview } from '@/lib/admin-review'
 
 interface ReviewDetailPageProps {
@@ -20,6 +20,13 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
   const [error, setError] = useState<string | null>(null)
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
+  
+  // Regeneration state
+  const [promptTweak, setPromptTweak] = useState('')
+  const [regenerateMonalisa, setRegenerateMonalisa] = useState(false)
+  const [regenerating, setRegenerating] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
+  const [showMonalisa, setShowMonalisa] = useState(false)
 
   useEffect(() => {
     fetchReview()
@@ -143,6 +150,68 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
       setUploading(false)
       setUploadFile(null)
     }
+  }
+
+  const handleRegenerate = async () => {
+    if (!review) return
+
+    try {
+      setRegenerating(true)
+      setError(null)
+
+      console.log('🔄 Starting regeneration...')
+      console.log('📝 Prompt tweak:', promptTweak)
+      console.log('🎨 Regenerate MonaLisa:', regenerateMonalisa)
+
+      const response = await fetch(`/api/admin/reviews/${params.reviewId}/regenerate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt_tweak: promptTweak,
+          regenerate_monalisa: regenerateMonalisa
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to regenerate artwork')
+      }
+
+      const data = await response.json()
+      console.log('✅ Regeneration complete:', data)
+
+      // Refresh the review data to show new image
+      await fetchReview()
+
+      // Reset form
+      setPromptTweak('')
+      setRegenerateMonalisa(false)
+
+      // Show success message
+      const successDiv = document.createElement('div')
+      successDiv.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50'
+      successDiv.textContent = 'Artwork regenerated successfully!'
+      document.body.appendChild(successDiv)
+
+      setTimeout(() => {
+        if (document.body.contains(successDiv)) {
+          document.body.removeChild(successDiv)
+        }
+      }, 3000)
+
+    } catch (err) {
+      console.error('❌ Regeneration error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to regenerate artwork')
+    } finally {
+      setRegenerating(false)
+    }
+  }
+
+  const buildFullPrompt = () => {
+    const basePrompt = "Incorporate the pet into the painting of the woman. She is holding it in her lap. Keep the painted style and likeness of the woman and pet"
+    return promptTweak ? `${basePrompt}. ${promptTweak}` : basePrompt
   }
 
   const getStatusIcon = (status: string) => {
@@ -344,6 +413,78 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
               </div>
             )}
 
+            {/* MonaLisa Base Image */}
+            {review.monalisa_base_url && (
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <button
+                  onClick={() => setShowMonalisa(!showMonalisa)}
+                  className="w-full flex items-center justify-between text-lg font-semibold text-gray-900 mb-4"
+                >
+                  <span className="flex items-center">
+                    <ImageIcon className="w-5 h-5 inline mr-2" />
+                    MonaLisa Base Image
+                  </span>
+                  {showMonalisa ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
+                {showMonalisa && (
+                  <div className="bg-gray-100 rounded-lg p-4">
+                    <img 
+                      src={review.monalisa_base_url}
+                      alt="MonaLisa base"
+                      className="max-w-full max-h-96 object-contain rounded mx-auto"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Regeneration History */}
+            {review.regeneration_history && review.regeneration_history.length > 0 && (
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <button
+                  onClick={() => setShowHistory(!showHistory)}
+                  className="w-full flex items-center justify-between text-lg font-semibold text-gray-900 mb-4"
+                >
+                  <span>
+                    Regeneration History ({review.regeneration_history.length})
+                  </span>
+                  {showHistory ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
+                {showHistory && (
+                  <div className="space-y-4">
+                    {review.regeneration_history.map((entry, index) => (
+                      <div key={index} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-700">
+                            Version {index + 1}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {new Date(entry.timestamp).toLocaleString()}
+                          </span>
+                        </div>
+                        {entry.prompt_tweak && (
+                          <div className="mb-2">
+                            <span className="text-xs font-medium text-gray-600">Prompt Tweak: </span>
+                            <span className="text-xs text-gray-700">{entry.prompt_tweak}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2 mb-2 text-xs">
+                          <span className={`px-2 py-1 rounded ${entry.regenerated_monalisa ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'}`}>
+                            {entry.regenerated_monalisa ? 'MonaLisa Regenerated' : 'MonaLisa Reused'}
+                          </span>
+                        </div>
+                        <img 
+                          src={entry.image_url}
+                          alt={`Version ${index + 1}`}
+                          className="w-full max-h-48 object-contain rounded bg-gray-50"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* FAL.ai Reference */}
             {review.fal_generation_url && (
               <div className="bg-white rounded-lg shadow-sm p-6">
@@ -382,6 +523,125 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
                     <p>Reviewed by {review.reviewed_by}</p>
                     <p>on {new Date(review.reviewed_at!).toLocaleString()}</p>
                   </div>
+                )}
+              </div>
+            )}
+
+            {/* Regenerate Artwork */}
+            {isPending && (
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  <RefreshCw className="w-5 h-5 inline mr-2" />
+                  Regenerate Artwork
+                </h3>
+                
+                {/* Preset Prompt Tweaks */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Quick Presets
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => setPromptTweak('Make the pet smaller')}
+                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 text-left"
+                    >
+                      Make pet smaller
+                    </button>
+                    <button
+                      onClick={() => setPromptTweak('Make the pet larger')}
+                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 text-left"
+                    >
+                      Make pet larger
+                    </button>
+                    <button
+                      onClick={() => setPromptTweak('Move the pet to the left side')}
+                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 text-left"
+                    >
+                      Move pet left
+                    </button>
+                    <button
+                      onClick={() => setPromptTweak('Move the pet to the right side')}
+                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 text-left"
+                    >
+                      Move pet right
+                    </button>
+                    <button
+                      onClick={() => setPromptTweak('Adjust the pet positioning higher')}
+                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 text-left"
+                    >
+                      Position higher
+                    </button>
+                    <button
+                      onClick={() => setPromptTweak('Adjust the pet positioning lower')}
+                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 text-left"
+                    >
+                      Position lower
+                    </button>
+                  </div>
+                </div>
+
+                {/* Custom Prompt Tweak */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Pet Integration Prompt Tweak
+                  </label>
+                  <textarea
+                    value={promptTweak}
+                    onChange={(e) => setPromptTweak(e.target.value)}
+                    placeholder="e.g., Make the pet smaller, position it to the left"
+                    className="w-full h-20 p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    disabled={regenerating}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    This text will be appended to the pet integration prompt
+                  </p>
+                </div>
+
+                {/* Full Prompt Preview */}
+                {promptTweak && (
+                  <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                    <label className="block text-xs font-medium text-purple-700 mb-1">
+                      Full Prompt Preview:
+                    </label>
+                    <p className="text-sm text-purple-900 italic">
+                      "{buildFullPrompt()}"
+                    </p>
+                  </div>
+                )}
+
+                {/* Regenerate MonaLisa Checkbox */}
+                <div className="mb-4">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={regenerateMonalisa}
+                      onChange={(e) => setRegenerateMonalisa(e.target.checked)}
+                      className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                      disabled={regenerating}
+                    />
+                    <span className="ml-2 text-sm text-gray-700">
+                      Regenerate MonaLisa base too
+                    </span>
+                  </label>
+                  <p className="text-xs text-gray-500 ml-6 mt-1">
+                    Check this to regenerate both the MonaLisa portrait and pet integration
+                  </p>
+                </div>
+
+                {/* Regenerate Button */}
+                <button
+                  onClick={handleRegenerate}
+                  disabled={regenerating || !review.source_images}
+                  className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center"
+                >
+                  <RefreshCw className={`w-5 h-5 mr-2 ${regenerating ? 'animate-spin' : ''}`} />
+                  {regenerating ? 'Regenerating...' : 'Regenerate Artwork'}
+                </button>
+
+                {!review.source_images && (
+                  <p className="text-sm text-red-600 mt-2">
+                    Source images not available. Cannot regenerate.
+                  </p>
                 )}
               </div>
             )}

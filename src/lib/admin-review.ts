@@ -1,6 +1,15 @@
 // src/lib/admin-review.ts
 import { supabaseAdmin } from './supabase'
 
+export interface RegenerationHistoryEntry {
+  timestamp: string
+  image_url: string
+  monalisa_base_url?: string
+  prompt_tweak: string
+  regenerated_monalisa: boolean
+  fal_generation_url?: string
+}
+
 export interface AdminReview {
   id: string
   review_id: string // API returns review_id as the primary identifier
@@ -23,6 +32,8 @@ export interface AdminReview {
   }
   manually_replaced?: boolean // Track if image was manually replaced by admin
   edit_request_text?: string // Customer's edit request (for edit_request type)
+  regeneration_history?: RegenerationHistoryEntry[] // History of regeneration attempts
+  monalisa_base_url?: string // MonaLisa base image for reference
 }
 
 export interface CreateReviewData {
@@ -231,7 +242,7 @@ export async function getAdminReview(reviewId: string): Promise<AdminReview | nu
       .from('admin_reviews')
       .select(`
         *,
-        artworks!inner(access_token, source_images)
+        artworks!inner(access_token, source_images, generated_images)
       `)
       .eq('id', reviewId)
       .single()
@@ -244,7 +255,8 @@ export async function getAdminReview(reviewId: string): Promise<AdminReview | nu
     return {
       ...data,
       artwork_token: data.artworks?.access_token,
-      source_images: data.artworks?.source_images
+      source_images: data.artworks?.source_images,
+      monalisa_base_url: data.artworks?.generated_images?.monalisa_base
     }
   } catch (error) {
     console.error('Error in getAdminReview:', error)
