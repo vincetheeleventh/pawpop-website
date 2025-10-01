@@ -7,7 +7,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { customer_name, customer_email, pet_name, email_captured_at, upload_deferred, user_type, price_variant } = body
+    const { customer_name, customer_email, pet_name, email_captured_at, upload_deferred, user_type, price_variant, user_id: providedUserId } = body
 
     // Validate required fields (customer_name is optional for email-first flow)
     if (!customer_email) {
@@ -25,24 +25,32 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create or get user by email
-    let userId: string | null = null
-    try {
-      console.log('👤 Creating/getting user for:', customer_email)
-      const { data: userIdData, error: userError } = await supabaseAdmin!.rpc('create_or_get_user_by_email', {
-        p_email: customer_email,
-        p_customer_name: customer_name || ''
-      })
-      
-      if (!userError && userIdData) {
-        userId = userIdData
-        console.log('✅ User ID:', userId)
-      } else {
-        console.error('⚠️ User creation failed, continuing without user_id:', userError)
+    // Use provided user_id if available, otherwise create/get user
+    let userId: string | null = providedUserId !== undefined && providedUserId !== null ? providedUserId : null
+    
+    console.log('🔍 user_id check:', { providedUserId, userId, hasUserId: !!userId });
+    
+    if (!userId) {
+      // No user_id provided, create or get user by email
+      try {
+        console.log('👤 No user_id provided, creating/getting user for:', customer_email)
+        const { data: userIdData, error: userError } = await supabaseAdmin!.rpc('create_or_get_user_by_email', {
+          p_email: customer_email,
+          p_customer_name: customer_name || ''
+        })
+        
+        if (!userError && userIdData) {
+          userId = userIdData
+          console.log('✅ User ID created:', userId)
+        } else {
+          console.error('⚠️ User creation failed, continuing without user_id:', userError)
+        }
+      } catch (userErr) {
+        console.error('⚠️ User creation error (non-fatal):', userErr)
+        // Continue anyway - user creation is optional
       }
-    } catch (userErr) {
-      console.error('⚠️ User creation error (non-fatal):', userErr)
-      // Continue anyway - user creation is optional
+    } else {
+      console.log('✅ Using provided user_id:', userId)
     }
 
     // Create artwork record
@@ -53,7 +61,7 @@ export async function POST(request: NextRequest) {
       email_captured_at,
       upload_deferred,
       user_type,
-      user_id: userId, // Link to user if created
+      user_id: userId, // Link to user (either provided or created)
       price_variant: price_variant || 'A' // Default to variant A
     })
 

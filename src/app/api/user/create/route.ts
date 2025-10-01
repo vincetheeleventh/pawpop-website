@@ -3,12 +3,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { isValidEmail } from '@/lib/utils'
 
+/**
+ * Create or get user by email
+ * This endpoint is used during email capture to create a user record
+ * without creating an artwork yet (avoiding duplicate artworks)
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, customerName } = body
+    const { email, customerName, userType } = body
 
-    console.log('📧 Creating/getting user for email:', email)
+    console.log('📧 Creating/getting user for email:', email, 'type:', userType)
 
     if (!email) {
       return NextResponse.json(
@@ -47,9 +52,26 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ User created/retrieved:', userId)
 
+    // Track user metadata (user_type) separately if needed
+    if (userId && userType) {
+      try {
+        await supabaseAdmin
+          .from('auth.users')
+          .update({
+            raw_user_meta_data: {
+              user_type: userType
+            }
+          })
+          .eq('id', userId)
+      } catch (metaError) {
+        console.warn('⚠️ Failed to update user metadata (non-fatal):', metaError)
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      userId
+      userId,
+      email
     })
 
   } catch (error) {
