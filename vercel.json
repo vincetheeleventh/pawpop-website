@@ -1,8 +1,1 @@
-{
-  "crons": [
-    {
-      "path": "/api/email/upload-reminder?send=true",
-      "schedule": "0 */6 * * *"
-    }
-  ]
-}
+{}
