@@ -48,14 +48,13 @@ interface FormData {
 type FlowStep = 'email-capture' | 'upload-choice' | 'photo-upload' | 'processing' | 'complete';
 
 interface ProcessingState {
+  step: 'uploading' | 'generating' | 'saving' | 'complete' | 'error';
   message: string;
   progress: number;
 }
 
 export const UploadModalEmailFirst = ({ isOpen, onClose, prefillData }: UploadModalEmailFirstProps) => {
-  const [flowStep, setFlowStep] = useState<FlowStep>(
-    prefillData?.skipEmailCapture ? 'photo-upload' : 'email-capture'
-  );
+  const [flowStep, setFlowStep] = useState<FlowStep>(prefillData?.skipEmailCapture ? 'photo-upload' : 'email-capture');
   const [formData, setFormData] = useState<FormData>({
     petMomPhoto: null,
     petPhoto: null,
@@ -63,10 +62,7 @@ export const UploadModalEmailFirst = ({ isOpen, onClose, prefillData }: UploadMo
     email: prefillData?.customerEmail || '',
     isGift: false
   });
-  const [artworkId, setArtworkId] = useState<string | null>(
-    prefillData?.artworkId || null
-  );
-  const [userId, setUserId] = useState<string | null>(null); // Store user ID after email capture
+  const [artworkId, setArtworkId] = useState<string | null>(prefillData?.artworkId || null);
   const [uploadToken, setUploadToken] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [processing, setProcessing] = useState<ProcessingState | null>(null);
@@ -179,29 +175,45 @@ export const UploadModalEmailFirst = ({ isOpen, onClose, prefillData }: UploadMo
         console.log(`Google Ads: Email capture conversion tracked (${userType}, value: $${conversionValue})`);
       }
 
-      // Create or get user (NO artwork created yet - avoiding duplicates!)
-      console.log('👤 Creating/getting user for:', formData.email);
-      const userResponse = await fetch('/api/user/create', {
+      // Create artwork record with email captured
+      const createResponse = await fetch('/api/artwork/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: formData.email,
-          customerName: '', // Name not collected in email-first flow
-          userType: userType // Track gifter vs self_purchaser
+          customer_name: '', // Will be collected later if needed
+          customer_email: formData.email,
+          email_captured_at: new Date().toISOString(),
+          upload_deferred: false, // Will be set to true if they choose "Upload Later"
+          user_type: userType // Track gifter vs self_purchaser
         }),
       });
 
-      if (!userResponse.ok) {
-        const errorData = await userResponse.json();
-        throw new Error(errorData.error || 'Failed to create user');
+      if (!createResponse.ok) {
+        const errorData = await createResponse.json();
+        throw new Error(errorData.error || 'Failed to create artwork record');
       }
       
-      const { userId: createdUserId } = await userResponse.json();
-      setUserId(createdUserId);
-      console.log('✅ User ID stored:', createdUserId);
-      console.log('✅ Email captured - user created/retrieved');
+      const { artwork, access_token } = await createResponse.json();
+      setArtworkId(artwork.id);
 
-      // Move to upload choice step (artwork will be created when user chooses Upload Now/Later)
+      // Generate upload token for deferred uploads
+      const tokenResponse = await fetch('/api/artwork/generate-upload-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ artworkId: artwork.id }),
+      });
+
+      if (!tokenResponse.ok) {
+        const tokenError = await tokenResponse.json();
+        throw new Error(tokenError.error || 'Failed to generate upload token');
+      }
+      
+      const { uploadToken: token } = await tokenResponse.json();
+      setUploadToken(token);
+      
+      console.log('✅ Email captured, artwork created:', artwork.id, 'Upload token:', token);
+
+      // Move to upload choice step
       setFlowStep('upload-choice');
 
     } catch (error) {
@@ -217,62 +229,20 @@ export const UploadModalEmailFirst = ({ isOpen, onClose, prefillData }: UploadMo
     }
   };
 
-  // Handle "Upload Now" choice - Create artwork then proceed to upload
-  const handleUploadNow = async () => {
-    if (!userId || !formData.email) {
-      setError('Missing user information. Please try again.');
-      return;
-    }
-
-    setIsSubmitting(true);
-    setError(null);
-
-    try {
-      // Create artwork NOW (not earlier)
-      console.log('🎨 Creating artwork for immediate upload...');
-      const userType = formData.isGift ? 'gifter' : 'self_purchaser';
-      
-      const createResponse = await fetch('/api/artwork/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customer_name: '',
-          customer_email: formData.email,
-          user_id: userId,
-          email_captured_at: new Date().toISOString(),
-          upload_deferred: false,
-          user_type: userType
-        }),
-      });
-
-      if (!createResponse.ok) {
-        const errorData = await createResponse.json();
-        throw new Error(errorData.error || 'Failed to create artwork');
-      }
-      
-      const { artwork } = await createResponse.json();
-      setArtworkId(artwork.id);
-      console.log('✅ Artwork created for immediate upload:', artwork.id);
-
-      trackInteraction.buttonClick('Upload Now', 'upload-choice');
-      clarityTracking.trackInteraction.buttonClick('upload_now', 'upload-choice');
-      
-      setFlowStep('photo-upload');
-    } catch (error) {
-      console.error('Error creating artwork:', error);
-      setError(error instanceof Error ? error.message : 'Failed to prepare upload');
-    } finally {
-      setIsSubmitting(false);
-    }
+  // Handle "Upload Now" choice
+  const handleUploadNow = () => {
+    setFlowStep('photo-upload');
+    trackInteraction.buttonClick('Upload Now', 'upload-choice');
+    clarityTracking.trackInteraction.buttonClick('upload_now', 'upload-choice');
   };
 
-  // Handle "Upload Later" choice - Create artwork with deferred flag
+  // Handle "Upload Later" choice
   const handleUploadLater = async () => {
-    console.log('🕒 Upload Later clicked', { userId, email: formData.email });
+    console.log('🕒 Upload Later clicked', { artworkId, uploadToken });
     
-    if (!userId || !formData.email) {
-      setError('Missing user information');
-      console.error('❌ Missing user info:', { userId, email: formData.email });
+    if (!artworkId || !uploadToken) {
+      setError('Missing artwork information');
+      console.error('❌ Missing artwork info:', { artworkId, uploadToken });
       return;
     }
 
@@ -280,48 +250,18 @@ export const UploadModalEmailFirst = ({ isOpen, onClose, prefillData }: UploadMo
     setError(null);
 
     try {
-      // Create artwork with deferred flag
-      console.log('🎨 Creating deferred artwork...');
-      const userType = formData.isGift ? 'gifter' : 'self_purchaser';
-      
-      const createResponse = await fetch('/api/artwork/create', {
-        method: 'POST',
+      // Mark artwork as deferred
+      await fetch('/api/artwork/update', {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          customer_name: '',
-          customer_email: formData.email,
-          user_id: userId,
-          email_captured_at: new Date().toISOString(),
-          upload_deferred: true,
-          user_type: userType
-        }),
+          artwork_id: artworkId,
+          upload_deferred: true
+        })
       });
-
-      if (!createResponse.ok) {
-        const errorData = await createResponse.json();
-        throw new Error(errorData.error || 'Failed to create artwork');
-      }
-      
-      const { artwork } = await createResponse.json();
-      setArtworkId(artwork.id);
-      console.log('✅ Deferred artwork created:', artwork.id);
-
-      // Generate upload token
-      const tokenResponse = await fetch('/api/artwork/generate-upload-token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ artworkId: artwork.id }),
-      });
-
-      if (!tokenResponse.ok) {
-        throw new Error('Failed to generate upload token');
-      }
-      
-      const { uploadToken: token } = await tokenResponse.json();
-      setUploadToken(token);
 
       // Send confirmation email with upload link
-      const uploadUrl = `${window.location.origin}/upload/${token}`;
+      const uploadUrl = `${window.location.origin}/upload/${uploadToken}`;
       await fetch('/api/email/capture-confirmation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

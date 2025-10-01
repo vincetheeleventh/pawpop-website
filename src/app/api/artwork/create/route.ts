@@ -25,35 +25,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Use provided user_id if available, otherwise create/get user
+    // TEMPORARY: Skip user creation until migration 024 is applied
+    // Use provided user_id if available, but DON'T create new users yet
     let userId: string | null = providedUserId !== undefined && providedUserId !== null ? providedUserId : null
     
+    console.log('⚠️  MIGRATION 024 NOT APPLIED - Skipping user creation');
     console.log('🔍 user_id check:', { providedUserId, userId, hasUserId: !!userId });
     
-    if (!userId) {
-      // No user_id provided, create or get user by email
-      try {
-        console.log('👤 No user_id provided, creating/getting user for:', customer_email)
-        const { data: userIdData, error: userError } = await supabaseAdmin!.rpc('create_or_get_user_by_email', {
-          p_email: customer_email,
-          p_customer_name: customer_name || ''
-        })
-        
-        if (!userError && userIdData) {
-          userId = userIdData
-          console.log('✅ User ID created:', userId)
-        } else {
-          console.error('⚠️ User creation failed, continuing without user_id:', userError)
-        }
-      } catch (userErr) {
-        console.error('⚠️ User creation error (non-fatal):', userErr)
-        // Continue anyway - user creation is optional
-      }
-    } else {
-      console.log('✅ Using provided user_id:', userId)
-    }
+    // DON'T create users until migration is applied
+    // This prevents foreign key constraint errors
 
-    // Create artwork record
+    // Create artwork record (without user_id for now)
     const { artwork, access_token } = await createArtwork({
       customer_name: customer_name || '',
       customer_email,
@@ -61,7 +43,7 @@ export async function POST(request: NextRequest) {
       email_captured_at,
       upload_deferred,
       user_type,
-      user_id: userId, // Link to user (either provided or created)
+      user_id: null, // TEMPORARY: Set to null until migration applied
       price_variant: price_variant || 'A' // Default to variant A
     })
 

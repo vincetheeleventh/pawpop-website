@@ -93,8 +93,9 @@ export async function createArtwork(data: CreateArtworkData): Promise<{ artwork:
   const access_token = generateSecureToken()
   const token_expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
 
-  // Use provided user_id if available, otherwise ensure user exists
-  const user_id = data.user_id || await ensureUser(data.customer_email)
+  // DISABLED: ensureUser() tries to insert into auth.users which fails
+  // Set user_id to null for now until we implement proper Supabase Auth integration
+  const user_id = null // await ensureUser(data.customer_email)
 
   const { data: artwork, error } = await ensureSupabaseAdmin()
     .from('artworks')
