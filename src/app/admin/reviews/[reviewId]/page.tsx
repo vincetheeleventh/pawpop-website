@@ -485,51 +485,6 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
                   Regenerate Artwork
                 </h3>
                 
-                {/* Preset Prompt Tweaks */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Quick Presets
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => setPromptTweak(`${DEFAULT_PROMPT}. Make the pet smaller`)}
-                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 text-left"
-                    >
-                      Make pet smaller
-                    </button>
-                    <button
-                      onClick={() => setPromptTweak(`${DEFAULT_PROMPT}. Make the pet larger`)}
-                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 text-left"
-                    >
-                      Make pet larger
-                    </button>
-                    <button
-                      onClick={() => setPromptTweak(`${DEFAULT_PROMPT}. Move the pet to the left side`)}
-                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 text-left"
-                    >
-                      Move pet left
-                    </button>
-                    <button
-                      onClick={() => setPromptTweak(`${DEFAULT_PROMPT}. Move the pet to the right side`)}
-                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 text-left"
-                    >
-                      Move pet right
-                    </button>
-                    <button
-                      onClick={() => setPromptTweak(`${DEFAULT_PROMPT}. Adjust the pet positioning higher`)}
-                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 text-left"
-                    >
-                      Position higher
-                    </button>
-                    <button
-                      onClick={() => setPromptTweak(`${DEFAULT_PROMPT}. Adjust the pet positioning lower`)}
-                      className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 text-left"
-                    >
-                      Position lower
-                    </button>
-                  </div>
-                </div>
-
                 {/* Full Prompt Editor */}
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -543,7 +498,7 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
                     disabled={regenerating}
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Edit the full prompt directly. Quick presets will replace the entire prompt.
+                    Edit the full prompt that will be sent to the pet integration API.
                   </p>
                 </div>
 
