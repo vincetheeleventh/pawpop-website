@@ -22,7 +22,8 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
   const [uploading, setUploading] = useState(false)
   
   // Regeneration state
-  const [promptTweak, setPromptTweak] = useState('')
+  const DEFAULT_PROMPT = "Incorporate the pet into the painting of the woman. She is holding it in her lap. Keep the painted style and likeness of the woman and pet"
+  const [promptTweak, setPromptTweak] = useState(DEFAULT_PROMPT)
   const [regenerateMonalisa, setRegenerateMonalisa] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
@@ -209,10 +210,6 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
     }
   }
 
-  const buildFullPrompt = () => {
-    const basePrompt = "Incorporate the pet into the painting of the woman. She is holding it in her lap. Keep the painted style and likeness of the woman and pet"
-    return promptTweak ? `${basePrompt}. ${promptTweak}` : basePrompt
-  }
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -495,37 +492,37 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
-                      onClick={() => setPromptTweak('Make the pet smaller')}
+                      onClick={() => setPromptTweak(`${DEFAULT_PROMPT}. Make the pet smaller`)}
                       className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 text-left"
                     >
                       Make pet smaller
                     </button>
                     <button
-                      onClick={() => setPromptTweak('Make the pet larger')}
+                      onClick={() => setPromptTweak(`${DEFAULT_PROMPT}. Make the pet larger`)}
                       className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 text-left"
                     >
                       Make pet larger
                     </button>
                     <button
-                      onClick={() => setPromptTweak('Move the pet to the left side')}
+                      onClick={() => setPromptTweak(`${DEFAULT_PROMPT}. Move the pet to the left side`)}
                       className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 text-left"
                     >
                       Move pet left
                     </button>
                     <button
-                      onClick={() => setPromptTweak('Move the pet to the right side')}
+                      onClick={() => setPromptTweak(`${DEFAULT_PROMPT}. Move the pet to the right side`)}
                       className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 text-left"
                     >
                       Move pet right
                     </button>
                     <button
-                      onClick={() => setPromptTweak('Adjust the pet positioning higher')}
+                      onClick={() => setPromptTweak(`${DEFAULT_PROMPT}. Adjust the pet positioning higher`)}
                       className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 text-left"
                     >
                       Position higher
                     </button>
                     <button
-                      onClick={() => setPromptTweak('Adjust the pet positioning lower')}
+                      onClick={() => setPromptTweak(`${DEFAULT_PROMPT}. Adjust the pet positioning lower`)}
                       className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 text-left"
                     >
                       Position lower
@@ -533,34 +530,22 @@ export default function ReviewDetailPage({ params }: ReviewDetailPageProps) {
                   </div>
                 </div>
 
-                {/* Custom Prompt Tweak */}
+                {/* Full Prompt Editor */}
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Pet Integration Prompt Tweak
+                    Pet Integration Prompt
                   </label>
                   <textarea
                     value={promptTweak}
                     onChange={(e) => setPromptTweak(e.target.value)}
-                    placeholder="e.g., Make the pet smaller, position it to the left"
-                    className="w-full h-20 p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="Enter the full pet integration prompt..."
+                    className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono text-sm"
                     disabled={regenerating}
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    This text will be appended to the pet integration prompt
+                    Edit the full prompt directly. Quick presets will replace the entire prompt.
                   </p>
                 </div>
-
-                {/* Full Prompt Preview */}
-                {promptTweak && (
-                  <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                    <label className="block text-xs font-medium text-purple-700 mb-1">
-                      Full Prompt Preview:
-                    </label>
-                    <p className="text-sm text-purple-900 italic">
-                      "{buildFullPrompt()}"
-                    </p>
-                  </div>
-                )}
 
                 {/* Regenerate MonaLisa Checkbox */}
                 <div className="mb-4">
