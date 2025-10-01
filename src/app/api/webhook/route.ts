@@ -141,6 +141,19 @@ export async function POST(req: Request) {
         // Track purchase conversion for Google Ads (server-side)
         try {
           const { trackServerSideConversion } = await import('@/lib/google-ads-server');
+          const { getArtworkById } = await import('@/lib/supabase-artworks');
+          
+          // Fetch artwork to get user_type
+          let userType: 'gifter' | 'self_purchaser' | undefined;
+          if (metadata.artworkId) {
+            try {
+              const artwork = await getArtworkById(metadata.artworkId);
+              userType = artwork?.user_type;
+              console.log('📊 User type for conversion tracking:', userType);
+            } catch (artworkError) {
+              console.warn('⚠️ Could not fetch artwork for user_type:', artworkError);
+            }
+          }
           
           const conversionData = {
             orderId: session.id,
@@ -148,6 +161,7 @@ export async function POST(req: Request) {
             currency: (session.currency || 'cad').toUpperCase(),
             productType: metadata.productType || 'PawPop Print',
             customerEmail: session.customer_details?.email || undefined,
+            userType: userType, // Add user_type for segmentation
             customParameters: {
               customer_name: metadata.customerName,
               pet_name: metadata.petName,
@@ -158,7 +172,7 @@ export async function POST(req: Request) {
           
           const trackingResult = await trackServerSideConversion(conversionData);
           if (trackingResult.success) {
-            console.log('✅ Google Ads server-side conversion tracked successfully');
+            console.log('✅ Google Ads server-side conversion tracked successfully with user_type:', userType);
           } else {
             console.warn('⚠️ Google Ads server-side conversion tracking failed:', trackingResult.error);
           }

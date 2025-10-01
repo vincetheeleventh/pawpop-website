@@ -136,7 +136,8 @@ export const trackPurchase = (
   value: number, 
   productType: string,
   currency: string = 'CAD',
-  userData?: EnhancedConversionData
+  userData?: EnhancedConversionData,
+  userType?: 'gifter' | 'self_purchaser'
 ) => {
   if (typeof window === 'undefined' || !window.gtag) return;
 
@@ -153,7 +154,8 @@ export const trackPurchase = (
     custom_parameters: {
       event_category: 'ecommerce',
       event_label: 'purchase_completed',
-      product_type: productType
+      product_type: productType,
+      user_type: userType || 'unknown' // Add user_type for segmentation
     }
   };
 
@@ -164,6 +166,7 @@ export const trackPurchase = (
     transaction_id: orderId,
     value: value,
     currency: currency,
+    user_type: userType || 'unknown', // Add user_type for GA4 segmentation
     items: [{
       item_id: `pawpop_${productType}`,
       item_name: `PawPop ${productType}`,
@@ -173,7 +176,7 @@ export const trackPurchase = (
     }]
   });
 
-  console.log('Google Ads: Purchase conversion tracked', conversionData);
+  console.log('Google Ads: Purchase conversion tracked', { ...conversionData, user_type: userType });
 };
 
 // Track artwork page view

@@ -33,6 +33,7 @@ export interface OrderMetadata {
   frameUpgrade?: boolean;
   shippingMethodId?: number;
   quantity?: number;
+  artworkId?: string; // Add artworkId for user_type tracking
 }
 
 export interface ProcessOrderParams {

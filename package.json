@@ -48,6 +48,7 @@
     "test:plausible": "vitest run tests/lib/plausible.test.ts tests/hooks/usePlausibleTracking.test.tsx tests/integration/plausible-ab-testing.test.ts",
     "test:plausible-watch": "vitest tests/lib/plausible.test.ts tests/hooks/usePlausibleTracking.test.tsx tests/integration/plausible-ab-testing.test.ts",
     "test:plausible-e2e": "playwright test tests/e2e/plausible-ab-testing.spec.ts tests/e2e/plausible-purchase-flow.spec.ts tests/e2e/plausible-performance.spec.ts",
+    "monitor:user-type-tracking": "node scripts/monitor-user-type-tracking.js",
     "test:plausible-e2e-headed": "playwright test tests/e2e/plausible-ab-testing.spec.ts tests/e2e/plausible-purchase-flow.spec.ts tests/e2e/plausible-performance.spec.ts --headed",
     "test:plausible-all": "npm run test:plausible && npm run test:plausible-e2e",
     "test:plausible-full": "node scripts/test-plausible-e2e.js",

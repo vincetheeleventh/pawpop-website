@@ -16,6 +16,7 @@ export interface ServerConversionData {
     postal_code?: string;
     country?: string;
   };
+  userType?: 'gifter' | 'self_purchaser'; // Add user_type for segmentation
   customParameters?: Record<string, any>;
 }
 
@@ -90,6 +91,7 @@ export async function trackServerSideConversion(
             event_category: 'ecommerce',
             event_label: 'purchase_completed',
             product_type: conversionData.productType,
+            user_type: conversionData.userType || 'unknown', // Add user_type for segmentation
             ...conversionData.customParameters
           }
         },
@@ -99,6 +101,7 @@ export async function trackServerSideConversion(
             transaction_id: conversionData.orderId,
             value: conversionData.value,
             currency: conversionData.currency,
+            user_type: conversionData.userType || 'unknown', // Add user_type for GA4 segmentation
             items: [
               {
                 item_id: `pawpop_${conversionData.productType}`,
@@ -122,6 +125,7 @@ export async function trackServerSideConversion(
       value: conversionData.value,
       currency: conversionData.currency,
       product_type: conversionData.productType,
+      user_type: conversionData.userType || 'unknown',
       has_enhanced_data: Object.keys(userData).length > 0,
       enhanced_fields: Object.keys(userData),
       timestamp: new Date().toISOString()
