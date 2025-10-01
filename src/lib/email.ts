@@ -21,6 +21,7 @@ export interface MasterpieceCreatingEmailData {
   customerEmail: string
   petName?: string
   artworkUrl: string
+  priceVariant?: 'A' | 'B'
 }
 
 export interface MasterpieceReadyEmailData {
@@ -29,6 +30,7 @@ export interface MasterpieceReadyEmailData {
   petName?: string
   artworkUrl: string
   imageUrl: string
+  priceVariant?: 'A' | 'B'
 }
 
 export interface OrderConfirmationEmailData {
@@ -127,6 +129,8 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; me
  */
 export async function sendMasterpieceCreatingEmail(data: MasterpieceCreatingEmailData): Promise<{ success: boolean; error?: string }> {
   const petNameText = data.petName ? ` for ${data.petName}` : ''
+  // Add price variant to artwork URL for cross-device consistency
+  const artworkUrl = data.priceVariant ? `${data.artworkUrl}?pv=${data.priceVariant}` : data.artworkUrl
   
   const html = `
     <!DOCTYPE html>
@@ -169,7 +173,7 @@ export async function sendMasterpieceCreatingEmail(data: MasterpieceCreatingEmai
           <div class="divider"></div>
           
           <p>You can check the status of your artwork anytime:</p>
-          <a href="${data.artworkUrl}" class="cta-button" style="display: inline-block; background: #FF9770 !important; color: #FFFFFF !important; padding: 15px 30px; text-decoration: none; border-radius: 12px; font-weight: 600; margin: 20px 0; border: none; font-family: 'Fredoka One', cursive;">View Your Artwork Status</a>
+          <a href="${artworkUrl}" class="cta-button" style="display: inline-block; background: #FF9770 !important; color: #FFFFFF !important; padding: 15px 30px; text-decoration: none; border-radius: 12px; font-weight: 600; margin: 20px 0; border: none; font-family: 'Fredoka One', cursive;">View Your Artwork Status</a>
           
           <p>We're excited to show you the incredible transformation!</p>
           
@@ -200,6 +204,8 @@ export async function sendMasterpieceCreatingEmail(data: MasterpieceCreatingEmai
  */
 export async function sendMasterpieceReadyEmail(data: MasterpieceReadyEmailData): Promise<{ success: boolean; error?: string }> {
   const petNameText = data.petName ? ` ${data.petName}'s` : ' your'
+  // Add price variant to artwork URL for cross-device consistency
+  const artworkUrl = data.priceVariant ? `${data.artworkUrl}?pv=${data.priceVariant}` : data.artworkUrl
   
   const html = `
     <!DOCTYPE html>
@@ -243,7 +249,7 @@ export async function sendMasterpieceReadyEmail(data: MasterpieceReadyEmailData)
           <p>We've created a special page just for you where you can see your artwork in full detail and decide how to make it real.</p>
           
           <div class="buttons-container">
-            <a href="${data.artworkUrl}" class="cta-button" style="display: inline-block; background: #FF9770 !important; color: #FFFFFF !important; padding: 15px 30px; text-decoration: none; border-radius: 12px; font-weight: 600; margin: 20px 10px; border: none; font-family: 'Fredoka One', cursive;">View Your Masterpiece</a>
+            <a href="${artworkUrl}" class="cta-button" style="display: inline-block; background: #FF9770 !important; color: #FFFFFF !important; padding: 15px 30px; text-decoration: none; border-radius: 12px; font-weight: 600; margin: 20px 10px; border: none; font-family: 'Fredoka One', cursive;">View Your Masterpiece</a>
           </div>
           
           <div class="divider"></div>

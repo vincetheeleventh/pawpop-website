@@ -17,6 +17,7 @@ export interface CreateArtworkData {
   email_captured_at?: string
   upload_deferred?: boolean
   user_type?: 'gifter' | 'self_purchaser'
+  price_variant?: 'A' | 'B'
   source_images?: {
     pet_photo?: string
     pet_mom_photo?: string
@@ -105,6 +106,7 @@ export async function createArtwork(data: CreateArtworkData): Promise<{ artwork:
       access_token,
       token_expires_at: token_expires_at.toISOString(),
       generation_step: 'pending',
+      price_variant: data.price_variant || 'A', // Default to variant A for consistent pricing
       source_images: data.source_images || {
         pet_photo: '',
         pet_mom_photo: '',

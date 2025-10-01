@@ -77,6 +77,9 @@ export interface Artwork {
   // User type tracking (gifter vs self-purchaser analytics)
   user_type?: 'gifter' | 'self_purchaser'
   
+  // Price variant for A/B testing cross-device consistency
+  price_variant?: 'A' | 'B'
+  
   created_at: string
   updated_at: string
 }

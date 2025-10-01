@@ -6,7 +6,7 @@ import { isValidEmail } from '@/lib/utils'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { customer_name, customer_email, pet_name, email_captured_at, upload_deferred, user_type } = body
+    const { customer_name, customer_email, pet_name, email_captured_at, upload_deferred, user_type, price_variant } = body
 
     // Validate required fields (customer_name is optional for email-first flow)
     if (!customer_email) {
@@ -31,7 +31,8 @@ export async function POST(request: NextRequest) {
       pet_name: pet_name || '',
       email_captured_at,
       upload_deferred,
-      user_type
+      user_type,
+      price_variant: price_variant || 'A' // Default to variant A
     })
 
     return NextResponse.json({

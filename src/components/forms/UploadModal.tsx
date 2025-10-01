@@ -455,6 +455,9 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
     const startTime = Date.now();
     
     try {
+      // Get current price variant for cross-device consistency
+      const currentVariant = getPriceVariant();
+      
       // Create artwork record and send confirmation email immediately
       const createResponse = await fetch('/api/artwork/create', {
         method: 'POST',
@@ -464,6 +467,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
         body: JSON.stringify({
           customer_name: formData.name,
           customer_email: formData.email,
+          price_variant: currentVariant, // Store variant for cross-device consistency
         }),
       });
 

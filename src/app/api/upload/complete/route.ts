@@ -45,7 +45,8 @@ export async function POST(request: NextRequest) {
         customerName: customer_name,
         customerEmail: customer_email,
         petName: pet_name,
-        artworkUrl
+        artworkUrl,
+        priceVariant: artwork.price_variant || 'A' // Include price variant for cross-device consistency
       })
       console.log('Masterpiece creating email sent successfully')
     } catch (emailError) {

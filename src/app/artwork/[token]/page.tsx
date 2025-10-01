@@ -26,6 +26,7 @@ interface Artwork {
   customer_name: string;
   customer_email: string;
   generation_step: string;
+  price_variant?: 'A' | 'B';
   generated_images?: {
     artwork_preview?: string;
     artwork_full_res?: string;
@@ -33,7 +34,7 @@ interface Artwork {
   processing_status?: Record<string, any>;
 }
 
-export default function ArtworkPage({ params }: { params: { token: string } }) {
+export default function ArtworkPage({ params, searchParams }: { params: { token: string }; searchParams?: { pv?: string } }) {
   const [artwork, setArtwork] = useState<Artwork | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +45,7 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
   const [modalVariant, setModalVariant] = useState<ModalVariant>('equal-tiers');
   const [isManualApprovalEnabled, setIsManualApprovalEnabled] = useState<boolean>(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [priceVariant, setPriceVariant] = useState<'A' | 'B'>('A');
   const router = useRouter();
 
   // Fetch manual approval status
@@ -62,6 +64,24 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
   };
 
   useEffect(() => {
+    // Handle price variant from URL or artwork data or localStorage
+    const handlePriceVariant = async () => {
+      const urlVariant = searchParams?.pv;
+      if (urlVariant && (urlVariant === 'A' || urlVariant === 'B')) {
+        // URL parameter takes precedence - store it for consistency
+        setPriceVariant(urlVariant);
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('pawpop_price_variant', urlVariant);
+            localStorage.setItem('pawpop_price_variant_expiry', (Date.now() + 30 * 24 * 60 * 60 * 1000).toString());
+          } catch (e) {
+            console.warn('Failed to store variant in localStorage:', e);
+          }
+        }
+      }
+    };
+    
+    handlePriceVariant();
     fetchArtwork();
     fetchReviewStatus();
     // Use physical-first variant for artwork pages
@@ -73,7 +93,7 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
         trackArtworkView(params.token, 2); // $2 CAD engagement value
       });
     }
-  }, [params.token]);
+  }, [params.token, searchParams]);
 
   const fetchArtwork = async () => {
     try {
@@ -83,6 +103,20 @@ export default function ArtworkPage({ params }: { params: { token: string } }) {
       }
       const data = await response.json();
       setArtwork(data.artwork);
+      
+      // Use artwork's stored price_variant if available and no URL override
+      if (data.artwork.price_variant && !searchParams?.pv) {
+        setPriceVariant(data.artwork.price_variant);
+        // Also store in localStorage for consistency
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('pawpop_price_variant', data.artwork.price_variant);
+            localStorage.setItem('pawpop_price_variant_expiry', (Date.now() + 30 * 24 * 60 * 60 * 1000).toString());
+          } catch (e) {
+            console.warn('Failed to store variant in localStorage:', e);
+          }
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load artwork');
     } finally {

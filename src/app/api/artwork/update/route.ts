@@ -134,7 +134,8 @@ export async function PATCH(request: NextRequest) {
             customerEmail: updatedArtwork.customer_email || existingArtwork.customer_email,
             petName: updatedArtwork.pet_name || existingArtwork.pet_name,
             artworkUrl,
-            imageUrl: generated_image_url
+            imageUrl: generated_image_url,
+            priceVariant: existingArtwork.price_variant || updatedArtwork.price_variant || 'A' // Include price variant
           })
           console.log('Masterpiece ready email sent successfully (manual approval disabled)')
         } catch (emailError) {

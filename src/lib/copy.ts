@@ -5,7 +5,7 @@
  * Includes dynamic pricing based on A/B test variants.
  */
 
-import { getPriceConfig, type PriceVariantConfig } from './plausible';
+import { getPriceConfig, PRICE_VARIANTS, type PriceVariantConfig } from './plausible';
 
 export const landingPageCopy = {
   header: {
@@ -297,11 +297,14 @@ export const pageContent = {
 };
 
 /**
- * Get dynamic pricing based on current A/B test variant
+ * Get dynamic pricing based on current A/B test variant or explicit variant
+ * @param explicitVariant - Optional variant override (e.g., from database or URL)
  */
-export function getDynamicPricing() {
+export function getDynamicPricing(explicitVariant?: 'A' | 'B') {
   try {
-    const priceConfig = getPriceConfig();
+    const priceConfig = explicitVariant 
+      ? PRICE_VARIANTS[explicitVariant]
+      : getPriceConfig();
     
     return {
       title: 'Bring Your Masterpiece Home',

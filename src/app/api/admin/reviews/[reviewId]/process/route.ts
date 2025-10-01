@@ -71,12 +71,20 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           const artwork = Array.isArray(review.artworks) ? review.artworks[0] : review.artworks
           
           if (review.review_type === 'artwork_proof' && artwork?.access_token) {
+            // Get full artwork details to include price_variant
+            const { data: fullArtwork } = await supabaseAdmin
+              .from('artworks')
+              .select('price_variant')
+              .eq('id', review.artwork_id)
+              .single()
+            
             // For artwork proof approval: Send completion email
             const emailResult = await sendMasterpieceReadyEmail({
               customerName: review.customer_name || '',
               customerEmail: review.customer_email,
               artworkUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/artwork/${artwork.access_token}`,
-              imageUrl: review.image_url
+              imageUrl: review.image_url,
+              priceVariant: fullArtwork?.price_variant || 'A' // Include price variant for cross-device consistency
             })
 
             if (emailResult.success) {
