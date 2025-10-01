@@ -63,6 +63,7 @@ export const UploadModalEmailFirst = ({ isOpen, onClose, prefillData }: UploadMo
     isGift: false
   });
   const [artworkId, setArtworkId] = useState<string | null>(prefillData?.artworkId || null);
+  const [accessToken, setAccessToken] = useState<string | null>(null); // For artwork page URL
   const [uploadToken, setUploadToken] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [processing, setProcessing] = useState<ProcessingState | null>(null);
@@ -195,6 +196,7 @@ export const UploadModalEmailFirst = ({ isOpen, onClose, prefillData }: UploadMo
       
       const { artwork, access_token } = await createResponse.json();
       setArtworkId(artwork.id);
+      setAccessToken(access_token); // Store for artwork page redirect
 
       // Generate upload token for deferred uploads
       const tokenResponse = await fetch('/api/artwork/generate-upload-token', {
@@ -655,15 +657,31 @@ export const UploadModalEmailFirst = ({ isOpen, onClose, prefillData }: UploadMo
                 trackPerformance.imageGeneration('Full Artwork Pipeline - Email First', generationTime, true);
               }
               
+              // Set completion message based on manual approval setting
+              const isManualApproval = typeof window !== 'undefined' && process.env.NEXT_PUBLIC_ENABLE_HUMAN_REVIEW === 'true';
               setProcessing({
                 step: 'complete',
-                message: 'Your masterpiece is ready! Redirecting...',
+                message: isManualApproval 
+                  ? "Upload complete! You'll receive an email with your proof within 24 hours." 
+                  : 'Your masterpiece is ready! Redirecting...',
                 progress: 100
               });
 
-              // Redirect to artwork page
+              // Redirect to artwork page (use access_token, not artworkId for URL)
               setTimeout(() => {
-                router.push(`/artwork/${artworkId}`);
+                // Don't redirect if manual approval is enabled - they'll get email
+                if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_ENABLE_HUMAN_REVIEW === 'true') {
+                  console.log('Manual approval enabled - not redirecting, user will receive email');
+                  onClose(); // Just close the modal
+                } else {
+                  // For automated flow, redirect to artwork page using access_token
+                  if (accessToken) {
+                    router.push(`/artwork/${accessToken}`);
+                  } else {
+                    console.error('No access token available for redirect');
+                    onClose();
+                  }
+                }
               }, 2000);
             }
           }
@@ -1078,7 +1096,11 @@ export const UploadModalEmailFirst = ({ isOpen, onClose, prefillData }: UploadMo
                   {processing.message}
                 </h3>
                 {processing.step !== 'complete' && processing.step !== 'error' && (
-                  <p className="text-gray-600">This usually takes 2-3 minutes...</p>
+                  <p className="text-gray-600">
+                    {typeof window !== 'undefined' && process.env.NEXT_PUBLIC_ENABLE_HUMAN_REVIEW === 'true'
+                      ? "Your proof will be ready within 24 hours. We'll email you!"
+                      : "This usually takes 2-3 minutes..."}
+                  </p>
                 )}
               </div>
 
