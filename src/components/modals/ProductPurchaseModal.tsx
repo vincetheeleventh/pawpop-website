@@ -468,12 +468,14 @@ export default function ProductPurchaseModal({
                           </div>
                           <h4 className="font-arvo font-bold text-base text-text-primary mb-1">
                             {size === '12x18' ? 'The Charmer' :
-                             (size === '16x24' || size === '18x24') ? 'The Showstopper' :
+                             size === '16x24' ? 'The Showstopper' :
+                             size === '18x24' ? 'The Showstopper' :
                              'The Masterpiece'}
                           </h4>
                           <p className="text-sm text-gray-600 font-geist">
                             {size === '12x18' ? 'Perfect for desks, nightstands, and cozy personal spaces' :
-                             (size === '16x24' || size === '18x24') ? 'Ideal for living rooms, hallways, and office walls' :
+                             size === '16x24' ? 'Ideal for living rooms, hallways, and office walls' :
+                             size === '18x24' ? 'Ideal for living rooms, hallways, and office walls' :
                              'Statement piece that transforms any room'}
                           </p>
                         </div>
@@ -540,12 +542,14 @@ export default function ProductPurchaseModal({
                     <div>
                       <h4 className="font-arvo font-bold text-lg text-text-primary mb-1">
                         {selectedSize === '12x18' ? 'The Charmer' :
-                         (selectedSize === '16x24' || selectedSize === '18x24') ? 'The Showstopper' :
+                         selectedSize === '16x24' ? 'The Showstopper' :
+                         selectedSize === '18x24' ? 'The Showstopper' :
                          'The Masterpiece'}
                       </h4>
                       <p className="text-sm text-gray-600 font-geist">
                         {selectedSize === '12x18' ? 'Perfect for desks, nightstands, and cozy personal spaces' :
-                         (selectedSize === '16x24' || selectedSize === '18x24') ? 'Ideal for living rooms, hallways, and office walls' :
+                         selectedSize === '16x24' ? 'Ideal for living rooms, hallways, and office walls' :
+                         selectedSize === '18x24' ? 'Ideal for living rooms, hallways, and office walls' :
                          'Statement piece that transforms any room'}
                       </p>
                     </div>
