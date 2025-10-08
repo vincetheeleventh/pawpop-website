@@ -442,15 +442,22 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
   };
 
   const handleSubmit = async () => {
-    if (!formData.petMomPhoto || !formData.petPhoto) return;
+    // Check if both photos are missing (deferred upload flow)
+    const hasPhotos = formData.petMomPhoto && formData.petPhoto;
     
     setIsSubmitting(true);
     setError(null);
     
     // Track form submission start
-    trackFunnel.artworkGenerationStarted();
-    trackInteraction.formStart('Upload Form');
-    clarityTracking.trackFunnel.artworkGenerationStarted();
+    if (hasPhotos) {
+      trackFunnel.artworkGenerationStarted();
+      trackInteraction.formStart('Upload Form');
+      clarityTracking.trackFunnel.artworkGenerationStarted();
+    } else {
+      // Track deferred upload (skipped photos)
+      trackInteraction.formStart('Upload Form - Deferred Upload');
+      clarityTracking.trackInteraction.buttonClick('deferred_upload_submission', 'upload-modal');
+    }
     
     const startTime = Date.now();
     
@@ -498,12 +505,56 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
         }); // $5 CAD lead value with enhanced conversion data
       }
       
-      // Show immediate confirmation with appropriate message based on review mode
+      // Check if we need to start generation or send deferred upload email
+      if (!hasPhotos) {
+        // Deferred upload flow - send email with upload link
+        console.log('📧 No photos uploaded - sending deferred upload email');
+        
+        // Track path decision
+        trackFunnel.uploadPathChosen('deferred');
+        trackFunnel.deferredUpload();
+        
+        try {
+          await fetch('/api/email/deferred-upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              customerName: formData.name,
+              customerEmail: formData.email,
+              uploadToken: (artwork && (artwork.upload_token || artwork.access_token)) || access_token
+            })
+          });
+          
+          setProcessing({ 
+            step: 'complete', 
+            message: 'Thank you! We\'ve sent you an email with a link to upload your photos. Check your inbox!', 
+            progress: 100 
+          });
+          
+          // Close modal after showing message
+          setTimeout(() => {
+            onClose();
+          }, 3000);
+          
+          setIsSubmitting(false);
+          return; // Exit early, no generation to start
+        } catch (emailError) {
+          console.error('Failed to send deferred upload email:', emailError);
+          setError('Failed to send upload link. Please try again.');
+          setIsSubmitting(false);
+          return;
+        }
+      }
+      
+      // Show immediate confirmation with appropriate message based on review mode (photos uploaded)
       const { isHumanReviewEnabled } = await import('@/lib/admin-review');
       const completionMessage = isHumanReviewEnabled() 
-        ? 'Thank you! We\'ve received your photos and are starting your masterpiece creation. You\'ll receive an email confirmation once generation begins, and we\'ll email you when it\'s ready!'
-        : 'Thank you! We\'ve received your photos and are starting your masterpiece creation. You\'ll receive an email confirmation once generation begins!';
+        ? 'Thank you! We\'ve received your photos and are starting your masterpiece creation. You\'ll receive an email confirmation shortly!'
+        : 'Thank you! We\'ve received your photos and are starting your masterpiece creation. You\'ll receive an email confirmation shortly!';
       
+      // Track path decision for direct generation
+      trackFunnel.uploadPathChosen('direct');
+
       setProcessing({ step: 'complete', message: completionMessage, progress: 100 });
       
       // Store artwork info for order page
@@ -924,11 +975,26 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
 
   const canProceed = () => {
     switch (currentStep) {
-      case 1: return formData.petMomPhoto !== null;
-      case 2: return formData.petPhoto !== null;
+      case 1: return true; // Allow proceeding even without photo (skip option)
+      case 2: return true; // Allow proceeding even without photo (skip option)
       case 3: return formData.name.trim() !== '' && formData.email.trim() !== '';
       default: return false;
     }
+  };
+
+  const handleSkip = (step: 1 | 2) => {
+    // Track skip action in analytics
+    if (step === 1) {
+      trackInteraction.buttonClick('Skip Pet Mom Photo', 'upload-modal-step-1');
+      clarityTracking.trackInteraction.buttonClick('skip_pet_mom_photo', 'upload-modal');
+      trackFunnel.photoSkipped('pet_mom');
+    } else {
+      trackInteraction.buttonClick('Skip Pet Photo', 'upload-modal-step-2');
+      clarityTracking.trackInteraction.buttonClick('skip_pet_photo', 'upload-modal');
+      trackFunnel.photoSkipped('pet');
+    }
+    setCurrentStep(prev => prev + 1);
+    scrollToBottom();
   };
 
   return (
@@ -1097,6 +1163,19 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                   if (file) await handleFileUpload(file, 'petMom');
                 }}
               />
+
+              {/* Skip Option */}
+              <div className="mt-4">
+                <button
+                  onClick={() => handleSkip(1)}
+                  className="text-sm text-gray-500 hover:text-gray-700 underline font-geist transition-colors"
+                >
+                  Skip for now
+                </button>
+                <p className="text-xs text-gray-400 mt-1 font-geist">
+                  You can add photos later
+                </p>
+              </div>
             </div>
           )}
 
@@ -1188,6 +1267,19 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                   if (file) await handleFileUpload(file, 'pet');
                 }}
               />
+
+              {/* Skip Option */}
+              <div className="mt-4">
+                <button
+                  onClick={() => handleSkip(2)}
+                  className="text-sm text-gray-500 hover:text-gray-700 underline font-geist transition-colors"
+                >
+                  Skip for now
+                </button>
+                <p className="text-xs text-gray-400 mt-1 font-geist">
+                  You can add photos later
+                </p>
+              </div>
             </div>
           )}
 
@@ -1242,7 +1334,10 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                       What happens next:
                     </p>
                     <p className="text-xs font-geist text-gray-600">
-                      You'll receive an email with your custom Renaissance masterpiece within 24 hours. Then choose canvas, art print, or digital file.
+                      {formData.petMomPhoto && formData.petPhoto 
+                        ? "You'll receive an email when your Renaissance masterpiece is ready. You're one step closer to having a fur baby masterpiece before your eyes!"
+                        : "You'll receive an email to finish uploading your pictures. You're one step closer to having a fur baby masterpiece before your eyes!"
+                      }
                     </p>
                   </div>
                 </div>
@@ -1256,6 +1351,10 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
               <div className="mb-6">
                 {processing.step === 'error' ? (
                   <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                ) : processing.step === 'complete' ? (
+                  <div className="w-12 h-12 bg-naples-yellow/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Check className="w-6 h-6 text-naples-yellow" />
+                  </div>
                 ) : (
                   <div className="w-12 h-12 bg-naples-yellow/20 rounded-full flex items-center justify-center mx-auto mb-4">
                     <div className="w-6 h-6 border-2 border-naples-yellow/30 border-t-naples-yellow rounded-full animate-spin" />

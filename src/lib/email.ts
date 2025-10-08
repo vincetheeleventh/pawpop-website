@@ -1,5 +1,6 @@
 // src/lib/email.ts
 import { Resend } from 'resend'
+import { isHumanReviewEnabled } from './admin-review'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -7,6 +8,14 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 // Only use test mode if explicitly enabled via EMAIL_TEST_MODE
 const isTestMode = process.env.EMAIL_TEST_MODE === 'true'
 const testEmailRecipient = process.env.EMAIL_TEST_RECIPIENT || 'pawpopart@gmail.com'
+
+// Manual review timing configuration
+// Example: MANUAL_REVIEW_DELAY_HOURS="24–48 hours"
+const manualReviewDelay = process.env.MANUAL_REVIEW_DELAY_HOURS || '24–48 hours'
+const processingTimeText = isHumanReviewEnabled() ? manualReviewDelay : '2–5 minutes'
+const processingAfterText = isHumanReviewEnabled()
+  ? `${manualReviewDelay} (after admin approval)`
+  : `${processingTimeText} after upload`
 
 export interface EmailData {
   to: string
@@ -829,7 +838,7 @@ export async function sendUploadReminder(data: UploadReminderData): Promise<{ su
       headline: 'Order Status: Awaiting Photos',
       message: `You started creating a custom Renaissance portrait but haven't uploaded your photos yet. Your order is ready to process as soon as you upload.`,
       urgency: '',
-      orderNote: '<p style="background: #F5F5F5; padding: 15px; margin: 20px 0; border-radius: 8px; font-size: 14px; color: #666;"><strong>Order Status:</strong> Awaiting photo upload<br><strong>Time to Complete:</strong> 3 minutes<br><strong>Processing Time:</strong> 2-5 minutes after upload</p>'
+      orderNote: `<p style="background: #F5F5F5; padding: 15px; margin: 20px 0; border-radius: 8px; font-size: 14px; color: #666;"><strong>Order Status:</strong> Awaiting photo upload<br><strong>Time to Complete:</strong> 3 minutes<br><strong>Processing Time:</strong> ${isHumanReviewEnabled() ? manualReviewDelay : `${processingTimeText} after upload`}</p>`
     },
     2: {
       subject: `Action Required: Upload Photos to Complete Order`,
@@ -897,7 +906,7 @@ export async function sendUploadReminder(data: UploadReminderData): Promise<{ su
           <ul style="font-size: 15px; line-height: 1.8;">
             <li>Custom Renaissance-style portrait</li>
             <li>High-resolution digital file</li>
-            <li>Ready in 2-5 minutes after upload</li>
+            <li>Ready in ${processingAfterText}</li>
           </ul>
           
           <p style="font-size: 14px; color: #666; margin-top: 30px;">
@@ -953,7 +962,7 @@ Upload Photos Now: ${data.uploadUrl}
 What You'll Receive:
 - Custom Renaissance-style portrait
 - High-resolution digital file  
-- Ready in 2-5 minutes after upload
+- Ready in ${processingAfterText}
 
 Questions about your order? Reply to this email for support.
 
@@ -966,6 +975,75 @@ Where pet moms become Renaissance masterpieces
   const result = await sendEmail({
     to: data.customerEmail,
     subject: msg.subject,
+    html,
+    replyTo: 'pawpopart@gmail.com'
+  })
+
+  return result
+}
+
+/**
+ * Send deferred upload email when user skips photo steps in UploadModal
+ */
+export interface DeferredUploadEmailData {
+  customerName?: string
+  customerEmail: string
+  uploadUrl: string
+}
+
+export async function sendDeferredUploadEmail(data: DeferredUploadEmailData): Promise<{ success: boolean; error?: string }> {
+  const subject = `Continue Your PawPop Portrait: Upload Your Photos`
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${subject}</title>
+      <style>
+        body { font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #2C2C2C; margin: 0; padding: 0; background-color: #F5EED7; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .header { background: #FF9770; color: #FFFFFF; padding: 36px 28px; text-align: center; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 700; font-family: 'Arvo', serif; }
+        .content { padding: 32px 28px; background-color: #FFFFFF; }
+        .content h2 { color: #2C2C2C; margin-top: 0; font-family: 'Arvo', serif; font-weight: 700; font-size: 22px; }
+        .cta-button { display: inline-block; background: #FF9770 !important; color: #FFFFFF !important; padding: 16px 32px; text-decoration: none; border-radius: 10px; font-weight: 600; margin: 16px 0; border: none; font-family: 'Fredoka One', cursive; font-size: 18px; }
+        .footer { background-color: #F5EED7; padding: 24px; text-align: center; color: #2C2C2C; font-size: 14px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>You're Almost There!</h1>
+        </div>
+        <div class="content">
+          <h2>${data.customerName ? `Hi ${data.customerName}!` : 'Hello!'}</h2>
+          <p style="font-size: 16px; line-height: 1.8;">
+            Thanks for starting your custom Renaissance portrait. To complete your order, please upload your photos. It only takes about 3 minutes, and your artwork will be ready in ${processingAfterText}.
+          </p>
+          <div style="text-align: center; margin: 24px 0;">
+            <a href="${data.uploadUrl}" class="cta-button" style="display: inline-block; background: #FF9770 !important; color: #FFFFFF !important; padding: 16px 32px; text-decoration: none; border-radius: 10px; font-weight: 600; border: none; font-family: 'Fredoka One', cursive; font-size: 18px;">Upload Photos Now</a>
+          </div>
+          <p style="font-size: 14px; color: #666;">
+            Your secure upload link will be valid for 7 days.
+          </p>
+          <p style="font-size: 14px; color: #666;">
+            Questions? Reply to this email and we'll help.
+          </p>
+        </div>
+        <div class="footer">
+          <p style="margin: 0 0 8px 0;"><strong>PawPop</strong><br/>Where pet moms become Renaissance masterpieces</p>
+          <p style="margin: 0; font-size: 13px; color: #666;">2006-1323 Homer St, Vancouver BC Canada V6B 5T1</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+
+  const result = await sendEmail({
+    to: data.customerEmail,
+    subject,
     html,
     replyTo: 'pawpopart@gmail.com'
   })

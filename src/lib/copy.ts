@@ -15,7 +15,7 @@ export const landingPageCopy = {
   hero: {
     title: 'Pet Mom, But Make it Mona Lisa',
     socialProof: '⭐️⭐️⭐️⭐️⭐️ Loved by 10,000+ pet moms worldwide',
-    subtitle: 'Create a masterpiece simply by uploading a photo of a pet mom and their pet. See your custom artwork before you buy.',
+    subtitle: 'Create a masterpiece simply by uploading a photo of a pet mom and their fur baby. See your finished custom artwork, completely free.',
     ctaButton: 'Try It With My Pet',
     subCta: 'Takes about 3 minutes',
   },

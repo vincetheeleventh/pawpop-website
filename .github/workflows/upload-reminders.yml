@@ -11,24 +11,33 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Verify configuration
+        run: |
+          if [ -z "${{ secrets.VERCEL_DEPLOYMENT_URL }}" ]; then
+            echo "❌ Missing required secret: VERCEL_DEPLOYMENT_URL"
+            echo "Set this to your production URL, e.g. https://pawpopart.com"
+            exit 1
+          fi
+          echo "VERCEL_DEPLOYMENT_URL is set to: ${{ secrets.VERCEL_DEPLOYMENT_URL }}"
+
       - name: Send upload reminders
         run: |
           echo "Sending upload reminders..."
-          
-          # Call the Vercel API endpoint
-          response=$(curl -s -w "\n%{http_code}" \
-            -X GET \
-            "${{ secrets.VERCEL_DEPLOYMENT_URL }}/api/email/upload-reminder?send=true")
-          
-          http_code=$(echo "$response" | tail -n1)
-          body=$(echo "$response" | sed '$d')
-          
+
+          URL="${{ secrets.VERCEL_DEPLOYMENT_URL }}/api/email/upload-reminder?send=true&hours=24&maxReminders=3"
+          echo "Requesting: $URL"
+
+          # Follow redirects (-L), show errors (-S), silent progress (-s), write body to file (-o), capture HTTP code (-w)
+          http_code=$(curl -sS -L -o response.json -w "%{http_code}" "$URL")
+
           echo "Response code: $http_code"
-          echo "Response body: $body"
-          
-          if [ "$http_code" -ne 200 ]; then
+          echo "Response body:"
+          cat response.json || true
+
+          # Treat any non-2xx as failure
+          if ! echo "$http_code" | grep -qE '^2[0-9]{2}$'; then
             echo "❌ Failed to send reminders (HTTP $http_code)"
             exit 1
           fi
-          
-          echo "✅ Upload reminders sent successfully"
+
+          echo "✅ Upload reminders request completed successfully"

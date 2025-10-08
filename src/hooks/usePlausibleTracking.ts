@@ -41,8 +41,14 @@ export function usePlausibleTracking() {
     // Step 2: Upload modal opened
     uploadModalOpened: () => trackFunnelStep('Upload Modal Opened', 2),
     
+    // Step 2.4: Photo skipped (by type)
+    photoSkipped: (which: 'pet_mom' | 'pet') => trackFunnelStep('Photo Skipped', 2.4, { which }),
+    
     // Step 2.5: Email captured (new email-first flow)
     emailCaptured: () => trackFunnelStep('Email Captured', 2.5),
+    
+    // Step 2.55: Upload path chosen (direct vs deferred)
+    uploadPathChosen: (path: 'direct' | 'deferred') => trackFunnelStep('Upload Path Chosen', 2.55, { path }),
     
     // Step 2.6: Upload deferred (chose "Upload Later")
     deferredUpload: () => trackFunnelStep('Upload Deferred', 2.6),

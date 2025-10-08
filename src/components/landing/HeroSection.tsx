@@ -16,6 +16,24 @@ export const HeroSection = ({ autoOpenUpload = false }: HeroSectionProps) => {
   const { hero } = landingPageCopy;
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Bold the phrase "completely free" in the subtitle
+  const renderSubtitle = (text: string) => {
+    const marker = 'completely free';
+    const lower = text.toLowerCase();
+    const idx = lower.indexOf(marker);
+    if (idx === -1) return text;
+    const before = text.slice(0, idx);
+    const match = text.slice(idx, idx + marker.length);
+    const after = text.slice(idx + marker.length);
+    return (
+      <>
+        {before}
+        <strong className="font-bold">{match}</strong>
+        {after}
+      </>
+    );
+  };
+
   // Auto-open modal if URL parameter is present
   useEffect(() => {
     if (autoOpenUpload) {
@@ -48,15 +66,8 @@ export const HeroSection = ({ autoOpenUpload = false }: HeroSectionProps) => {
               {hero.title}
             </h1>
 
-            {/* Social Proof */}
-            <div className="text-center mb-6">
-              <p className="text-sm font-medium text-cyclamen">
-                {hero.socialProof}
-              </p>
-            </div>
-
             <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-              {hero.subtitle}
+              {renderSubtitle(hero.subtitle)}
             </p>
 
             <button
@@ -75,8 +86,8 @@ export const HeroSection = ({ autoOpenUpload = false }: HeroSectionProps) => {
               {hero.ctaButton}
             </button>
 
-            <p className="text-sm text-gray-500 mt-4 font-medium">
-              {hero.subCta}
+            <p className="text-sm text-cyclamen mt-4 font-medium">
+              {hero.socialProof}
             </p>
           </div>
         </div>
@@ -89,15 +100,8 @@ export const HeroSection = ({ autoOpenUpload = false }: HeroSectionProps) => {
               {hero.title}
             </h1>
 
-            {/* Social Proof */}
-            <div className="mb-6">
-              <p className="text-base font-medium text-cyclamen">
-                {hero.socialProof}
-              </p>
-            </div>
-
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              {hero.subtitle}
+              {renderSubtitle(hero.subtitle)}
             </p>
 
             <div className="flex flex-col items-center">
@@ -116,8 +120,8 @@ export const HeroSection = ({ autoOpenUpload = false }: HeroSectionProps) => {
                 {hero.ctaButton}
               </button>
 
-              <p className="text-base text-gray-500 mt-4 font-medium">
-                {hero.subCta}
+              <p className="text-base text-cyclamen mt-4 font-medium">
+                {hero.socialProof}
               </p>
             </div>
           </div>
