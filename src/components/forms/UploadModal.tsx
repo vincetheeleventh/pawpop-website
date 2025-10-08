@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import { X, Upload, ArrowRight, ArrowLeft, Check, Camera, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import usePlausibleTracking from '@/hooks/usePlausibleTracking';
@@ -58,6 +59,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
   const [processing, setProcessing] = useState<ProcessingState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState<{ petMom: boolean; pet: boolean }>({ petMom: false, pet: false });
+  const [showTips, setShowTips] = useState<{ step1: boolean; step2: boolean }>({ step1: false, step2: false });
   const router = useRouter();
   
   // Plausible tracking
@@ -94,14 +96,19 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
     };
   }, [formData.petMomPhoto, formData.petPhoto]);
 
-  // Track modal opening (only track once when modal opens)
+  // Track modal opening (only once per open) and satisfy hook deps
+  const didTrackOpen = useRef(false);
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !didTrackOpen.current) {
       trackFunnel.uploadModalOpened();
       trackInteraction.modalOpen('Upload Modal');
       clarityTracking.trackFunnel.uploadModalOpened();
+      didTrackOpen.current = true;
     }
-  }, [isOpen]); // Remove trackFunnel and trackInteraction from deps to prevent infinite loops
+    if (!isOpen) {
+      didTrackOpen.current = false;
+    }
+  }, [isOpen, trackFunnel, trackInteraction, clarityTracking]);
 
   if (!isOpen) return null;
 
@@ -1040,15 +1047,9 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
             <div className="text-center">
               {/* Header Section */}
               <div className="mb-6">
-                <div className="w-16 h-16 bg-naples-yellow/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Camera className="w-8 h-8 text-naples-yellow" />
-                </div>
                 <h2 className="text-xl font-arvo font-bold text-text-primary mb-2">
                   Upload Your Photo
                 </h2>
-                <p className="text-sm font-geist text-gray-600 mb-6">
-                  Clear front-facing photo for the best Mona Lisa transformation
-                </p>
               </div>
 
               {/* Visual Guide Section */}
@@ -1056,9 +1057,11 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                 <div className="flex justify-center gap-3 mb-4">
                   <div className="flex-1 max-w-24">
                     <div className="relative">
-                      <img 
-                        src="/images/user upload instructions/yes.png" 
-                        alt="Good photo example" 
+                      <Image
+                        src="/images/user upload instructions/yes.png"
+                        alt="Good photo example"
+                        width={96}
+                        height={96}
                         className="w-full h-auto rounded-xl border-2 border-naples-yellow shadow-sm"
                       />
                       <div className="absolute -top-2 -right-2 w-6 h-6 bg-naples-yellow rounded-full flex items-center justify-center">
@@ -1069,9 +1072,11 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                   </div>
                   <div className="flex-1 max-w-24">
                     <div className="relative">
-                      <img 
-                        src="/images/user upload instructions/no1.png" 
-                        alt="Poor photo example 1" 
+                      <Image
+                        src="/images/user upload instructions/no1.png"
+                        alt="Poor photo example 1"
+                        width={96}
+                        height={96}
                         className="w-full h-auto rounded-xl border-2 border-gray-300 opacity-60"
                       />
                       <div className="absolute -top-2 -right-2 w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center">
@@ -1082,9 +1087,11 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                   </div>
                   <div className="flex-1 max-w-24">
                     <div className="relative">
-                      <img 
-                        src="/images/user upload instructions/no2.png" 
-                        alt="Poor photo example 2" 
+                      <Image
+                        src="/images/user upload instructions/no2.png"
+                        alt="Poor photo example 2"
+                        width={96}
+                        height={96}
                         className="w-full h-auto rounded-xl border-2 border-gray-300 opacity-60"
                       />
                       <div className="absolute -top-2 -right-2 w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center">
@@ -1096,19 +1103,27 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                 </div>
               </div>
 
-              {/* Tip Section */}
-              <div className="mb-6">
-                <div className="bg-mindaro/10 p-4 rounded-xl border border-mindaro/20">
-                  <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-mindaro/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-mindaro text-sm">💡</span>
-                    </div>
-                    <p className="text-sm font-geist font-medium text-text-primary text-left">
-                      Accessories like glasses, hats, and jewelry will be included in your Renaissance masterpiece!
-                    </p>
+
+
+              <div className="mb-3 flex justify-center">
+                <button
+                  type="button"
+                  aria-label="Bonus tip"
+                  className="text-gray-600 hover:text-text-primary transition-colors text-xs font-geist flex items-center gap-1"
+                  onClick={() => setShowTips((s) => ({ ...s, step1: !s.step1 }))}
+                >
+                  <span aria-hidden>💡</span>
+                  <span>Bonus tip</span>
+                </button>
+              </div>
+
+              {showTips.step1 && (
+                <div className="mb-3 w-full flex justify-center">
+                  <div className="bg-white border border-gray-200 rounded-lg shadow-xl p-4 text-left w-80 max-w-[90vw]">
+                    <p className="text-sm font-geist text-text-primary">Accessories like glasses, hats, and jewelry will be included in your Mona Lisa masterpiece!</p>
                   </div>
                 </div>
-              </div>
+              )}
 
               <div 
                 onClick={() => petMomInputRef.current?.click()}
@@ -1129,9 +1144,12 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                 {formData.petMomPhoto ? (
                   <div className="flex flex-col items-center">
                     <div className="w-24 h-24 mb-3 rounded-lg overflow-hidden border-2 border-naples-yellow">
-                      <img 
-                        src={objectUrls.petMom} 
+                      <Image
+                        src={objectUrls.petMom || ''}
                         alt="Uploaded pet mom photo"
+                        width={96}
+                        height={96}
+                        unoptimized
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -1146,9 +1164,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                     <p className="text-sm font-geist text-gray-600">
                       Click to upload or drag and drop
                     </p>
-                    <p className="text-xs font-geist text-gray-500 mt-1">
-                      JPG, PNG, WebP, HEIC (auto-compressed)
-                    </p>
+
                   </div>
                 )}
               </div>
@@ -1184,35 +1200,32 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
             <div className="text-center">
               {/* Header Section */}
               <div className="mb-6">
-                <div className="w-16 h-16 bg-atomic-tangerine/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-3xl">🐕</span>
-                </div>
                 <h2 className="text-xl font-arvo font-bold text-text-primary mb-2">
                   Upload Your Pet's Photo
                 </h2>
-                <p className="text-sm font-geist text-gray-600 mb-6">
-                  Clear photo of your beloved pet for the best artwork result
-                </p>
               </div>
 
-              {/* Tip Section */}
-              <div className="mb-6">
-                <div className="bg-atomic-tangerine/10 p-4 rounded-xl border border-atomic-tangerine/20">
-                  <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-atomic-tangerine/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-atomic-tangerine text-sm">🎨</span>
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm font-geist font-medium text-text-primary mb-1">
-                        Their expression, pose and accessories will be included in your painting.
-                      </p>
-                      <p className="text-xs font-geist text-gray-600">
-                        Most clear photos work great, but taking a photo just for this painting can be fun!
-                      </p>
-                    </div>
+
+              <div className="mb-3 flex justify-center">
+                <button
+                  type="button"
+                  aria-label="Bonus tip"
+                  className="text-gray-600 hover:text-text-primary transition-colors text-xs font-geist flex items-center gap-1"
+                  onClick={() => setShowTips((s) => ({ ...s, step2: !s.step2 }))}
+                >
+                  <span aria-hidden>💡</span>
+                  <span>Bonus tip</span>
+                </button>
+              </div>
+
+              {showTips.step2 && (
+                <div className="mb-3 w-full flex justify-center">
+                  <div className="bg-white border border-gray-200 rounded-lg shadow-xl p-4 text-left w-80 max-w-[90vw]">
+                    <p className="text-sm font-geist text-text-primary mb-1">Their expression, pose and accessories will be included in your painting.</p>
+                    <p className="text-xs font-geist text-gray-600">Most clear photos work great, but taking a photo just for this painting can be fun!</p>
                   </div>
                 </div>
-              </div>
+              )}
 
               <div 
                 onClick={() => petInputRef.current?.click()}
@@ -1233,9 +1246,12 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                 {formData.petPhoto ? (
                   <div className="flex flex-col items-center">
                     <div className="w-24 h-24 mb-3 rounded-lg overflow-hidden border-2 border-naples-yellow">
-                      <img 
-                        src={objectUrls.pet} 
+                      <Image
+                        src={objectUrls.pet || ''}
                         alt="Uploaded pet photo"
+                        width={96}
+                        height={96}
+                        unoptimized
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -1250,9 +1266,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                     <p className="text-sm font-geist text-gray-600">
                       Click to upload or drag and drop
                     </p>
-                    <p className="text-xs font-geist text-gray-500 mt-1">
-                      JPG, PNG, WebP, HEIC (auto-compressed)
-                    </p>
+
                   </div>
                 )}
               </div>
