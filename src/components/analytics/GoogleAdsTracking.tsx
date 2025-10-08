@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect } from 'react';
-import { initGoogleAds } from '@/lib/google-ads';
+import Script from 'next/script';
 
 interface GoogleAdsTrackingProps {
   conversionId?: string;
@@ -10,15 +9,35 @@ interface GoogleAdsTrackingProps {
 export function GoogleAdsTracking({ 
   conversionId = process.env.NEXT_PUBLIC_GOOGLE_ADS_CONVERSION_ID 
 }: GoogleAdsTrackingProps) {
-  useEffect(() => {
-    if (!conversionId) {
-      console.warn('Google Ads: No conversion ID provided');
-      return;
-    }
+  if (!conversionId) {
+    console.warn('Google Ads: No conversion ID provided');
+    return null;
+  }
 
-    // Initialize Google Ads tracking
-    initGoogleAds(conversionId);
-  }, [conversionId]);
-
-  return null; // This component doesn't render anything
+  return (
+    <>
+      {/* Google Ads gtag.js */}
+      <Script
+        src={`https://www.googletagmanager.com/gtag/js?id=${conversionId}`}
+        strategy="lazyOnload"
+        onLoad={() => {
+          console.log('Google Ads: Script loaded successfully');
+        }}
+      />
+      
+      {/* Initialize gtag */}
+      <Script
+        id="google-ads-init"
+        strategy="lazyOnload"
+        dangerouslySetInnerHTML={{
+          __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${conversionId}');
+          `,
+        }}
+      />
+    </>
+  );
 }

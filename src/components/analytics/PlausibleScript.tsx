@@ -23,7 +23,7 @@ export default function PlausibleScript({
       const variant = plausible.getPriceVariant();
       console.log('[PlausibleScript] Initialized with price variant:', variant);
     }
-  }, []); // Empty dependency array to run only once
+  }, [domain]);
 
   if (!domain) {
     console.warn('[PlausibleScript] No domain configured, Plausible tracking disabled');
@@ -37,7 +37,7 @@ export default function PlausibleScript({
         defer
         data-domain={domain}
         src={src}
-        strategy="afterInteractive"
+        strategy="lazyOnload"
         onLoad={() => {
           console.log('[PlausibleScript] Plausible script loaded successfully');
           
@@ -64,7 +64,7 @@ export default function PlausibleScript({
       {/* Plausible queue initialization script */}
       <Script
         id="plausible-init"
-        strategy="beforeInteractive"
+        strategy="afterInteractive"
         dangerouslySetInnerHTML={{
           __html: `window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }`
         }}

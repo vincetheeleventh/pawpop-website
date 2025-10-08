@@ -1,12 +1,14 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
+import { Suspense, lazy } from 'react';
 import { HeroSection } from "@/components/landing/HeroSection";
-import { GallerySection } from "@/components/landing/GallerySection";
-import { SeeFirstSection } from "@/components/landing/SeeFirstSection";
-import { ReactionsSection } from "@/components/landing/ReactionsSection";
-import { PricingSection } from "@/components/landing/PricingSection";
+
+// Lazy load below-the-fold sections for better initial load performance
+const GallerySection = lazy(() => import("@/components/landing/GallerySection").then(mod => ({ default: mod.GallerySection })));
+const SeeFirstSection = lazy(() => import("@/components/landing/SeeFirstSection").then(mod => ({ default: mod.SeeFirstSection })));
+const ReactionsSection = lazy(() => import("@/components/landing/ReactionsSection").then(mod => ({ default: mod.ReactionsSection })));
+const PricingSection = lazy(() => import("@/components/landing/PricingSection").then(mod => ({ default: mod.PricingSection })));
 
 function HomeContent() {
   const searchParams = useSearchParams();
@@ -17,18 +19,26 @@ function HomeContent() {
       <section id="home">
         <HeroSection autoOpenUpload={autoOpenUpload} />
       </section>
-      <section id="gallery">
-        <GallerySection />
-      </section>
-      <section id="see-first">
-        <SeeFirstSection />
-      </section>
-      <section id="testimonials">
-        <ReactionsSection />
-      </section>
-      <section id="pricing">
-        <PricingSection />
-      </section>
+      <Suspense fallback={<div className="h-96 flex items-center justify-center"><div className="animate-pulse text-gray-400">Loading...</div></div>}>
+        <section id="gallery">
+          <GallerySection />
+        </section>
+      </Suspense>
+      <Suspense fallback={<div className="h-96 flex items-center justify-center"><div className="animate-pulse text-gray-400">Loading...</div></div>}>
+        <section id="see-first">
+          <SeeFirstSection />
+        </section>
+      </Suspense>
+      <Suspense fallback={<div className="h-96 flex items-center justify-center"><div className="animate-pulse text-gray-400">Loading...</div></div>}>
+        <section id="testimonials">
+          <ReactionsSection />
+        </section>
+      </Suspense>
+      <Suspense fallback={<div className="h-96 flex items-center justify-center"><div className="animate-pulse text-gray-400">Loading...</div></div>}>
+        <section id="pricing">
+          <PricingSection />
+        </section>
+      </Suspense>
     </div>
   );
 }

@@ -67,6 +67,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${GeistSans.variable} ${arvo.variable} ${fredoka.variable}`}>
+      <head>
+        {/* Preconnect to external domains */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://plausible.io" />
+        <link rel="dns-prefetch" href="https://nwqwtmudwbdkyjfyzlyg.supabase.co" />
+        <link rel="dns-prefetch" href="https://utfs.io" />
+        <link rel="dns-prefetch" href="https://fal.media" />
+      </head>
       <body className="font-geist bg-site-bg text-text-primary antialiased">
         <Providers>
           <GoogleAdsTracking />
