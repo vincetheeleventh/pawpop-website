@@ -162,6 +162,32 @@ export default function ArtworkPage({ params, searchParams }: { params: { token:
     setShowEditModal(false);
   };
 
+  const handleDownloadProof = () => {
+    if (!artwork) return;
+    
+    const imageUrl = artwork.generated_images?.artwork_preview || artwork.generated_images?.artwork_full_res || artwork.generated_image_url;
+    const link = document.createElement('a');
+    link.href = imageUrl;
+    link.download = `pawpop-proof-${artwork.pet_name || 'artwork'}.jpg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleUnlockMasterpiece = () => {
+    if (!artwork) return;
+    
+    // Track modal open event - use digital-first variant for digital download focus
+    trackModalVariant('digital-first', 'modal_opened', {
+      artwork_id: artwork.id,
+      customer_name: artwork.customer_name
+    });
+    
+    // Set modal variant to digital-first for this action
+    setModalVariant('digital-first');
+    setShowPurchaseModal(true);
+  };
+
 
   if (loading) {
     return (
@@ -280,16 +306,37 @@ export default function ArtworkPage({ params, searchParams }: { params: { token:
                   />
                 </div>
                 
-                {/* Request Edits Button */}
+                {/* Download Proof Button */}
                 <button
-                  onClick={handleRequestEdit}
-                  className="w-full px-6 py-3 border-2 border-pale-azure hover:bg-pale-azure/10 text-text-primary rounded-xl font-arvo font-semibold transition-all duration-200"
+                  onClick={handleDownloadProof}
+                  className="w-full px-6 py-3 bg-gray-100 hover:bg-gray-200 text-text-primary rounded-lg font-geist font-medium transition-colors duration-200 mb-4"
                 >
-                  ✏️ Request Edits
+                  📥 Download Proof
                 </button>
-                <p className="text-xs text-gray-500 text-center mt-2 font-geist">
-                  Not quite perfect? Let us know what to adjust
-                </p>
+
+                {/* Unlock Full Masterpiece Button */}
+                <div className="bg-gradient-to-r from-atomic-tangerine/10 to-cyclamen/10 rounded-xl p-6 mb-4">
+                  <button
+                    onClick={handleUnlockMasterpiece}
+                    className="w-full px-6 py-4 bg-gradient-to-r from-atomic-tangerine to-cyclamen hover:from-atomic-tangerine/90 hover:to-cyclamen/90 text-white rounded-lg font-arvo font-bold text-lg transition-all duration-200 shadow-lg hover:shadow-xl mb-2"
+                  >
+                    ✨ Unlock the full masterpiece
+                  </button>
+                  <p className="text-sm text-gray-600 text-center font-geist">
+                    Get every whisker, every detail crystal clear and print-ready.
+                  </p>
+                </div>
+                
+                {/* Request Edit Link */}
+                <div className="mt-2 text-right">
+                  <a
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); handleRequestEdit(); }}
+                    className="text-sm underline text-gray-500 hover:text-gray-700 font-geist"
+                  >
+                    Something is wrong with my artwork
+                  </a>
+                </div>
               </div>
 
               {/* Right Column: Product Options */}

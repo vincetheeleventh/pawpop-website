@@ -27,34 +27,57 @@ User clicks "Upload Photo Now" → Opens Upload Modal
 
 ---
 
-### Step 2: Upload Modal
+### Step 2: Upload Modal (3-Step Flow)
 **Component:** `UploadModal.tsx`  
-**Primary Job:** Capture photos and customer info to start generation process
+**Primary Job:** Capture photos first, then email to complete generation request
 
-#### Modal Flow
-1. **Photo Upload Section**
-   - Pet photo upload (required)
-   - Pet mom photo upload (required)
-   - Real-time validation and preview
+#### 3-Step Modal Flow
 
-2. **Customer Information**
-   - Customer name (required)
-   - Pet name (optional but encouraged)
-   - Email address (required)
+**Step 1: Pet Mom Photo Upload**
+- Upload clear front-facing photo for Mona Lisa transformation
+- Visual guide showing good vs poor photo examples
+- Tips about accessories being included in artwork
+- Drag-and-drop or click to upload
+- Automatic HEIC/HEIF to JPEG conversion
+- Smart compression for large files (>3MB)
 
-3. **Submit Process**
-   - Form validation
-   - UploadThing file processing
-   - Artwork record creation
-   - Immediate confirmation email sent
+**Step 2: Pet Photo Upload**
+- Upload clear photo of beloved pet
+- Tips about expression, pose, and accessories being included
+- Same upload features as Step 1
+
+**Step 3: Contact Information**
+- **Customer name** (required) - For personalization
+- **Email address** (required) - Primary field for completion notifications
+- Clear "What happens next" messaging explaining the completion timeline
+- Sets expectations: "You'll receive an email within 24 hours with your Renaissance masterpiece"
+
+#### Submit Process
+1. **Artwork Record Creation**
+   - Creates database record with customer info
+   - Generates unique access token
+   - Stores price variant for cross-device consistency
+   - **Confirmation email sent AFTER generation starts successfully**
+
+2. **Background Generation Pipeline**
+   - Source images uploaded to Supabase Storage
+   - MonaLisa generation initiated
+   - Pet integration processing
+   - Admin review checkpoint (if enabled)
+   - Completion email sent when ready (or after approval)
 
 #### Success Metrics
-- **Primary:** Form Completion Rate (% who complete all fields)
-- **Secondary:** Upload abandonment points, field completion rates
+- **Primary:** Form Completion Rate (% who complete all 3 steps)
+- **Secondary:** Step abandonment rates, upload success rates, email validation errors
 - **Conversion Goal:** 60-80% of modal opens result in successful upload
 
+#### Email Communication Strategy
+- **Confirmation Email:** Sent AFTER generation pipeline starts successfully (not immediately)
+- **Completion Email:** Sent when artwork is ready (respects manual approval if enabled)
+- **Timeline:** User sets expectation for 24-hour completion during Step 3
+
 #### Critical Path Action
-User completes upload → Redirected to artwork page (pending state)
+User completes all 3 steps → Background generation starts → User receives confirmation message → Redirected to artwork page (if manual approval disabled) OR stays to await admin approval email (if enabled)
 
 ---
 
@@ -81,8 +104,8 @@ User completes upload → Redirected to artwork page (pending state)
    - Stores mockup URLs in database for immediate display
 
 #### User Communication
-- **Email #1:** "Your masterpiece is being created! 🎨" (immediate)
-- **Email #2:** "Your masterpiece is ready! 🎉" (after admin approval OR automatic completion)
+- **Email #1:** "Your masterpiece is being created! 🎨" (sent AFTER MonaLisa generation starts successfully, not immediately on form submit)
+- **Email #2:** "Your masterpiece is ready! 🎉" (after admin approval OR automatic completion if manual review disabled)
 
 #### Success Metrics
 - **Primary:** Generation Success Rate (% completed without errors)
