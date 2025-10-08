@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { landingPageCopy } from '@/lib/copy';
 import { HeroVideoReveal } from './HeroVideoReveal';
-import { UploadModalEmailFirst } from '@/components/forms/UploadModalEmailFirst';
+import { UploadModal } from '@/components/forms/UploadModal';
 
 interface HeroSectionProps {
   autoOpenUpload?: boolean;
@@ -44,9 +44,16 @@ export const HeroSection = ({ autoOpenUpload = false }: HeroSectionProps) => {
 
           {/* Content */}
           <div className="px-6">
-            <h1 className="font-arvo text-3xl font-bold text-text-primary mb-4 leading-tight">
+            <h1 className="font-arvo text-3xl font-bold text-text-primary mb-3 leading-tight">
               {hero.title}
             </h1>
+
+            {/* Social Proof */}
+            <div className="text-center mb-6">
+              <p className="text-sm font-medium text-cyclamen">
+                {hero.socialProof}
+              </p>
+            </div>
 
             <p className="text-lg text-gray-600 mb-8 leading-relaxed">
               {hero.subtitle}
@@ -78,9 +85,16 @@ export const HeroSection = ({ autoOpenUpload = false }: HeroSectionProps) => {
         <div className="hidden md:grid md:grid-cols-2 md:gap-12 md:items-center">
           {/* Left: Content */}
           <div className="text-left pl-8 lg:pl-12">
-            <h1 className="font-arvo text-4xl lg:text-5xl font-bold text-text-primary mb-6 leading-tight">
+            <h1 className="font-arvo text-4xl lg:text-5xl font-bold text-text-primary mb-4 leading-tight">
               {hero.title}
             </h1>
+
+            {/* Social Proof */}
+            <div className="mb-6">
+              <p className="text-base font-medium text-cyclamen">
+                {hero.socialProof}
+              </p>
+            </div>
 
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
               {hero.subtitle}
@@ -124,8 +138,8 @@ export const HeroSection = ({ autoOpenUpload = false }: HeroSectionProps) => {
         </div>
       </div>
 
-      {/* Upload Modal - Email First Flow */}
-      <UploadModalEmailFirst 
+      {/* Upload Modal */}
+      <UploadModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
       />
