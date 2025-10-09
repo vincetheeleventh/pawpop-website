@@ -16,20 +16,32 @@ export async function GET(request: NextRequest) {
 
     if (!supabaseAdmin) {
       return NextResponse.json(
-        { error: 'Database not configured' },
         { status: 500 }
       )
     }
 
     // Fetch artwork by upload token
-    const { data: artwork, error } = await supabaseAdmin
+    let { data: artwork, error } = await supabaseAdmin
       .from('artworks')
       .select('*')
       .eq('upload_token', token)
       .single()
 
+    // Backward-compatibility: earlier emails mistakenly used access_token
+    if ((error || !artwork)) {
+      console.warn('No artwork found by upload_token. Trying access_token fallback for token:', token)
+      const fallback = await supabaseAdmin
+        .from('artworks')
+        .select('*')
+        .eq('access_token', token)
+        .single()
+
+      artwork = fallback.data as any
+      error = fallback.error as any
+    }
+
     if (error || !artwork) {
-      console.error('Artwork not found for token:', token, error)
+      console.error('Artwork not found for token (both upload_token and access_token failed):', token, error)
       return NextResponse.json(
         { error: 'Invalid or expired upload link' },
         { status: 404 }

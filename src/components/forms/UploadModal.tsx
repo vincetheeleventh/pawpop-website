@@ -482,6 +482,8 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
           customer_name: formData.name,
           customer_email: formData.email,
           price_variant: currentVariant, // Store variant for cross-device consistency
+          // Mark as deferred when photos are skipped so the upload link is valid
+          upload_deferred: !hasPhotos
         }),
       });
 
@@ -522,13 +524,37 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
         trackFunnel.deferredUpload();
         
         try {
+          // Ensure we have a valid upload_token generated and saved for this artwork
+          let uploadToken: string | undefined;
+          try {
+            const genTokenRes = await fetch('/api/artwork/generate-upload-token', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ artworkId: artwork.id })
+            });
+            if (genTokenRes.ok) {
+              const genData = await genTokenRes.json();
+              uploadToken = genData.uploadToken;
+              console.log('✅ Generated upload token for deferred email');
+            } else {
+              const t = await genTokenRes.text();
+              console.warn('⚠️ Failed to generate upload token, response:', t);
+            }
+          } catch (e) {
+            console.warn('⚠️ Error generating upload token:', e);
+          }
+
+          // Fallback: use artwork.upload_token if present from server side, otherwise this will fail gracefully in API
+          const tokenForEmail = uploadToken || (artwork && artwork.upload_token) || undefined;
+
           await fetch('/api/email/deferred-upload', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               customerName: formData.name,
               customerEmail: formData.email,
-              uploadToken: (artwork && (artwork.upload_token || artwork.access_token)) || access_token
+              // IMPORTANT: use the dedicated uploadToken; DO NOT use access_token here
+              uploadToken: tokenForEmail
             })
           });
           
