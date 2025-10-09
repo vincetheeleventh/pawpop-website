@@ -4,9 +4,58 @@
 
 PawPop now includes comprehensive Plausible Analytics integration with A/B testing for price variants. This implementation provides privacy-focused analytics alongside the existing Google Ads conversion tracking.
 
-## Key Features
+## Future Enhancements
 
-### 🎯 A/B Testing for Price Variants
+  ### Planned Features
+
+## Goals & Funnels (Plausible Dashboard)
+
+This implementation already emits all required events. Configure goals and funnels in Plausible to visualize conversion.
+
+### Recommended Goals
+- Funnel Step: Upload Modal Opened
+- Funnel Step: Email Captured
+- Funnel Step: Upload Deferred
+- Funnel Step: Deferred Upload Completed
+- Funnel Step: Photo Uploaded
+- Funnel Step: Artwork Generation Started
+- Funnel Step: Artwork Completed
+- Funnel Step: Artwork Page Viewed
+- Funnel Step: Purchase Modal Opened
+- Funnel Step: Checkout Initiated
+- Funnel Step: Purchase Completed
+
+### Recommended Funnels
+1) Email-First Complete Flow: Upload Modal Opened → Email Captured → Photo Uploaded → Artwork Completed → Purchase Completed
+2) Immediate Upload Flow: Email Captured → Photo Uploaded → Artwork Completed
+3) Deferred Upload Recovery: Email Captured → Upload Deferred → Deferred Upload Completed → Artwork Completed
+
+### Key Metrics
+- Email capture rate = Email Captured / Upload Modal Opened
+- Upload Now vs Later split via button_name
+- Deferred return rate = Deferred Upload Completed / Upload Deferred
+- Overall funnel completion = Purchase Completed / Upload Modal Opened
+
+## Email-First Upload Flow Tracking
+
+The email-first modal introduces additional steps between modal open and photo upload. All events include price variant context and run alongside Clarity.
+
+### New/Updated Events
+- Email Captured: form start/complete for the email step
+- Upload Now vs Upload Later: button clicks with location=upload-choice
+- Deferred Upload: special funnel step (2.6) and completion (2.7)
+- Photo Upload: file properties (type, size MB, converted_from_heic)
+- Generation Started/Completed: includes performance timings and manual approval labels when applicable
+- Error Occurred: rich context for validation and network errors
+
+### Dashboard Filters
+- form_name: "Email Capture Form", "Upload Form - Email First"
+- button_name: "Upload Now" | "Upload Later"
+- price_variant: "A" | "B"
+- form_name contains "Pending Approval" (when manual approval is enabled)
+
+## Conclusion
+🎯 A/B Testing for Price Variants
 - **Persistent Assignment**: Users are assigned to variant A or B and maintain that assignment for 30 days
 - **Two Price Points**: 
   - Variant A (Standard): Digital $29, Print $79, Canvas $129
@@ -360,22 +409,6 @@ console.log(getDynamicPricing());
 localStorage.setItem('plausible_debug', 'true');
 
 // View analytics summary
-console.log(plausibleTestUtils.getAnalyticsSummary());
-```
-
-## Future Enhancements
-
-### Planned Features
-1. **Multi-variate Testing**: Test multiple elements simultaneously
-2. **Segmentation**: User behavior analysis by traffic source
-3. **Cohort Analysis**: User retention and lifetime value tracking
-4. **Real-time Dashboard**: Live analytics monitoring
-
-### Integration Opportunities
-1. **Email Marketing**: Variant-based email campaigns
-2. **Customer Support**: Context-aware support tickets
-3. **Inventory Management**: Demand forecasting by variant
-4. **Pricing Optimization**: Dynamic pricing based on performance
 
 ## Conclusion
 
@@ -383,9 +416,7 @@ The Plausible Analytics implementation provides comprehensive, privacy-focused a
 
 **Key Benefits:**
 - ✅ Privacy-focused analytics
-- ✅ Persistent A/B testing
 - ✅ Comprehensive funnel analysis
-- ✅ Performance monitoring
 - ✅ Easy configuration and deployment
 - ✅ Extensive test coverage
 - ✅ Integration with existing systems

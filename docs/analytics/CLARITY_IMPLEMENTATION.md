@@ -340,15 +340,34 @@ By default, Clarity records 100% of sessions. If needed, you can configure sampl
 - [Clarity Documentation](https://docs.microsoft.com/en-us/clarity/)
 - [Setup Guide](https://docs.microsoft.com/en-us/clarity/setup-and-installation/clarity-setup)
 - [Tag Documentation](https://docs.microsoft.com/en-us/clarity/custom-tags)
-- [Privacy Guide](https://docs.microsoft.com/en-us/clarity/privacy-disclosure)
+  - [Privacy Guide](https://docs.microsoft.com/en-us/clarity/privacy-disclosure)
+
+## Production Checklist
+
+- Add `NEXT_PUBLIC_CLARITY_PROJECT_ID` to `.env.local` and production env
+- Verify script loads on site (Network: clarity.ms) and no console errors
+- Confirm session tags present: `price_variant`, `variant_label`, `funnel_step`, `environment`
+- Validate key events appear in recordings: upload, purchase, interactions, errors
+- Ensure cookie consent flow calls `consent()` if applicable
+- Confirm performance impact minimal (loaded after interactive)
+
+## Success Metrics
+
+- Ability to filter recordings by price variant (A/B test segmentation)
+- Rage clicks and dead clicks monitored weekly
+- Heatmaps available for homepage and artwork page
+- Error sessions upgraded and reviewed during incidents
+- Qualitative insights used to explain quantitative funnel drops from Plausible
 
 ## Summary
 
 Microsoft Clarity provides invaluable UX insights through:
-- ✅ Session recordings of real user behavior
-- ✅ Heatmaps showing where users click and scroll
-- ✅ Automatic friction detection (rage clicks, dead clicks)
-- ✅ Integration with existing analytics stack
+- Session recordings of real user behavior
+- Heatmaps showing where users click and scroll
+- Automatic friction detection (rage clicks, dead clicks)
+- Integration with existing analytics stack
+- Privacy-first configuration
+- Custom tagging for A/B test segmentation
 - ✅ Privacy-first configuration
 - ✅ Custom tagging for A/B test segmentation
 
