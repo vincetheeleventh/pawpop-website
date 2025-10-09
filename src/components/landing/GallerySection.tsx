@@ -62,11 +62,11 @@ export const GallerySection = () => {
     <section className="w-full bg-site-bg py-8 md:py-12">
       {/* Section Title - Always visible, outside carousel container */}
       <div className="text-center mb-6 md:mb-8 px-6">
-        <h2 className="font-arvo text-5xl md:text-6xl lg:text-7xl font-bold text-text-primary mb-2">
-          Gallery
+        <h2 className="font-arvo text-3xl md:text-4xl lg:text-4xl font-bold text-text-primary mb-2">
+          A Masterpiece from 2 Photos 
         </h2>
         <p className="text-gray-600 text-base md:text-lg">
-          See what we've created for other pet moms
+          See what other pet moms have created by uploading a photo of themselves and their pet.
         </p>
       </div>
 
@@ -79,8 +79,8 @@ export const GallerySection = () => {
             infinite={true}
             autoPlay={false}
             keyBoardControl={true}
-            customTransition="transform 300ms ease-in-out"
-            transitionDuration={300}
+            customTransition="transform 500ms ease-in-out"
+            transitionDuration={500}
             containerClass="gallery-multi-carousel"
             removeArrowOnDeviceType={[]}
             dotListClass="custom-dot-list-style"
@@ -141,7 +141,7 @@ export const GallerySection = () => {
           >
             {galleryImages.map((image, index) => (
               <div key={index} className="px-0 md:px-3">
-                <div className="relative w-full">
+                <div className="relative w-full bg-gray-100">
                   <Image
                     src={image.src}
                     alt={image.alt}
@@ -155,10 +155,13 @@ export const GallerySection = () => {
                       shadow-lg hover:shadow-xl
                       transition-shadow duration-200
                     "
-                    priority={index === 0}
-                    quality={90}
+                    priority={index < 3}
+                    loading={index < 3 ? "eager" : "lazy"}
+                    quality={85}
                     sizes="(max-width: 768px) 100vw, (max-width: 1024px) 33vw, 33vw"
                     draggable={false}
+                    placeholder="blur"
+                    blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAKAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAf/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                   />
                   {/* Optional overlay for better visual appeal */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent pointer-events-none rounded-none md:rounded-xl" />
@@ -258,7 +261,7 @@ export const GallerySection = () => {
         
         /* Smooth transitions */
         .react-multi-carousel-list {
-          transition: transform 300ms ease-in-out !important;
+          transition: transform 500ms ease-in-out !important;
         }
         
         .react-multi-carousel-track {

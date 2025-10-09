@@ -63,7 +63,7 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
   const router = useRouter();
   
   // Plausible tracking
-  const { trackFunnel, trackInteraction, trackPerformance, getPriceVariant } = usePlausibleTracking();
+  const { trackFunnel, trackInteraction, trackPerformance, getPriceVariant, getPriceConfig } = usePlausibleTracking();
   
   // Clarity tracking
   const clarityTracking = useClarityTracking();
@@ -1215,7 +1215,8 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                   Skip for now
                 </button>
                 <p className="text-xs text-gray-400 mt-1 font-geist">
-                  You can add photos later
+                  You can add photos later.<br />
+                  Enter your email to secure your free artwork proof.
                 </p>
               </div>
             </div>
@@ -1332,10 +1333,14 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                   <span className="text-3xl">✨</span>
                 </div>
                 <h2 className="text-xl font-arvo font-bold text-text-primary mb-2">
-                  Almost Ready!
+                  {formData.petMomPhoto && formData.petPhoto 
+                    ? "Almost Ready!" 
+                    : `Secure Your Free $${getPriceConfig().digital} Artwork Proof`}
                 </h2>
                 <p className="text-sm font-geist text-gray-600 mb-6">
-                  We'll email you when your Renaissance masterpiece is ready
+                  {formData.petMomPhoto && formData.petPhoto 
+                    ? "We'll email you when your masterpiece is ready"
+                    : "Upload photos within 48 hours to claim your complimentary masterpiece"}
                 </p>
               </div>
 
@@ -1371,12 +1376,14 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                 <div className="bg-card-surface p-4 rounded-xl border border-gray-200">
                   <div className="text-center">
                     <p className="text-sm font-geist font-medium text-text-primary mb-1">
-                      What happens next:
+                      {formData.petMomPhoto && formData.petPhoto 
+                        ? "What happens next:"
+                        : `We've reserved your $${getPriceConfig().digital} artwork proof`}
                     </p>
                     <p className="text-xs font-geist text-gray-600">
                       {formData.petMomPhoto && formData.petPhoto 
-                        ? "You'll receive an email when your Renaissance masterpiece is ready. You're one step closer to having a fur baby masterpiece before your eyes!"
-                        : "You'll receive an email to finish uploading your pictures. You're one step closer to having a fur baby masterpiece before your eyes!"
+                        ? "You'll receive an email when your Renaissance masterpiece is ready. You're very close to having a fur baby masterpiece before your eyes!"
+                        : "Upload photos within 48 hours to keep your spot and get your free proof!"
                       }
                     </p>
                   </div>
