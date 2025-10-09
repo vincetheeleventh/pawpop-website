@@ -108,6 +108,9 @@ export async function createArtwork(data: CreateArtworkData): Promise<{ artwork:
       token_expires_at: token_expires_at.toISOString(),
       generation_step: 'pending',
       price_variant: data.price_variant || 'A', // Default to variant A for consistent pricing
+      email_captured_at: data.email_captured_at || new Date().toISOString(),
+      upload_deferred: data.upload_deferred || false,
+      user_type: data.user_type || null,
       source_images: data.source_images || {
         pet_photo: '',
         pet_mom_photo: '',
