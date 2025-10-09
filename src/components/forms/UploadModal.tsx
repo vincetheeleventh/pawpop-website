@@ -1335,12 +1335,12 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                 <h2 className="text-xl font-arvo font-bold text-text-primary mb-2">
                   {formData.petMomPhoto && formData.petPhoto 
                     ? "Almost Ready!" 
-                    : `Secure Your Free $${getPriceConfig().digital} Artwork Proof`}
+                    : `Get Your Artwork Proof FREE (Worth $${getPriceConfig().digital})`}
                 </h2>
                 <p className="text-sm font-geist text-gray-600 mb-6">
                   {formData.petMomPhoto && formData.petPhoto 
                     ? "We'll email you when your masterpiece is ready"
-                    : "Upload photos within 48 hours to claim your complimentary masterpiece"}
+                    : "Upload photos within 48 hours to claim your complimentary proof - no payment required"}
                 </p>
               </div>
 
@@ -1378,12 +1378,12 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
                     <p className="text-sm font-geist font-medium text-text-primary mb-1">
                       {formData.petMomPhoto && formData.petPhoto 
                         ? "What happens next:"
-                        : `We've reserved your $${getPriceConfig().digital} artwork proof`}
+                        : `Your FREE $${getPriceConfig().digital} Proof is Reserved`}
                     </p>
                     <p className="text-xs font-geist text-gray-600">
                       {formData.petMomPhoto && formData.petPhoto 
                         ? "You'll receive an email when your Renaissance masterpiece is ready. You're very close to having a fur baby masterpiece before your eyes!"
-                        : "Upload photos within 48 hours to keep your spot and get your free proof!"
+                        : "Upload photos within 48 hours to keep your reservation - absolutely no cost!"
                       }
                     </p>
                   </div>
