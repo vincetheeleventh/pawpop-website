@@ -48,16 +48,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Check if upload is still pending (should be deferred = true)
-    if (artwork.upload_deferred !== true) {
-      console.error('Upload not deferred for token:', token, 'upload_deferred:', artwork.upload_deferred)
-      return NextResponse.json(
-        { error: 'This upload link is no longer valid' },
-        { status: 400 }
-      )
-    }
-    
-    // Check if already completed
+    // Check if already completed - this is the primary validation
+    // (upload_deferred field may not exist on old records, so we don't enforce it)
     if (artwork.generation_step && artwork.generation_step !== 'pending') {
       console.log('Upload already completed for token:', token, 'generation_step:', artwork.generation_step)
       return NextResponse.json(
