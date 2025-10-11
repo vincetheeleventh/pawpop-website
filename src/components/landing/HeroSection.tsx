@@ -64,7 +64,7 @@ export const HeroSection = ({ autoOpenUpload = false }: HeroSectionProps) => {
 
           {/* Content */}
           <div className="px-6">
-            <h1 className="font-arvo text-3xl font-bold text-text-primary mb-3 leading-tight">
+            <h1 className="font-arvo text-2xl font-bold text-text-primary mb-3 leading-tight">
               {hero.title}
             </h1>
 
@@ -98,7 +98,7 @@ export const HeroSection = ({ autoOpenUpload = false }: HeroSectionProps) => {
         <div className="hidden md:grid md:grid-cols-2 md:gap-12 md:items-center">
           {/* Left: Content */}
           <div className="text-left pl-8 lg:pl-12">
-            <h1 className="font-arvo text-4xl lg:text-5xl font-bold text-text-primary mb-4 leading-tight">
+            <h1 className="font-arvo text-3xl lg:text-4xl font-bold text-text-primary mb-4 leading-tight">
               {hero.title}
             </h1>
 
