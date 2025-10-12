@@ -19,6 +19,8 @@
     "test:google-ads-e2e": "playwright test tests/e2e/google-ads-conversion-tracking.spec.ts",
     "test:google-ads-quick": "node scripts/test-google-ads-tracking.js",
     "test:google-ads-production": "node scripts/test-google-ads-production.js",
+    "test:meta-ads": "vitest run tests/lib/meta-ads.test.ts tests/lib/meta-ads-server.test.ts",
+    "test:meta-ads-watch": "vitest tests/lib/meta-ads.test.ts tests/lib/meta-ads-server.test.ts",
     "test:complete-pipeline": "node scripts/test/test-complete-pipeline.js",
     "test:flux": "node scripts/test/test-flux.js",
     "test:monalisa-maker": "node scripts/test/test-monalisa-maker.js",

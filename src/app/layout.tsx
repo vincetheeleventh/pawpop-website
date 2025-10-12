@@ -8,6 +8,7 @@ import { Providers } from './providers';
 import { GoogleAdsTracking } from '@/components/analytics/GoogleAdsTracking';
 import PlausibleScript from '@/components/analytics/PlausibleScript';
 import ClarityScript from '@/components/analytics/ClarityScript';
+import { MetaPixel } from '@/components/analytics/MetaPixel';
 
 // PawPop Brand Fonts
 const arvo = Arvo({ 
@@ -73,6 +74,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="preconnect" href="https://plausible.io" />
+        <link rel="preconnect" href="https://connect.facebook.net" />
         <link rel="dns-prefetch" href="https://nwqwtmudwbdkyjfyzlyg.supabase.co" />
         <link rel="dns-prefetch" href="https://utfs.io" />
         <link rel="dns-prefetch" href="https://fal.media" />
@@ -82,6 +84,7 @@ export default function RootLayout({
           <GoogleAdsTracking />
           <PlausibleScript />
           <ClarityScript />
+          <MetaPixel />
           <Header />
           <main>{children}</main>
           <Footer />

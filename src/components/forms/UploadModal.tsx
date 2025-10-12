@@ -512,6 +512,21 @@ export const UploadModal = ({ isOpen, onClose }: UploadModalProps) => {
             last_name: lastName
           }
         }); // $5 CAD lead value with enhanced conversion data
+        
+        // Track Meta Pixel Lead event
+        const { trackMetaPhotoUpload, setMetaAdvancedMatching } = await import('@/lib/meta-ads');
+        
+        // Set advanced matching for better attribution
+        setMetaAdvancedMatching({
+          email: formData.email,
+          firstName: firstName,
+          lastName: lastName
+        });
+        
+        trackMetaPhotoUpload(2, {
+          email: formData.email,
+          name: formData.name
+        }); // $2 CAD lead value
       }
       
       // Check if we need to start generation or send deferred upload email

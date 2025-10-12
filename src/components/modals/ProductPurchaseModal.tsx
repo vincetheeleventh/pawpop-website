@@ -250,6 +250,12 @@ export default function ProductPurchaseModal({
     trackFunnel.checkoutInitiated(productType, currentPrice, quantity)
     trackInteraction.buttonClick('Buy Now', 'Purchase Modal')
     clarityTracking.trackFunnel.checkoutInitiated(productType, currentPrice)
+    
+    // Track Meta Pixel InitiateCheckout event
+    if (typeof window !== 'undefined') {
+      const { trackMetaBeginCheckout } = await import('@/lib/meta-ads')
+      trackMetaBeginCheckout(productType, currentPrice * quantity, 'CAD')
+    }
 
     try {
       // Validate required data

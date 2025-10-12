@@ -177,7 +177,42 @@ export async function POST(req: Request) {
             console.warn('⚠️ Google Ads server-side conversion tracking failed:', trackingResult.error);
           }
         } catch (trackingError) {
-          console.error('❌ Failed to track purchase conversion:', trackingError);
+          console.error('❌ Failed to track Google Ads purchase conversion:', trackingError);
+        }
+
+        // Track purchase conversion for Meta Ads (server-side)
+        try {
+          const { trackMetaServerSideConversion } = await import('@/lib/meta-ads-server');
+          
+          // Extract shipping address if available
+          const shippingDetails = (fullSession as any).shipping_details;
+          const customerAddress = shippingDetails?.address ? {
+            city: shippingDetails.address.city,
+            state: shippingDetails.address.state,
+            zip: shippingDetails.address.postal_code,
+            country: shippingDetails.address.country
+          } : undefined;
+          
+          const metaConversionData = {
+            orderId: session.id,
+            value: (session.amount_total || 0) / 100, // Convert cents to dollars
+            currency: (session.currency || 'cad').toUpperCase(),
+            productType: metadata.productType || 'PawPop Print',
+            customerEmail: session.customer_details?.email || undefined,
+            customerName: session.customer_details?.name || metadata.customerName,
+            customerPhone: session.customer_details?.phone || undefined,
+            customerAddress: customerAddress,
+            eventSourceUrl: process.env.NEXT_PUBLIC_BASE_URL || 'https://pawpopart.com'
+          };
+          
+          const metaTrackingResult = await trackMetaServerSideConversion(metaConversionData);
+          if (metaTrackingResult.success) {
+            console.log('✅ Meta Conversions API: Purchase tracked successfully');
+          } else {
+            console.warn('⚠️ Meta Conversions API tracking failed:', metaTrackingResult.error);
+          }
+        } catch (metaTrackingError) {
+          console.error('❌ Failed to track Meta purchase conversion:', metaTrackingError);
         }
 
         // Send order confirmation email

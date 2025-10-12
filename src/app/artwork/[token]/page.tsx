@@ -92,6 +92,11 @@ export default function ArtworkPage({ params, searchParams }: { params: { token:
       import('@/lib/google-ads').then(({ trackArtworkView }) => {
         trackArtworkView(params.token, 2); // $2 CAD engagement value
       });
+      
+      // Track Meta Pixel ViewContent event
+      import('@/lib/meta-ads').then(({ trackMetaArtworkView }) => {
+        trackMetaArtworkView(params.token, 1); // $1 CAD engagement value
+      });
     }
   }, [params.token, searchParams]);
 
