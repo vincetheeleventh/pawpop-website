@@ -1,0 +1,27 @@
+-- Rollback Migration: Fix user_type_analytics view security definer issue
+-- Created: 2025-10-15
+-- Description: Rolls back the user_type_analytics view to its original state (without explicit security_invoker)
+
+-- Drop the SECURITY INVOKER version
+DROP VIEW IF EXISTS user_type_analytics;
+
+-- Recreate the original view (default SECURITY DEFINER)
+CREATE OR REPLACE VIEW user_type_analytics AS
+SELECT 
+  user_type,
+  COUNT(*) as total_artworks,
+  COUNT(CASE WHEN generation_step = 'completed' THEN 1 END) as completed_artworks,
+  COUNT(CASE WHEN email_captured_at IS NOT NULL THEN 1 END) as emails_captured,
+  COUNT(CASE WHEN upload_deferred = true THEN 1 END) as deferred_uploads,
+  ROUND(
+    COUNT(CASE WHEN generation_step = 'completed' THEN 1 END)::numeric / 
+    NULLIF(COUNT(*), 0) * 100, 
+    2
+  ) as completion_rate_percent
+FROM artworks
+WHERE user_type IS NOT NULL
+GROUP BY user_type;
+
+-- Grant access to the view
+GRANT SELECT ON user_type_analytics TO authenticated;
+GRANT SELECT ON user_type_analytics TO service_role;
