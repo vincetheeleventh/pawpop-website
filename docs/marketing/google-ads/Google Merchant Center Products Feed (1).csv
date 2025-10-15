@@ -1,0 +1,180 @@
+id,title,description,availability,availability date,expiration date,link,mobile link,image link,price,sale price,sale price effective date,identifier exists,gtin,mpn,brand,product highlight,product detail,additional image link,condition,adult,color,size,size type,size system,gender,material,pattern,age group,multipack,is bundle,unit pricing measure,unit pricing base measure,energy efficiency class,min energy efficiency class,min energy efficiency class,item group id,sell on google quantity
+"Required
+
+Your product's unique ID
+
+Tip: Enter a unique ID to help Google distinguish each product from the others. Use SKUs as your IDs where possible.","Required
+
+Your product's title
+
+Up to 150 characters
+
+Tip: Clearly identify what you're selling. A specific and accurate title can help Google show your product to the right customers.","Required
+
+Your product's description
+
+Up to 200 characters
+
+Tip: List the most important details about your product. Use bullets and paragraphs to make the description easy to read for customers.","Required
+
+Your product's availability
+
+Tip: tell customers whether you have your product or not. Enter one of the following: ""in_stock"", ""out_of_stock"", ""preorder"", ""backorder"".","Required if availability is ""preorder"" or ""backorder""
+
+The date, with time and timezone, on which a preordered or backordered product becomes available for delivery
+
+Tip: enter the date in one of the following formats: YYYY-MM-DDThh:mm[±hhmm] or YYYY-MM-DDThh:mmZ","Optional
+
+The date, with time and time zone, on which your product should stop showing
+
+Tip: enter the date in one of the following formats: YYYY-MM-DDThh:mm[±hhmm] or YYYY-MM-DDThh:mmZ","Required
+
+Your product's landing page link
+
+Tip: provide a link that will allow customers to open a landing page on your website for that product","Optional
+
+Your product's mobile-optimised landing page link
+
+Tip: use when you have a different link pointing to your mobile and desktop","Required
+
+The link pointing to your product's main image
+
+Tip: make sure that your image is available in one of the following formats: JPEG (.jpg/.jpeg), WebP (.webp), PNG (.png), GIF (.gif), BMP (.bmp), TIFF (.tif/.tiff)","Required
+
+Your product's price
+
+Your product's price","Optional
+
+Your product's price during a sale
+
+Tip: make sure that your sale price includes the currency code such as USD, CAD, EUR, GBP (as specified in ISO 4217)","Optional
+
+The date range, with time and time zone, during which the product's sale price applies
+
+Tip: enter a start date and an end date in the one of the following formats: YYYY-MM-DDThh:mm[±hhmm] or YYYY-MM-DDThh:mmZ, separated by slash ( / )","Required
+
+Indicates that your product has a unique identification number such as GTIN, MPN, UPC, EAN, JAN, or ISBN
+
+Tip: enter one of the following: ""yes"", ""no"". You might not have a unique identification number if you sell products such as flowers, bouquets, gift baskets, or handmade goods.","Required if your product has a manufacturer-assigned identification number known as GTIN
+
+Your product's Global Trade Item Number (GTIN)
+
+Tip: you can use UPC (12 digits), EAN (13 digits), JAN (8 or 13 digits), ISBN (10 or 13 digits), or ITF-14 (14 digits) as your GTIN too. Not required if you sell products that don't have GTINs such as flowers, bouquets, gift baskets, or handmade goods.","Required if your product has a manufacturer-assigned identification number known as MPN
+
+Your product's Manufacturer Part Number (MPN)
+
+Tip: if you're a manufacturer, your MPN can be identical to your SKU. Not required if you sell products that don't have MPNs such as flowers, bouquets, gift baskets, or handmade goods.","Required
+
+Your product's brand name
+
+Tip: use the brand name of the product that customers generally will recognize","Optional but beneficial
+
+The most relevant highlights of your products
+
+Up to 150 characters
+
+Tip: include as many highlights as possible to help customers scan sentence fragments that answer the most common questions or that call out the most important aspects of the product","Optional but beneficial
+
+Technical specifications or additional details of your product
+
+Tip: include as many details as possible to help answer any questions customers might have about your product. Enter your details in the following format: ""section_name: attribute_name: attribute_value"".","Optional but beneficial
+
+The link pointing to your product's additional images
+
+Tip: use to show your product from different angles or in use. Additional images are often critical for customers to understand what the product looks like. The same formats apply as for the main image.","Required if your product is used or refurbished
+
+The condition of your product at time of sale
+
+Tip: enter one of the following: ""new"", ""refurbished"", ""used""","Required if a product contains adult content
+
+Indicates that your product includes sexually suggestive content
+
+Tip: enter one of the following: ""yes"", ""no""","Required for apparel products
+
+Your product's colour
+
+Tip: use for electronics, home goods, appliances, and anything that differentiates by color. If your product is made up of several colours, you can specify 1 primary colour followed by up to 2 secondary colours that are each separated by a slash (/).
+
+For example: Red/Green/Black","Required for apparel products
+
+Your product's size
+
+Tip: use for electronics, home goods, sporting goods, or apparel if you want your product to appear in results that are filtered by size. Enter a single size per product.","Optional
+
+Your clothing product's cut
+
+Tip: enter one of the following: ""regular"", ""petite"", ""plus"", ""tall"", ""big"", ""maternity""","Optional
+
+The country of the size system used by your product
+
+Tip: use to help customers narrow search results. Enter one of the following: ""AU"",""BR"",""CN"" (China), ""DE"",""EU"",""FR"", ""IT"", ""JP"", ""MEX"", ""UK"", ""GB"".","Required for apparel products
+
+The gender for which your product is intended
+
+Tip: enter one of the following: ""female"", ""male"", ""unisex""","Required for apparel & distinguishing different products
+
+Your product's fabric or material
+
+Tip: describe the main fabric or material that your product is made of","Required for apparel & distinguishing different products
+
+Your product's pattern or graphic print
+
+Up to 200 characters
+
+Tip: use to help customers narrow search results","Required for apparel & toys
+
+The demographic for which your product is intended
+
+Tip: enter one of the following: ""newborn"", ""infant"", ""toddler"", ""children"", ""adult""","Required for products sold in Australia, Brazil, Czechia, France, Germany, Italy, Japan, the Netherlands, Spain, Switzerland, the UK, or the US
+
+The number of identical products sold within a merchant-defined multipack
+
+For example: one multipack could consist of 3 packages containing 4 manufacturer-packed pens each","Required for products sold in Australia, Brazil, Czechia, France, Germany, Italy, Japan, the Netherlands, Spain, Switzerland, the UK, or the US
+
+Indicates that your product is a merchant-defined custom group of different products featuring one main product
+
+Tip: enter one of the following: ""yes"", ""no""
+
+For example: a video console (main product) with 3 video games could be a bundle","Required for special country regulations
+
+The measure and dimension of your product as it is sold
+
+Tip: enter the measure in the following format: a number with a unit such as oz, lb, mg, g, kg, floz, pt, qt, gal, ml, cl, l, cbm, in, ft, yd, cm, m, sqft, sqm, or ct
+
+For example: 750 ml","Required for special country regulations
+
+The product's unit base measure for pricing
+
+Tip: enter the unit measure in the following format: a number with a unit such as oz, lb, mg, g, kg, floz, pt, qt, gal, ml, cl, l, cbm, in, ft, yd, cm, m, sqft, sqm, or ct
+
+For example: 100 ml, which means that the price is calculated based on a unit of 100 ml","Required for special country regulations
+
+Your product's energy label
+
+Tip: enter one of the following: ""A+++"", ""A++"", ""A+"", ""A"", ""B"", ""C"", ""D"", ""E"", ""F"", ""G""","Required for special country regulations
+
+Your product's minimum energy class
+
+Tip: enter one of the following: ""A+++"", ""A++"", ""A+"", ""A"", ""B"", ""C"", ""D"", ""E"", ""F"", ""G""","Required for special country regulations
+
+Your product's maximum energy class
+
+Tip: enter one of the following: ""A+++"", ""A++"", ""A+"", ""A"", ""B"", ""C"", ""D"", ""E"", ""F"", ""G""","Required for products sold in Brazil, France, Germany, Japan, the UK, or the US & being a variant
+
+The ID for a group of products that come in different versions (variants)
+
+Tip: use to group your product and its variants to show them together to customers. Use parent SKUs as your group IDs where possible.","Required for Buy on Google
+
+The total number of your product available to sell
+
+Tip: use to indicate how many units of your product you want to sell ""on Google"""
+PAWPOP-DIGITAL-45,PawPop Digital Masterpiece - Custom Pet Portrait,"Transform your pet's photo into a stunning digital masterpiece. High-resolution custom portrait combining your pet with iconic art. Instant email delivery, perfect for printing or digital display. Includes unlimited revisions.",in_stock,,,https://pawpopart.com,,https://pawpopart.com/images/gallery/example-1.jpg,45.00 CAD,,,no,,,PawPop,"""Instant digital delivery"", ""High-resolution for printing"", ""Unlimited revisions included"", ""Custom handcrafted artwork""",Art:type:digital portrait|Art:style:custom pet art|Delivery:method:instant email,https://pawpopart.com/images/gallery/example-2.jpg,new,no,,,,,unisex,Digital Artwork,,adult,,,,,,,PAWPOP-DIGITAL,
+PAWPOP-PRINT-12x18,PawPop Fine Art Print 12×18 - Museum Quality Pet Portrait,"Museum-quality fine art print on premium archival paper. Your custom pet portrait printed with fade-resistant inks on heavyweight fine art paper (285 g/m²). Perfect for gifting and display.",in_stock,,,https://pawpopart.com,,https://pawpopart.com/images/gallery/example-1.jpg,79.00 CAD,,,no,,,PawPop,"""Museum-quality archival paper"", ""Fade-resistant professional inks"", ""Heavyweight 285 g/m² fine art paper"", ""Custom handcrafted portrait""",Art:type:fine art print|Material:paper:archival fine art|Quality:grade:museum quality,https://pawpopart.com/images/gallery/example-2.jpg,new,no,,12×18 inches,,,unisex,Fine Art Paper (285 g/m²),,adult,,,,,,,PAWPOP-PRINT,
+PAWPOP-PRINT-18x24,PawPop Fine Art Print 18×24 - Museum Quality Pet Portrait,"Museum-quality fine art print on premium archival paper. Your custom pet portrait printed with fade-resistant inks on heavyweight fine art paper (285 g/m²). Perfect for gifting and display.",in_stock,,,https://pawpopart.com,,https://pawpopart.com/images/gallery/example-1.jpg,95.00 CAD,,,no,,,PawPop,"""Museum-quality archival paper"", ""Fade-resistant professional inks"", ""Heavyweight 285 g/m² fine art paper"", ""Custom handcrafted portrait""",Art:type:fine art print|Material:paper:archival fine art|Quality:grade:museum quality,https://pawpopart.com/images/gallery/example-2.jpg,new,no,,18×24 inches,,,unisex,Fine Art Paper (285 g/m²),,adult,,,,,,,PAWPOP-PRINT,
+PAWPOP-PRINT-20x30,PawPop Fine Art Print 20×30 - Museum Quality Pet Portrait,"Museum-quality fine art print on premium archival paper. Your custom pet portrait printed with fade-resistant inks on heavyweight fine art paper (285 g/m²). Perfect for gifting and display.",in_stock,,,https://pawpopart.com,,https://pawpopart.com/images/gallery/example-1.jpg,115.00 CAD,,,no,,,PawPop,"""Museum-quality archival paper"", ""Fade-resistant professional inks"", ""Heavyweight 285 g/m² fine art paper"", ""Custom handcrafted portrait""",Art:type:fine art print|Material:paper:archival fine art|Quality:grade:museum quality,https://pawpopart.com/images/gallery/example-2.jpg,new,no,,20×30 inches,,,unisex,Fine Art Paper (285 g/m²),,adult,,,,,,,PAWPOP-PRINT,
+PAWPOP-CANVAS-STRETCHED-12x18,PawPop Stretched Canvas 12×18 - Premium Matte Canvas Print,"Premium stretched matte canvas on solid wood frame. Your custom pet portrait hand-stretched over 1.25" wooden frame. Museum-quality materials with professional finishing. Ready to hang or upgrade with framing.",in_stock,,,https://pawpopart.com,,https://pawpopart.com/images/gallery/example-1.jpg,95.00 CAD,,,no,,,PawPop,"""Hand-stretched on solid wood frame"", ""Premium matte canvas finish"", ""Museum-quality materials"", ""Optional framing upgrade available""",Art:type:stretched canvas|Material:canvas:premium matte|Frame:depth:1.25 inches|Quality:grade:museum quality,https://pawpopart.com/images/gallery/example-2.jpg,new,no,,12×18 inches,,,unisex,Premium Matte Canvas on Wood Frame,,adult,,,,,,,PAWPOP-CANVAS-STRETCHED,
+PAWPOP-CANVAS-STRETCHED-16x24,PawPop Stretched Canvas 16×24 - Premium Matte Canvas Print,"Premium stretched matte canvas on solid wood frame. Your custom pet portrait hand-stretched over 1.25" wooden frame. Museum-quality materials with professional finishing. Ready to hang or upgrade with framing.",in_stock,,,https://pawpopart.com,,https://pawpopart.com/images/gallery/example-1.jpg,135.00 CAD,,,no,,,PawPop,"""Hand-stretched on solid wood frame"", ""Premium matte canvas finish"", ""Museum-quality materials"", ""Optional framing upgrade available""",Art:type:stretched canvas|Material:canvas:premium matte|Frame:depth:1.25 inches|Quality:grade:museum quality,https://pawpopart.com/images/gallery/example-2.jpg,new,no,,16×24 inches,,,unisex,Premium Matte Canvas on Wood Frame,,adult,,,,,,,PAWPOP-CANVAS-STRETCHED,
+PAWPOP-CANVAS-STRETCHED-20x30,PawPop Stretched Canvas 20×30 - Premium Matte Canvas Print,"Premium stretched matte canvas on solid wood frame. Your custom pet portrait hand-stretched over 1.25" wooden frame. Museum-quality materials with professional finishing. Ready to hang or upgrade with framing.",in_stock,,,https://pawpopart.com,,https://pawpopart.com/images/gallery/example-1.jpg,175.00 CAD,,,no,,,PawPop,"""Hand-stretched on solid wood frame"", ""Premium matte canvas finish"", ""Museum-quality materials"", ""Optional framing upgrade available""",Art:type:stretched canvas|Material:canvas:premium matte|Frame:depth:1.25 inches|Quality:grade:museum quality,https://pawpopart.com/images/gallery/example-2.jpg,new,no,,20×30 inches,,,unisex,Premium Matte Canvas on Wood Frame,,adult,,,,,,,PAWPOP-CANVAS-STRETCHED,
+PAWPOP-CANVAS-FRAMED-12x18,PawPop Framed Canvas 12×18 - Luxury Ready-to-Hang Pet Portrait,"Luxury framed canvas print - the ultimate gift. Your custom pet portrait on premium matte canvas with professional multi-color framing. Museum-quality materials, ready to hang, gift-ready packaging.",in_stock,,,https://pawpopart.com,,https://pawpopart.com/images/gallery/example-1.jpg,145.00 CAD,,,no,,,PawPop,"""Professional multi-color framing"", ""Premium matte canvas"", ""Ready-to-hang gift-ready"", ""Museum-quality materials""",Art:type:framed canvas|Material:canvas:premium matte|Frame:type:multi-color professional|Quality:grade:luxury,https://pawpopart.com/images/gallery/example-2.jpg,new,no,,12×18 inches,,,unisex,Premium Matte Canvas with Multi-Color Frame,,adult,,,,,,,PAWPOP-CANVAS-FRAMED,
+PAWPOP-CANVAS-FRAMED-16x24,PawPop Framed Canvas 16×24 - Luxury Ready-to-Hang Pet Portrait,"Luxury framed canvas print - the ultimate gift. Your custom pet portrait on premium matte canvas with professional multi-color framing. Museum-quality materials, ready to hang, gift-ready packaging.",in_stock,,,https://pawpopart.com,,https://pawpopart.com/images/gallery/example-1.jpg,185.00 CAD,,,no,,,PawPop,"""Professional multi-color framing"", ""Premium matte canvas"", ""Ready-to-hang gift-ready"", ""Museum-quality materials""",Art:type:framed canvas|Material:canvas:premium matte|Frame:type:multi-color professional|Quality:grade:luxury,https://pawpopart.com/images/gallery/example-2.jpg,new,no,,16×24 inches,,,unisex,Premium Matte Canvas with Multi-Color Frame,,adult,,,,,,,PAWPOP-CANVAS-FRAMED,
+PAWPOP-CANVAS-FRAMED-20x30,PawPop Framed Canvas 20×30 - Luxury Ready-to-Hang Pet Portrait,"Luxury framed canvas print - the ultimate gift. Your custom pet portrait on premium matte canvas with professional multi-color framing. Museum-quality materials, ready to hang, gift-ready packaging.",in_stock,,,https://pawpopart.com,,https://pawpopart.com/images/gallery/example-1.jpg,225.00 CAD,,,no,,,PawPop,"""Professional multi-color framing"", ""Premium matte canvas"", ""Ready-to-hang gift-ready"", ""Museum-quality materials""",Art:type:framed canvas|Material:canvas:premium matte|Frame:type:multi-color professional|Quality:grade:luxury,https://pawpopart.com/images/gallery/example-2.jpg,new,no,,20×30 inches,,,unisex,Premium Matte Canvas with Multi-Color Frame,,adult,,,,,,,PAWPOP-CANVAS-FRAMED,
