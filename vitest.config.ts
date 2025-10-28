@@ -1,13 +1,15 @@
 import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig({
+  plugins: [react()],
   test: {
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
-    testTimeout: 30000, // 30s for image processing tests
-    hookTimeout: 10000,
+    include: ['tests/**/*.test.{ts,tsx}'],
+    exclude: ['tests/e2e/**/*'],
   },
   resolve: {
     alias: {
