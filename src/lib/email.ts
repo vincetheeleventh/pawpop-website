@@ -163,20 +163,20 @@ export async function sendMasterpieceCreatingEmail(data: MasterpieceCreatingEmai
     <body>
       <div class="container">
         <div class="header">
-          <h1>🎨 Your Masterpiece is Being Created</h1>
+          <h1>Your Masterpiece is Being Created</h1>
         </div>
         
         <div class="content">
-          <h2>${data.customerName ? `Hi ${data.customerName}!` : 'Hello there! 👋'}</h2>
+          <h2>${data.customerName ? `Hi ${data.customerName}` : 'Hello'}</h2>
           
           <p>Thank you for choosing PawPop! We've received your beautiful photo${petNameText} and our artists are now working their magic to create your handcrafted, one-of-a-kind Mona Lisa masterpiece.</p>
           
           <p><strong>What happens next:</strong></p>
           <ul>
-            <li>🎨 We are transforming your photo into a stunning Mona Lisa-style masterpiece</li>
-            <li>⏱️ This process will take 24-48 hours.</li>
-            <li>📧 You'll receive another email as soon as your masterpiece is ready</li>
-            <li>🖼️ You can then choose to purchase beautiful canvas prints or keep it digital</li>
+            <li>We're transforming your photo into a stunning Mona Lisa-style masterpiece</li>
+            <li>This process will take 24-48 hours</li>
+            <li>You'll receive another email as soon as your masterpiece is ready</li>
+            <li>You can then choose to purchase beautiful canvas prints or keep it digital</li>
           </ul>
           
           <div class="divider"></div>
@@ -201,7 +201,7 @@ export async function sendMasterpieceCreatingEmail(data: MasterpieceCreatingEmai
 
   const result = await sendEmail({
     to: data.customerEmail,
-    subject: 'Your masterpiece is being created! 🎨',
+    subject: 'Your PawPop Masterpiece - Creating Now',
     html
   })
 
@@ -242,19 +242,19 @@ export async function sendMasterpieceReadyEmail(data: MasterpieceReadyEmailData)
     <body>
       <div class="container">
         <div class="header">
-          <h1>🎉 Your Masterpiece is Ready!</h1>
+          <h1>Your Masterpiece is Ready</h1>
         </div>
         
         <div class="content">
-          <h2>${data.customerName ? `Hi ${data.customerName}!` : 'Amazing news! 🎉'}</h2>
+          <h2>${data.customerName ? `Hi ${data.customerName}` : 'Your artwork is complete'}</h2>
           
-          <p>${data.customerName ? 'We\'ve' : 'Your'} completed${petNameText} stunning Mona Lisa transformation${data.customerName ? '' : ' is ready'}. The result is absolutely beautiful!</p>
+          <p>${data.customerName ? 'We\'ve' : 'Your'} completed${petNameText} stunning Mona Lisa transformation${data.customerName ? '' : ' is ready'}. We think you're going to love it!</p>
           
           <div class="artwork-preview">
             <img src="${data.imageUrl}" alt="Your PawPop Masterpiece" style="max-width: 200px; height: auto; border-radius: 8px;" />
           </div>
           
-          <p><strong>Your unique masterpiece is ready to view!</strong></p>
+          <p><strong>Your unique masterpiece is ready to view.</strong></p>
           <p>We've created a special page just for you where you can see your artwork in full detail and decide how to make it real.</p>
           
           <div class="buttons-container">
@@ -265,14 +265,14 @@ export async function sendMasterpieceReadyEmail(data: MasterpieceReadyEmailData)
           
           <p><strong>Print Options Available:</strong></p>
           <ul>
-            <li>🖼️ <strong>Fine Art Prints</strong> - Museum-quality fine art paper (285 g/m²), multiple sizes</li>
-            <li>🎨 <strong>Framed Canvas</strong> - Ready to hang, gallery-wrapped</li>
-            <li>📱 <strong>Digital Download</strong> - High-resolution file for personal use</li>
+            <li><strong>Fine Art Prints</strong> - Museum-quality fine art paper (285 g/m²), multiple sizes</li>
+            <li><strong>Framed Canvas</strong> - Ready to hang, gallery-wrapped</li>
+            <li><strong>Digital Download</strong> - High-resolution file for personal use</li>
           </ul>
           
           <p>Your artwork link will remain active for 30 days, so you can share it with friends and family or come back to order prints anytime.</p>
           
-          <p>We hope you love your unique PawPop masterpiece!</p>
+          <p>We hope you enjoy your unique PawPop masterpiece.</p>
           
           <p>Best regards,<br>The PawPop Team</p>
         </div>
@@ -289,7 +289,7 @@ export async function sendMasterpieceReadyEmail(data: MasterpieceReadyEmailData)
 
   const result = await sendEmail({
     to: data.customerEmail,
-    subject: 'Your masterpiece is ready! 🎉',
+    subject: 'Your PawPop Masterpiece is Ready',
     html
   })
 
@@ -328,13 +328,13 @@ export async function sendOrderConfirmationEmail(data: OrderConfirmationEmailDat
     <body>
       <div class="container">
         <div class="header">
-          <h1>✅ Order Confirmed!</h1>
+          <h1>Order Confirmed</h1>
         </div>
         
         <div class="content">
-          <h2>${data.customerName ? `Thank you for your order, ${data.customerName}!` : 'Thank you for your order! 🎨'}</h2>
+          <h2>${data.customerName ? `Thank you for your order, ${data.customerName}` : 'Thank you for your order'}</h2>
           
-          <p>We've received your order${petNameText} and are excited to create your beautiful PawPop print!</p>
+          <p>We've received your order${petNameText} and we're excited to create your beautiful PawPop print!</p>
           
           <div class="order-details">
             <h3 style="margin-top: 0; color: #667eea;">Order Details</h3>
@@ -354,10 +354,10 @@ export async function sendOrderConfirmationEmail(data: OrderConfirmationEmailDat
           
           <p><strong>What happens next:</strong></p>
           <ul>
-            <li>🎨 We'll prepare your artwork for printing with the highest quality standards</li>
-            <li>🖨️ Your order will be sent to our premium printing partner</li>
-            <li>📦 You'll receive a shipping notification with tracking information</li>
-            <li>🚚 Delivery typically takes 5-7 business days</li>
+            <li>We'll prepare your artwork for printing with the highest quality standards</li>
+            <li>Your order will be sent to our premium printing partner</li>
+            <li>You'll receive a shipping notification with tracking information</li>
+            <li>Delivery typically takes 5-7 business days</li>
           </ul>
           
           <div class="divider"></div>
@@ -423,11 +423,11 @@ export async function sendShippingNotificationEmail(data: ShippingNotificationEm
     <body>
       <div class="container">
         <div class="header">
-          <h1>📦 Your Order Has Shipped!</h1>
+          <h1>Your Order Has Shipped</h1>
         </div>
         
         <div class="content">
-          <h2>${data.customerName ? `Great news, ${data.customerName}!` : 'Great news! 📦'}</h2>
+          <h2>${data.customerName ? `Hi ${data.customerName}` : 'Shipping Update'}</h2>
           
           <p>Your PawPop ${data.productType} (Order #${data.orderNumber}) has been carefully packaged and is now on its way to you!</p>
           
@@ -435,14 +435,14 @@ export async function sendShippingNotificationEmail(data: ShippingNotificationEm
           
           <p><strong>Delivery Information:</strong></p>
           <ul>
-            <li>📅 Estimated delivery: 3-5 business days</li>
-            <li>📦 Your artwork is professionally packaged to ensure it arrives in perfect condition</li>
-            <li>🏠 Delivery will be made to the address provided during checkout</li>
+            <li>Estimated delivery: 3-5 business days</li>
+            <li>Your artwork is professionally packaged to ensure it arrives in perfect condition</li>
+            <li>Delivery will be made to the address provided during checkout</li>
           </ul>
           
           <div class="divider"></div>
           
-          <p>We can't wait for you to see your beautiful PawPop masterpiece in person! The quality and attention to detail will truly amaze you.</p>
+          <p>We can't wait for you to see your beautiful PawPop masterpiece in person!</p>
           
           <p>If you have any questions about your shipment or need to make any changes, please contact us as soon as possible.</p>
           
@@ -463,7 +463,7 @@ export async function sendShippingNotificationEmail(data: ShippingNotificationEm
 
   const result = await sendEmail({
     to: data.customerEmail,
-    subject: `Your PawPop order #${data.orderNumber} has shipped! 📦`,
+    subject: `Your PawPop order #${data.orderNumber} has shipped`,
     html
   })
 
@@ -748,11 +748,11 @@ export async function sendEmailCaptureConfirmation(data: EmailCaptureConfirmatio
     <body>
       <div class="container">
         <div class="header">
-          <h1>✨ Your Spot is Reserved!</h1>
+          <h1>Your Spot is Reserved</h1>
         </div>
         
         <div class="content">
-          <h2>${data.customerName ? `Hi ${data.customerName}! 👋` : 'Welcome to PawPop! 👋'}</h2>
+          <h2>${data.customerName ? `Hi ${data.customerName}` : 'Welcome to PawPop'}</h2>
           
           <p style="font-size: 16px; line-height: 1.8;">
             Thanks for your interest in creating a Renaissance masterpiece! We've saved your spot and you can upload your photos whenever you're ready.
@@ -760,7 +760,7 @@ export async function sendEmailCaptureConfirmation(data: EmailCaptureConfirmatio
           
           <div class="highlight-box">
             <p style="margin: 0; font-size: 16px; font-weight: 600; color: #2C2C2C;">
-              🎨 <strong>What happens next?</strong>
+              <strong>What happens next?</strong>
             </p>
             <p style="margin: 10px 0 0 0; font-size: 15px;">
               When you're ready, just upload your photos and we'll transform them into a stunning Renaissance-style portrait in about 3 minutes!
@@ -784,12 +784,12 @@ export async function sendEmailCaptureConfirmation(data: EmailCaptureConfirmatio
           
           <div class="highlight-box">
             <p style="margin: 0; font-size: 14px; color: #666;">
-              💡 <strong>Pro Tip:</strong> Have your photos ready on your device before you start. This makes the process super quick and easy!
+              <strong>Pro Tip:</strong> Have your photos ready on your device before you start. This makes the process super quick and easy!
             </p>
           </div>
           
           <p style="font-size: 15px; margin-top: 30px;">
-            Questions? Just reply to this email - we're here to help! 💕
+            Questions? Just reply to this email - we're here to help!
           </p>
           
         </div>
@@ -925,7 +925,7 @@ export async function sendUploadReminder(data: UploadReminderData): Promise<{ su
           </div>
           
           <p style="font-size: 15px; text-align: center; margin-top: 30px; color: #666;">
-            <strong>It only takes 3 minutes</strong> to create your masterpiece! 🎨
+            <strong>It only takes 3 minutes</strong> to create your masterpiece!
           </p>
           
           <p style="font-size: 14px; margin-top: 30px; color: #999; text-align: center;">
@@ -1034,6 +1034,134 @@ export async function sendDeferredUploadEmail(data: DeferredUploadEmailData): Pr
         </div>
         <div class="footer">
           <p style="margin: 0 0 8px 0;"><strong>PawPop</strong><br/>Where pet moms become Renaissance masterpieces</p>
+          <p style="margin: 0; font-size: 13px; color: #666;">2006-1323 Homer St, Vancouver BC Canada V6B 5T1</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+
+  const result = await sendEmail({
+    to: data.customerEmail,
+    subject,
+    html,
+    replyTo: 'pawpopart@gmail.com'
+  })
+
+  return result
+}
+
+/**
+ * Send Pop5Pack proof email with watermarked preview
+ */
+export interface Pop5PackProofEmailData {
+  customerEmail: string
+  parodyStyle: string
+  proofImageUrl: string
+  artworkId: string
+}
+
+export async function sendPop5PackProofEmail(data: Pop5PackProofEmailData): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const subject = 'Your Free Parody Proof is Ready'
+  
+  const parodyStyleNames: Record<string, string> = {
+    wizard: 'Wizard',
+    paws: 'PAWS',
+    popstar: 'Popstar',
+    dogfather: 'Dogfather',
+  }
+  
+  const styleName = parodyStyleNames[data.parodyStyle] || data.parodyStyle
+  const checkoutUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://pawpopart.com'}/pop5pack/checkout/${data.artworkId}`
+  
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${subject}</title>
+      <style>
+        body { font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #2C2C2C; margin: 0; padding: 0; background-color: #F5EED7; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #FF70A6 0%, #FF9770 100%); color: #FFFFFF; padding: 36px 28px; text-align: center; }
+        .header h1 { margin: 0; font-size: 28px; font-weight: 700; font-family: 'Arvo', serif; }
+        .content { padding: 32px 28px; background-color: #FFFFFF; }
+        .content h2 { color: #2C2C2C; margin-top: 0; font-family: 'Arvo', serif; font-weight: 700; font-size: 22px; }
+        .proof-image { width: 100%; max-width: 400px; height: auto; border-radius: 12px; margin: 20px auto; display: block; border: 3px solid #FFD670; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .watermark-notice { background: #FFF3CD; border-left: 4px solid #FFD670; padding: 16px; margin: 20px 0; border-radius: 8px; }
+        .cta-button { display: inline-block; background: #FF9770 !important; color: #FFFFFF !important; padding: 18px 36px; text-decoration: none; border-radius: 12px; font-weight: 700; margin: 20px 0; border: none; font-family: 'Fredoka One', cursive; font-size: 20px; box-shadow: 0 4px 12px rgba(255, 151, 112, 0.4); }
+        .price-highlight { background: linear-gradient(135deg, #70D6FF 0%, #FF70A6 100%); color: #FFFFFF; padding: 20px; border-radius: 12px; text-align: center; margin: 24px 0; }
+        .price-highlight .price { font-size: 48px; font-weight: 700; font-family: 'Arvo', serif; margin: 0; }
+        .price-highlight .subtext { font-size: 16px; margin: 8px 0 0 0; opacity: 0.95; }
+        .benefits { background: #F5EED7; padding: 20px; border-radius: 12px; margin: 20px 0; }
+        .benefit-item { display: flex; align-items: start; margin: 12px 0; }
+        .benefit-icon { font-size: 24px; margin-right: 12px; }
+        .footer { background-color: #F5EED7; padding: 24px; text-align: center; color: #2C2C2C; font-size: 14px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>Your ${styleName} Proof is Ready</h1>
+        </div>
+        <div class="content">
+          <h2>Your Free Preview</h2>
+          <p style="font-size: 16px; line-height: 1.8;">
+            Check out your pet in the <strong>${styleName}</strong> style! This is a watermarked preview to show you the quality.
+          </p>
+          
+          <img src="${data.proofImageUrl}" alt="${styleName} Proof" class="proof-image" />
+          
+          <div class="watermark-notice">
+            <p style="margin: 0; font-size: 14px; line-height: 1.6;">
+              <strong>Note:</strong> This is a low-resolution watermarked proof. The full pack includes high-resolution, watermark-free versions of all 4 parody styles!
+            </p>
+          </div>
+          
+          <div class="price-highlight">
+            <p class="price">$5</p>
+            <p class="subtext">Get All 4 High-Res Parody Styles</p>
+          </div>
+          
+          <div class="benefits">
+            <div class="benefit-item">
+              <div>
+                <strong>Wizard</strong> - Magical wizard portrait
+              </div>
+            </div>
+            <div class="benefit-item">
+              <div>
+                <strong>PAWS</strong> - Iconic movie poster style
+              </div>
+            </div>
+            <div class="benefit-item">
+              <div>
+                <strong>Popstar</strong> - 80s album cover pose
+              </div>
+            </div>
+            <div class="benefit-item">
+              <div>
+                <strong>Dogfather</strong> - Mafia boss portrait
+              </div>
+            </div>
+          </div>
+          
+          <div style="text-align: center; margin: 32px 0;">
+            <a href="${checkoutUrl}" class="cta-button" style="display: inline-block; background: #FF9770 !important; color: #FFFFFF !important; padding: 18px 36px; text-decoration: none; border-radius: 12px; font-weight: 700; border: none; font-family: 'Fredoka One', cursive; font-size: 20px;">Get All 4 Styles for $5</a>
+          </div>
+          
+          <p style="font-size: 14px; color: #666; text-align: center; margin-top: 24px;">
+            <strong>Instant digital delivery</strong> - Download all 4 high-res images immediately after purchase<br/>
+            <strong>100% satisfaction guarantee</strong> - Love it or get your money back
+          </p>
+          
+          <p style="font-size: 14px; color: #666; margin-top: 32px;">
+            Questions? Reply to this email and we'll help!
+          </p>
+        </div>
+        <div class="footer">
+          <p style="margin: 0 0 8px 0;"><strong>PawPop</strong><br/>Turn your pet into iconic parodies</p>
           <p style="margin: 0; font-size: 13px; color: #666;">2006-1323 Homer St, Vancouver BC Canada V6B 5T1</p>
         </div>
       </div>

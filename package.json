@@ -59,7 +59,11 @@
     "test:plausible-integration": "node scripts/test-plausible-integration.js",
     "test:plausible-validate": "node scripts/validate-plausible-production.js",
     "test:clarity": "vitest run tests/lib/clarity.test.ts tests/hooks/useClarityTracking.test.tsx",
-    "test:clarity-watch": "vitest tests/lib/clarity.test.ts tests/hooks/useClarityTracking.test.tsx"
+    "test:clarity-watch": "vitest tests/lib/clarity.test.ts tests/hooks/useClarityTracking.test.tsx",
+    "test:pop5pack": "vitest run tests/api/pop5pack-generate-proof.test.ts",
+    "test:pop5pack-e2e": "playwright test tests/e2e/pop5pack-flow.spec.ts",
+    "test:pop5pack-all": "npm run test:pop5pack && npm run test:pop5pack-e2e",
+    "test:pop5pack-flow": "node scripts/test-pop5pack-flow.js"
   },
   "dependencies": {
     "@fal-ai/client": "^1.6.2",

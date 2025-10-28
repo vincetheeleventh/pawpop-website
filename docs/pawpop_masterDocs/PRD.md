@@ -10,7 +10,6 @@ This PRD defines the current product vision, scope, critical path, and technical
 
 ## 1. Vision & Positioning
 - Offer a unique, emotionally resonant gift for pet moms by transforming two photos (pet mom + pet) into a Renaissance-style portrait.
-- Emphasize "handcrafted" and "modern illustration tools with human finishing touches" (no AI-first messaging).
 - Conversion-first, ultra-minimal squeeze page with a single primary action.
 
 ## 2. Target Audience
