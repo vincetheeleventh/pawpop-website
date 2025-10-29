@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import { Arvo, Fredoka } from 'next/font/google';
+import { Arvo, Fredoka, Patrick_Hand } from 'next/font/google';
 import { GeistSans } from 'geist/font/sans';
 import "./globals.css";
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
+import LayoutShell from './LayoutShell';
 import { Providers } from './providers';
 import { GoogleAdsTracking } from '@/components/analytics/GoogleAdsTracking';
 import PlausibleScript from '@/components/analytics/PlausibleScript';
@@ -22,6 +21,13 @@ const fredoka = Fredoka({
   weight: '400',
   subsets: ['latin'], 
   variable: '--font-fredoka',
+  display: 'swap'
+});
+
+const patrickHand = Patrick_Hand({ 
+  weight: '400',
+  subsets: ['latin'], 
+  variable: '--font-patrick-hand',
   display: 'swap'
 });
 
@@ -67,7 +73,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${GeistSans.variable} ${arvo.variable} ${fredoka.variable}`}>
+    <html lang="en" className={`${GeistSans.variable} ${arvo.variable} ${fredoka.variable} ${patrickHand.variable}`}>
       <head>
         {/* Preconnect to external domains */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -85,9 +91,9 @@ export default function RootLayout({
           <PlausibleScript />
           <ClarityScript />
           <MetaPixel />
-          <Header />
-          <main>{children}</main>
-          <Footer />
+          <LayoutShell>
+            {children}
+          </LayoutShell>
         </Providers>
       </body>
     </html>

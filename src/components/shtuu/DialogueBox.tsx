@@ -14,13 +14,17 @@ interface DialogueBoxProps {
   options?: DialogueOption[];
   onSelectOption?: (optionId: string) => void;
   isTyping?: boolean;
+  compact?: boolean;
+  showText?: boolean;
 }
 
 export default function DialogueBox({
   message,
   options = [],
   onSelectOption,
-  isTyping = false
+  isTyping = false,
+  compact = false,
+  showText = true
 }: DialogueBoxProps) {
   const [displayedText, setDisplayedText] = useState('');
   
@@ -43,14 +47,21 @@ export default function DialogueBox({
   }, [message, isTyping]);
 
   return (
-    <div className="bg-card-surface border-2 border-naples-yellow rounded-2xl p-6 shadow-lg relative">
+    <div className={`bg-card-surface border-2 border-naples-yellow rounded-2xl shadow-lg relative ${compact ? 'px-4 py-3' : 'p-6'}`}>
       {/* Speech bubble tail */}
       <div className="absolute -left-3 top-8 w-6 h-6 bg-card-surface border-l-2 border-b-2 border-naples-yellow transform rotate-45" />
       
-      {/* Message text */}
-      <p className="font-geist text-lg text-text-primary mb-4 min-h-[60px]">
-        {displayedText}
-        {isTyping && <span className="animate-pulse">|</span>}
+      {/* Message text - Fixed height container to prevent bubble expansion */}
+      <p className={`font-fredoka font-semibold text-text-primary my-3 ${compact ? 'text-xl md:text-lg' : 'text-2xl md:text-xl min-h-[60px]'}`}>
+        {/* Invisible text to set container size */}
+        <span className="invisible absolute">{message}</span>
+        {/* Visible typing text */}
+        {showText && (
+          <span className="relative">
+            {displayedText}
+            {isTyping && <span className="animate-pulse">|</span>}
+          </span>
+        )}
       </p>
       
       {/* Options */}

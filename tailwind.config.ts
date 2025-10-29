@@ -63,6 +63,7 @@ const config: Config = {
         'arvo': ['Arvo', ...fontFamily.serif],
         'geist': ['Geist', ...fontFamily.sans],
         'fredoka': ['Fredoka One', ...fontFamily.sans],
+        'patrick-hand': ['var(--font-patrick-hand)', 'Patrick Hand', ...fontFamily.sans],
         // Legacy font mappings (maintain compatibility)
         'playfair': ['Playfair Display', ...fontFamily.serif],
         'inter': ['Inter', ...fontFamily.sans],
@@ -82,6 +83,7 @@ const config: Config = {
         'brush-stroke': 'brushStroke 1.5s ease-in-out infinite',
         'gallery-slide': 'gallerySlide 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         'gallery-fade-in': 'galleryFadeIn 0.5s ease-out',
+        'dialogue-pop': 'dialoguePop 0.3s ease-in-out forwards',
       },
       transitionTimingFunction: {
         'gallery-snap': 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
@@ -110,8 +112,22 @@ const config: Config = {
           '100%': { transform: 'translateX(0)', opacity: '1' },
         },
         galleryFadeIn: {
-          '0%': { opacity: '0', transform: 'scale(0.95)' },
-          '100%': { opacity: '1', transform: 'scale(1)' },
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        dialoguePop: {
+          '0%': { 
+            transform: 'scale(0.02, 0.05)',
+            borderRadius: '50%',
+          },
+          '50%': { 
+            transform: 'scale(1, 0.05)',
+            borderRadius: '2px',
+          },
+          '100%': { 
+            transform: 'scale(1, 1)',
+            borderRadius: '1rem',
+          },
         },
       },
     },

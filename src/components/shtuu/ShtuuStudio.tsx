@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import ShtuuCharacter from './ShtuuCharacter';
+import { useState, useEffect, useCallback } from 'react';
 import DialogueBox from './DialogueBox';
 import ImageUploadZone from './ImageUploadZone';
 import GeneratingAnimation from './GeneratingAnimation';
@@ -48,6 +47,8 @@ export default function ShtuuStudio() {
   useEffect(() => {
     startDialogueSession();
   }, []);
+
+  // (moved) listener defined after handleOptionSelect
 
   const startDialogueSession = async () => {
     setState(prev => ({ ...prev, isLoading: true }));
@@ -105,11 +106,11 @@ export default function ShtuuStudio() {
     }
   };
 
-  const handleOptionSelect = async (optionId: string) => {
+  const handleOptionSelect = useCallback(async (optionId: string) => {
     if (!state.sessionToken) return;
-    
+
     setState(prev => ({ ...prev, isLoading: true }));
-    
+
     try {
       const response = await fetch('/api/shtuu/dialogue/respond', {
         method: 'POST',
@@ -120,9 +121,9 @@ export default function ShtuuStudio() {
           response: { petType: optionId }
         })
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         setState(prev => ({
           ...prev,
@@ -136,108 +137,88 @@ export default function ShtuuStudio() {
       console.error('Failed to send response:', error);
       setState(prev => ({ ...prev, isLoading: false }));
     }
-  };
+  }, [state.sessionToken, state.currentStep]);
+
+  // Listen for hero overlay button selections (after handleOptionSelect is defined)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const custom = e as CustomEvent<{ id: string }>;
+      if (custom.detail?.id) {
+        handleOptionSelect(custom.detail.id);
+      }
+    };
+    window.addEventListener('shtuu:selectOption', handler as EventListener);
+    return () => window.removeEventListener('shtuu:selectOption', handler as EventListener);
+  }, [handleOptionSelect]);
 
   const currentDialogue = state.conversationHistory[state.conversationHistory.length - 1];
-  const currentMood = currentDialogue?.mood || 'idle';
 
   return (
-    <div className="min-h-screen bg-site-bg py-12 px-4">
-      {/* Placeholder background - will be replaced with actual studio background */}
-      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 opacity-50" />
-      
+    <div className="py-12 px-4">
       <div className="max-w-4xl mx-auto">
-        {/* Studio header */}
-        <div className="flex items-center justify-center mb-8">
-          <h1 className="font-arvo text-3xl md:text-4xl font-bold text-text-primary">
-            Shtuu's Studio
-          </h1>
-        </div>
 
-        {/* Main dialogue area */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-          {/* Left: Shtuu Character */}
-          <div className="flex flex-col items-center justify-center order-2 lg:order-1">
-            <ShtuuCharacter 
-              mood={currentMood}
-              size="lg"
-              showPixel={state.currentStep !== 'welcome'}
+        {/* Dialogue area */}
+        <div className="flex flex-col gap-6">
+
+          {/* Image upload component */}
+          {state.currentStep === 'upload' && state.sessionToken && (
+            <ImageUploadZone
+              sessionToken={state.sessionToken}
+              onUploadComplete={async (imageUrl, artworkId) => {
+                setState(prev => ({
+                  ...prev,
+                  artworkId,
+                  currentStep: 'generating',
+                  conversationHistory: [...prev.conversationHistory, {
+                    character: 'shtuu',
+                    message: 'So cute! I have a great idea for something…',
+                    mood: 'working'
+                  }]
+                }));
+
+                // Trigger generation
+                try {
+                  await fetch('/api/shtuu/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ artworkId })
+                  });
+                } catch (error) {
+                  console.error('Generation trigger error:', error);
+                }
+              }}
+              onError={(error) => {
+                console.error('Upload error:', error);
+                alert(error);
+              }}
             />
-            <p className="font-geist text-sm text-text-primary/60 mt-4 text-center italic">
-              {state.isLoading && 'Thinking...'}
-              {!state.isLoading && state.currentStep === 'welcome' && 'Ready to create!'}
-              {!state.isLoading && state.currentStep === 'upload' && 'Excited to see your pet!'}
-            </p>
-          </div>
+          )}
+          
+          {/* Generating with polling */}
+          {state.currentStep === 'generating' && state.artworkId && (
+            <GeneratingAnimation
+              artworkId={state.artworkId}
+              onComplete={(imageUrl, parodyStyle) => {
+                setState(prev => ({
+                  ...prev,
+                  currentStep: 'reveal',
+                  generatedImageUrl: imageUrl,
+                  parodyStyle,
+                  conversationHistory: [...prev.conversationHistory, {
+                    character: 'shtuu',
+                    message: 'I made this for you! Do you like it?',
+                    mood: 'happy'
+                  }]
+                }));
+              }}
+              onError={(error) => {
+                console.error('Generation error:', error);
+                alert(error);
+              }}
+            />
+          )}
 
-          {/* Right: Dialogue box */}
-          <div className="flex flex-col gap-6 order-1 lg:order-2">
-            {currentDialogue && (
-              <DialogueBox
-                message={currentDialogue.message}
-                options={currentDialogue.options}
-                onSelectOption={handleOptionSelect}
-                isTyping={state.isLoading}
-              />
-            )}
-
-            {/* Image upload component */}
-            {state.currentStep === 'upload' && state.sessionToken && (
-              <ImageUploadZone
-                sessionToken={state.sessionToken}
-                onUploadComplete={async (imageUrl, artworkId) => {
-                  setState(prev => ({
-                    ...prev,
-                    artworkId,
-                    currentStep: 'generating',
-                    conversationHistory: [...prev.conversationHistory, {
-                      character: 'shtuu',
-                      message: 'So cute! I have a great idea for something…',
-                      mood: 'working'
-                    }]
-                  }));
-
-                  // Trigger generation
-                  try {
-                    await fetch('/api/shtuu/generate', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ artworkId })
-                    });
-                  } catch (error) {
-                    console.error('Generation trigger error:', error);
-                  }
-                }}
-                onError={(error) => {
-                  console.error('Upload error:', error);
-                  alert(error);
-                }}
-              />
-            )}
-            
-            {/* Generating with polling */}
-            {state.currentStep === 'generating' && state.artworkId && (
-              <GeneratingAnimation
-                artworkId={state.artworkId}
-                onComplete={(imageUrl, parodyStyle) => {
-                  setState(prev => ({
-                    ...prev,
-                    currentStep: 'reveal',
-                    generatedImageUrl: imageUrl,
-                    parodyStyle,
-                    conversationHistory: [...prev.conversationHistory, {
-                      character: 'shtuu',
-                      message: 'I made this for you! Do you like it?',
-                      mood: 'happy'
-                    }]
-                  }));
-                }}
-                onError={(error) => {
-                  console.error('Generation error:', error);
-                  alert(error);
-                }}
-              />
-            )}
+          {/* Options are rendered on the hero overlay */}
 
             {/* Artwork reveal */}
             {state.currentStep === 'reveal' && state.generatedImageUrl && (
@@ -249,7 +230,6 @@ export default function ShtuuStudio() {
                 }}
               />
             )}
-          </div>
         </div>
       </div>
     </div>
